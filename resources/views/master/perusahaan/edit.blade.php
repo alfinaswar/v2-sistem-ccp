@@ -1,0 +1,108 @@
+@extends('layouts.app')
+
+@section('content')
+    <div class="page-header">
+        <div class="row">
+            <div class="col">
+                <h3 class="page-title">Master Perusahaan</h3>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('perusahaan.index') }}">Master Perusahaan</a></li>
+                    <li class="breadcrumb-item active">Edit Perusahaan</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-dark">
+                    <h4 class="card-title mb-0">Formulir Edit Perusahaan</h4>
+                    <p class="card-text mb-0">
+                        Silakan ubah data perusahaan di bawah ini.
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('perusahaan.update', $perusahaan->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label for="Kode" class="form-label"><strong>Kode</strong></label>
+                                <input type="text" name="Kode" class="form-control @error('Kode') is-invalid @enderror"
+                                    id="Kode" placeholder="Contoh : DIH" value="{{ old('Kode', $perusahaan->Kode) }}">
+                                @error('Kode')
+                                    <div class="text-danger mt-1">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="Nama" class="form-label"><strong>Nama</strong></label>
+                                <input type="text" name="Nama" class="form-control @error('Nama') is-invalid @enderror"
+                                    id="Nama" placeholder="Nama" value="{{ old('Nama', $perusahaan->Nama) }}">
+                                @error('Nama')
+                                    <div class="text-danger mt-1">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="NamaLengkap" class="form-label"><strong>Nama Lengkap</strong></label>
+                                <input type="text" name="NamaLengkap"
+                                    class="form-control @error('NamaLengkap') is-invalid @enderror" id="NamaLengkap"
+                                    placeholder="Nama Lengkap" value="{{ old('NamaLengkap', $perusahaan->NamaLengkap) }}">
+                                @error('NamaLengkap')
+                                    <div class="text-danger mt-1">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="Kategori" class="form-label"><strong>Kategori</strong></label>
+                                <select name="Kategori" id="Kategori"
+                                    class="form-control @error('Kategori') is-invalid @enderror">
+                                    <option value="">Pilih Kategori</option>
+                                    <option value="ABGROUP" {{ old('Kategori', $perusahaan->Kategori) == 'ABGROUP' ? 'selected' : '' }}>ABGROUP</option>
+                                    <option value="CISCO" {{ old('Kategori', $perusahaan->Kategori) == 'CISCO' ? 'selected' : '' }}>CISCO</option>
+                                </select>
+                                @error('Kategori')
+                                    <div class="text-danger mt-1">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="col-12">
+                                <label for="Deskripsi" class="form-label"><strong>Deskripsi</strong></label>
+                                <textarea name="Deskripsi" class="form-control @error('Deskripsi') is-invalid @enderror"
+                                    id="Deskripsi"
+                                    placeholder="Deskripsi">{{ old('Deskripsi', $perusahaan->Deskripsi) }}</textarea>
+                                @error('Deskripsi')
+                                    <div class="text-danger mt-1">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="col-12 text-end mt-3">
+                                <a href="{{ route('perusahaan.index') }}" class="btn btn-secondary me-2">
+                                    <i class="fa fa-arrow-left"></i> Kembali
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa fa-save"></i> Update
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection

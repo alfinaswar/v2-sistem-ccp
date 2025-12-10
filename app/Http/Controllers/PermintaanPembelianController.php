@@ -1,0 +1,408 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\MasterBarang;
+use App\Models\MasterDepartemen;
+use App\Models\MasterJenisPengajuan;
+use App\Models\MasterSatuan;
+use App\Models\PermintaanPembelian;
+use App\Models\PermintaanPembelianDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
+
+class PermintaanPembelianController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            // Siapkan base query tanpa get()
+            if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('Direktur')) {
+                $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
+                    ->orderBy('id', 'desc');
+            } else {
+                if (auth()->user()->hasRole('SMI') || auth()->user()->hasRole('Kadiv Penunjang Medis')) {
+                    $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
+                        ->where('Jenis', '=', '1')
+                        ->where('KodePerusahaan', '=', auth()->user()->kodeperusahaan)
+                        ->orderBy('id', 'desc');
+                } elseif (auth()->user()->hasRole('Logistik') || auth()->user()->hasRole('Kadiv Logistik')) {
+                    $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
+                        ->where('Jenis', '=', '2')
+                        ->where('KodePerusahaan', '=', auth()->user()->kodeperusahaan)
+                        ->orderBy('id', 'desc');
+                } else {
+
+                    $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
+                        ->where('KodePerusahaan', '=', auth()->user()->kodeperusahaan)
+                        ->orderBy('id', 'desc');
+                }
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('Departemen', function ($row) {
+                    return optional($row->getDepartemen)->Nama;
+                })
+                ->editColumn('DiajukanOleh', function ($row) {
+                    return optional($row->getDiajukanOleh)->name;
+                })
+                ->addColumn('NomorPermintaan', function ($row) {
+                    $encryptedId = encrypt($row->id);
+                    return '<a href="' . route('pp.show', ['id' => $encryptedId]) . '" style="color: #007bff; font-weight: bold;">' . e($row->NomorPermintaan) . '</a>';
+                })
+                ->editColumn('KodePerusahaan', function ($row) {
+                    return optional($row->getPerusahaan)->Nama;
+                })
+                ->addColumn('action', function ($row) {
+                    $encryptedId = encrypt($row->id);
+                    return '
+                        <a href="' . route('pp.edit', $row->id) . '" class="btn btn-sm btn-warning me-1">
+                            <i class="fa fa-edit"></i> Edit
+                        </a>
+                        <button class="btn btn-sm btn-danger btn-delete me-1" data-id="' . $row->id . '">
+                            <i class="fa fa-trash"></i> Hapus
+                        </button>
+                        <a href="' . route('pp.print', $row->id) . '" class="btn btn-sm btn-success" target="_blank">
+                            <i class="fa fa-print"></i> Print
+                        </a>
+                    ';
+                })
+                ->editColumn('Jenis', function ($row) {
+                    return optional($row->getJenisPermintaan)->Nama;
+                })
+                ->addColumn('Status', function ($row) {
+                    $status = e($row->Status);
+                    $statusUpdate = $row->StatusUpdate ? \Carbon\Carbon::parse($row->StatusUpdate)->format('d-m-Y H:i') : '-';
+                    return '<div><span class="badge bg-info">' . $status . '</span><br><small class="text-muted">Update: ' . $statusUpdate . '</small></div>';
+                })
+                ->rawColumns(['action', 'NomorPermintaan', 'Status'])
+                ->make(true);
+        }
+        return view('form.permintaan-pembelian.index');
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $barang = MasterBarang::with('getMerk', 'getSatuan')->get();
+        $departemen = MasterDepartemen::where('KodePerusahaan', auth()->user()->kodeperusahaan)->get();
+        $satuan = MasterSatuan::get();
+        $jenisPengajuan = MasterJenisPengajuan::get();
+        return view('form.permintaan-pembelian.create', compact('jenisPengajuan', 'barang', 'departemen', 'satuan'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'Tanggal' => 'required|date',
+            'Departemen' => 'required',
+            'Jenis' => 'required',
+            'Tujuan' => 'required',
+            'NamaBarang' => 'required|array|min:1',
+            'Jumlah' => 'required|array|min:1',
+            'Satuan' => 'required|array|min:1',
+            'RencanaPenempatan' => 'required|array|min:1',
+            'Keterangan' => 'nullable|array',
+            'NamaBarang.*' => 'required|string|max:255',
+            'Jumlah.*' => 'required|numeric|min:1',
+            'Satuan.*' => 'required|string|max:100',
+            'RencanaPenempatan.*' => 'nullable|string|max:255',
+            'Keterangan.*' => 'nullable|string|max:500',
+        ]);
+
+        // Generate Nomor Pengajuan
+        $nomorAkhir = $this->generateNomorPermintaan();
+        $permintaan = PermintaanPembelian::create([
+            'NomorPermintaan' => $nomorAkhir,
+            'Jenis' => $request->Jenis,
+            'Tujuan' => $request->Tujuan,
+            'Tanggal' => $request->Tanggal,
+            'Departemen' => $request->Departemen,
+            'Status' => 'Baru Diajukan',
+            'StatusUpdate' => now(),
+            'KodePerusahaan' => auth()->user()->kodeperusahaan,
+            'DiajukanOleh' => auth()->user()->id,
+            'DiajukanPada' => now(),
+            'UserCreate' => auth()->user()->name,
+        ]);
+
+        foreach ($request->NamaBarang as $key => $item) {
+            PermintaanPembelianDetail::create([
+                'IdPermintaan' => $permintaan->id,
+                'NamaBarang' => $item,
+                'Jumlah' => $request->Jumlah[$key],
+                'Satuan' => $request->Jumlah[$key],
+                'RencanaPenempatan' => $request->RencanaPenempatan[$key],
+                'Keterangan' => $request->Keterangan[$key],
+                'KodePerusahaan' => auth()->user()->kodeperusahaan,
+            ]);
+        }
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user()->id)
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Permintaan Pembelian baru dibuat: ' . $nomorAkhir);
+        }
+
+        return redirect()->route('pp.index')->with('success', 'Permintaan pembelian berhasil disimpan.');
+    }
+
+    private function generateNomorPermintaan()
+    {
+        $prefix = 'PP-';
+        $bulan = date('m');
+        $tahun = date('y');
+        $kodePerusahaan = auth()->user()->kodeperusahaan;
+        $jumlah = PermintaanPembelian::where('KodePerusahaan', $kodePerusahaan)
+            ->whereMonth('Tanggal', $bulan)
+            ->whereYear('Tanggal', '20' . $tahun)
+            ->count();
+
+        $nextNumber = $jumlah + 1;
+
+        $nomorAkhir = $prefix . $tahun . $bulan . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $nomorAkhir;
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $id = decrypt($id);
+        $data = PermintaanPembelian::with('getJenisPermintaan', 'getDetail.getBarang', 'getDiajukanOleh')->find($id);
+        // dd($data);
+        return view('form.permintaan-pembelian.show', compact('data'));
+    }
+
+    public function print($id)
+    {
+        // $id = decrypt($id);
+        $data = PermintaanPembelian::with([
+            'getDetail.getBarang.getMerk',
+            'getDiajukanOleh',
+            'getDetail.getBarang.getSatuan'
+        ])->find($id);
+
+        // dd($data);
+        $pdf = Pdf::loadView('form.permintaan-pembelian.cetak-permintaan', compact('data'));
+        // If you need to enable remote, use setOption if supported:
+        if (method_exists($pdf, 'setOption')) {
+            $pdf->setOption('enable_remote', true);
+        }
+        return $pdf->stream('permintaan-pembelian-' . $data->NomorPengajuan . '.pdf');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        $barang = MasterBarang::with('getMerk', 'getSatuan')->get();
+        $departemen = MasterDepartemen::get();
+        $satuan = MasterSatuan::get();
+        $data = PermintaanPembelian::with('getDetail.getBarang')->find($id);
+        return view('form.permintaan-pembelian.edit', compact('barang', 'departemen', 'satuan', 'data'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'Tanggal' => 'required|date',
+            'Departemen' => 'required',
+            'Jenis' => 'required',
+            'NamaBarang' => 'required|array|min:1',
+            'Jumlah' => 'required|array|min:1',
+            'Satuan' => 'required|array|min:1',
+            'RencanaPenempatan' => 'required|array|min:1',
+            'Keterangan' => 'nullable|array',
+            'NamaBarang.*' => 'required|string|max:255',
+            'Jumlah.*' => 'required|numeric|min:1',
+            'Satuan.*' => 'required|string|max:100',
+            'RencanaPenempatan.*' => 'nullable|string|max:255',
+            'Keterangan.*' => 'nullable|string|max:500',
+        ]);
+
+        $permintaan = PermintaanPembelian::findOrFail($id);
+
+        $permintaan->update([
+            'Tanggal' => $request->Tanggal,
+            'Departemen' => $request->Departemen,
+            'Jenis' => $request->Jenis,
+            'UserUpdate' => auth()->user()->name ?? null,
+        ]);
+
+        PermintaanPembelianDetail::where('IdPermintaan', $permintaan->id)->delete();
+
+        foreach ($request->NamaBarang as $key => $item) {
+            PermintaanPembelianDetail::create([
+                'IdPermintaan' => $permintaan->id,
+                'Jenis' => $request->Jenis,
+                'NamaBarang' => $item,
+                'Jumlah' => $request->Jumlah[$key],
+                'Satuan' => $request->Satuan[$key],
+                'RencanaPenempatan' => $request->RencanaPenempatan[$key],
+                'Keterangan' => $request->Keterangan[$key] ?? null,
+                'KodePerusahaan' => auth()->user()->kodeperusahaan,
+            ]);
+        }
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Memperbarui permintaan pembelian: Nomor ' . $permintaan->NomorPengajuan . ' (ID ' . $permintaan->id . ')');
+        }
+
+        return redirect()->route('pp.index')->with('success', 'Permintaan pembelian berhasil diperbarui.');
+    }
+
+    /**
+     * Proses ACC (approval) Kepala Divisi pada permintaan pembelian
+     */
+    public function accKepalaDivisi($id)
+    {
+        $permintaan = PermintaanPembelian::findOrFail($id);
+        $permintaan->update([
+            'Status' => 'Disetujui Oleh Kepala Divisi',
+            'StatusUpdate' => now(),
+            'KepalaDivisi_Status' => 'Y',
+            'KepalaDivisi_Pada' => now(),
+            'KepalaDivisi_Oleh' => auth()->user()->id,
+        ]);
+
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Permintaan pembelian diketahui Kepala Divisi: Nomor ' . $permintaan->NomorPengajuan . ' (ID ' . $permintaan->id . ')');
+        }
+
+        return redirect()->back()->with('success', 'Permintaan pembelian telah diketahui oleh Kepala Divisi.');
+    }
+
+    /**
+     * Proses ACC (approval) Kepala Divisi Penunjang Medis/Umum pada permintaan pembelian
+     */
+    public function accKepalaDivisiPenunjang($id)
+    {
+        $permintaan = PermintaanPembelian::findOrFail($id);
+
+        if (!filled($permintaan->KepalaDivisi_Status) || in_array($permintaan->KepalaDivisi_Status, ['N', 'P'])) {
+            return redirect()->back()->with('error', 'Tidak Bisa Disetujui Karena Belum Disetujui Oleh Kadiv Bagian Terkait');
+        }
+
+        $permintaan->update([
+            'Status' => 'Disetujui Oleh Kepala Divisi Penunjang Medis / Umum',
+            'StatusUpdate' => now(),
+            'Penunjang_Oleh' => auth()->user()->id,
+            'Penunjang_Pada' => now(),
+            'Penunjang_Status' => 'Y',
+        ]);
+
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Permintaan pembelian disetujui Kepala Divisi Penunjang: Nomor ' . $permintaan->NomorPengajuan . ' (ID ' . $permintaan->id . ')');
+        }
+
+        return redirect()->back()->with('success', 'Permintaan pembelian telah diketahui oleh Kepala Divisi.');
+    }
+
+    /**
+     * Proses ACC (approval) Direktur pada permintaan pembelian
+     */
+    public function accDirektur($id)
+    {
+        $permintaan = PermintaanPembelian::with('getJenisPermintaan')->findOrFail($id);
+
+        if (!filled($permintaan->Penunjang_Status) || in_array($permintaan->Penunjang_Status, ['N', 'P'])) {
+            return redirect()->back()->with('error', 'Tidak Bisa Disetujui Karena Belum Disetujui Oleh Kadiv Penunjang ' . $permintaan->getJenisPermintaan->Nama);
+        }
+        $permintaan->update([
+            'Status' => 'Disetujui Oleh Direktur',
+            'StatusUpdate' => now(),
+            'Direktur_Status' => 'Y',
+            'Direktur_Pada' => now(),
+            'Direktur_Oleh' => auth()->user()->id,
+        ]);
+
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Permintaan pembelian disetujui Direktur: Nomor ' . $permintaan->NomorPengajuan . ' (ID ' . $permintaan->id . ')');
+        }
+
+        return redirect()->back()->with('success', 'Permintaan pembelian telah disetujui oleh Direktur.');
+    }
+
+    /**
+     * Proses ACC (approval) SMI/Logistik pada permintaan pembelian
+     */
+    public function accSmi($id)
+    {
+        $permintaan = PermintaanPembelian::findOrFail($id);
+        if (!filled($permintaan->Direktur_Status) || in_array($permintaan->Direktur_Status, ['N', 'P'])) {
+            return redirect()->back()->with('error', 'Tidak Bisa Disetujui Karena Belum Disetujui Oleh Direktur');
+        }
+        $permintaan->update([
+            'Status' => 'Telah Diterima SMI',
+            'StatusUpdate' => now(),
+            'Logistik_Oleh' => auth()->user()->id,
+            'Logistik_Status' => 'Y',
+            'Logistik_Pada' => now(),
+        ]);
+
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Permintaan pembelian disetujui/dikonfirmasi SMI/Logistik: Nomor ' . $permintaan->NomorPengajuan . ' (ID ' . $permintaan->id . ')');
+        }
+
+        return redirect()->back()->with('success', 'Permintaan pembelian telah dikonfirmasi/logistik oleh SMI.');
+    }
+
+    public function destroy($id)
+    {
+        $permintaan = PermintaanPembelian::find($id);
+
+        if (!$permintaan) {
+            return response()->json(['status' => 404, 'message' => 'Permintaan pembelian tidak ditemukan.']);
+        }
+
+        PermintaanPembelianDetail::where('IdPermintaan', $permintaan->id)->delete();
+
+        $permintaan->delete();
+
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($permintaan)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Menghapus permintaan pembelian: Nomor ' . $permintaan->NomorPengajuan . ' (ID ' . $permintaan->id . ')');
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Permintaan pembelian berhasil dihapus.']);
+    }
+}
