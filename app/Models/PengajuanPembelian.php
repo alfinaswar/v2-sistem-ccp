@@ -49,28 +49,8 @@ class PengajuanPembelian extends Model
         return $this->hasMany(ListVendorDetail::class, 'IdPengajuan', 'id');
     }
 
-    // public function DetailPengajuan()
-    // {
-    //     return $this->hasMany(PengajuanPembelianDetail::class, 'IdPengajuan', 'id');
-    // }
-
-    public function getHta()
+    public function getPengajuanItem()
     {
-        return $this->hasMany(HtaDanGpa::class, 'IdPengajuan', 'id');
-    }
-
-    public function getListVendorHta()
-    {
-        return $this->hasMany(ListVendorHtaGpa::class, 'IdHtaGpa', 'id');
-    }
-
-    public function getReview()
-    {
-        return $this->hasMany(Rekomendasi::class, 'IdPengajuan', 'id');
-    }
-
-    public function getFui()
-    {
-        return $this->hasOne(UsulanInvestasi::class, 'IdPengajuan', 'id');
+        return $this->hasMany(PengajuanItem::class, 'IdPengajuan', 'id');
     }
 }

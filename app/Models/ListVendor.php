@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ListVendor extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $table = 'list_vendors';
     protected $guarded = ['id'];
 
@@ -21,6 +22,7 @@ class ListVendor extends Model
     {
         return $this->belongsTo(MasterVendor::class, 'NamaVendor', 'Nama');
     }
+
     public function getNamaVendor()
     {
         return $this->hasOne(MasterVendor::class, 'id', 'NamaVendor');
@@ -29,5 +31,10 @@ class ListVendor extends Model
     public function getVendorDetail()
     {
         return $this->hasMany(ListVendorDetail::class, 'IdListVendor', 'id');
+    }
+
+    public function getHtaGpa()
+    {
+        return $this->hasMany(HtaDanGpa::class, 'IdVendor', 'NamaVendor');
     }
 }

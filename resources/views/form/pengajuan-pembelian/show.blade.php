@@ -359,76 +359,47 @@
                         </div>
                     </div>
                     {{-- END PERBANDINGAN VENDOR --}}
-                    <div class="card">
+                    {{-- DAFTAR ITEM YANG DIAJUKAN --}}
+                    <div class="card mb-4">
                         <div class="card-header">
-                            <div class="card-title">
-                                HTA (Health Technology Assesment)
-                            </div>
+                            <h4 class="card-title mb-0">Daftar Item yang Diajukan</h4>
                         </div>
                         <div class="card-body">
-                            @php
-                                // Ambil data HTA dari $data->getHta
-                                $listHta = $data->getHta ?? [];
-                                // dd($listHta);
-                            @endphp
                             <div class="table-responsive">
                                 <table class="table align-middle">
                                     <thead class="table-light">
                                         <tr>
-                                            <th width="5%">No</th>
+                                            <th class="text-center" style="width:40px;">No</th>
                                             <th>Nama Barang</th>
-                                            <th>Merek</th>
-                                            <th width="10%" class="text-center">HTA</th>
-                                            <th width="10%" class="text-center">Hasil Rekomendasi</th>
+                                            <th class="text-center">HTA / GPA</th>
+                                            <th class="text-center">FUI</th>
+                                            <th class="text-center">Rekomendasi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($listHta as $key => $hta)
-                                            <tr>
-                                                <td>{{ $key + 1 }}</td>
-                                                <td>{{ $hta->getNamaBarang->Nama ?? '-' }}</td>
-                                                <td>{{ $hta->getNamaBarang->getMerk->Nama ?? '-' }}</td>
+                                        @if ($data->getPengajuanItem && count($data->getPengajuanItem))
+                                            @foreach ($data->getPengajuanItem as $i => $item)
+                                                <tr>
+                                                    <td class="text-center">{{ $i + 1 }}</td>
+                                                    <td>
+                                                        {{ $item->getBarang->Nama ?? '-' }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
+                                                            class="btn btn-success">
+                                                            Isi HTA
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
+                                                    <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
 
-                                                @php
-                                                    $lastSegment = collect(request()->segments())->last();
-                                                    $idBarang = $hta->getNamaBarang->id ?? null;
-                                                    // dd($hta->getListVendorHta);
-                                                @endphp
-
-                                                <td>
-                                                    @if (empty($hta->getListVendorHta) || (is_countable($hta->getListVendorHta) && count($hta->getListVendorHta) == 0))
-                                                        <a href="{{ route($data->Jenis == '2' ? 'hta.create' : 'gpa.create', ['IdPengajuan' => $lastSegment, 'barang' => $idBarang]) }}"
-                                                            class="badge bg-primary text-white ms-2"
-                                                            title="Isi Nilai HTA">
-                                                            <i class="fa fa-pencil"></i> Isi HTA
-                                                        </a>
-                                                    @else
-                                                        <a href="{{ route($data->Jenis == '2' ? 'hta.show' : 'gpa.show', ['IdPengajuan' => $lastSegment, 'barang' => $idBarang]) }}"
-                                                            class="badge bg-info text-white ms-2" title="Lihat detail">
-                                                            <i class="fa fa-eye"></i> Lihat HTA
-                                                        </a>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if (empty($hta->getListVendorHta) || (is_countable($hta->getListVendorHta) && count($hta->getListVendorHta) == 0))
-                                                        <a href="{{ route($data->Jenis == '2' ? 'hta.create' : 'gpa.create', ['IdPengajuan' => $lastSegment, 'barang' => $idBarang]) }}"
-                                                            class="badge bg-primary text-white ms-2"
-                                                            title="Isi Nilai HTA">
-                                                            <i class="fa fa-pencil"></i> Isi HTA
-                                                        </a>
-                                                    @else
-                                                        <a href="{{ route($data->Jenis == '2' ? 'hta.show' : 'gpa.show', ['IdPengajuan' => $lastSegment, 'barang' => $idBarang]) }}"
-                                                            class="badge bg-info text-white ms-2" title="Lihat detail">
-                                                            <i class="fa fa-eye"></i> Lihat HTA
-                                                        </a>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
+                                                </tr>
+                                            @endforeach
+                                        @else
                                             <tr>
-                                                <td colspan="5" class="text-center">Tidak ada data HTA/GPA.</td>
+                                                <td colspan="6" class="text-center">Tidak ada data item.</td>
                                             </tr>
-                                        @endforelse
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>

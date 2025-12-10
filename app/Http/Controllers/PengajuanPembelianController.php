@@ -9,6 +9,7 @@ use App\Models\ListVendorDetail;
 use App\Models\MasterBarang;
 use App\Models\MasterJenisPengajuan;
 use App\Models\MasterVendor;
+use App\Models\PengajuanItem;
 use App\Models\PengajuanPembelian;
 use App\Models\PermintaanPembelian;
 use Illuminate\Http\Request;
@@ -94,16 +95,14 @@ class PengajuanPembelianController extends Controller
         return view('form.pengajuan-pembelian.create', compact('JenisPengajuan', 'masterbarang', 'permintaan', 'vendor', 'CekHta'));
     }
 
-    public function SimpanDraft($id)
-    {
-    }
+    public function SimpanDraft($id) {}
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        // dd();
+        // dd($request->all());
         $request->validate([
             'pengajuan.tanggal' => 'required|date',
             'pengajuan.id_permintaan' => 'required',
@@ -179,11 +178,13 @@ class PengajuanPembelianController extends Controller
             }
         }
         foreach ($request->vendors[0]['details'] as $key => $listalat) {
-            HtaDanGpa::create([
+            PengajuanItem::create([
                 'IdPengajuan' => $pengajuan->id,
                 'IdBarang' => $listalat['barang_id'],
-                'Jenis' => $request->pengajuan['jenis'] ?? null,
-                'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                'Jumlah' => $listalat['jumlah'] ?? null,
+                'Satuan' => $listalat['satuan'] ?? null,
+                'HargaSatuan' => isset($listalat['harga_satuan']) ? preg_replace('/\D/', '', $listalat['harga_satuan']) : null,
+                'HargaNego' => isset($listalat['harga_nego']) ? preg_replace('/\D/', '', $listalat['harga_nego']) : null,
                 'UserCreate' => auth()->user()->name,
             ]);
         }
@@ -225,8 +226,7 @@ class PengajuanPembelianController extends Controller
      */
     public function show($id)
     {
-        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getHta.getListVendorHta', 'getJenisPermintaan')->find($id);
-        // dd($data);
+        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang')->find($id);
         $vendor = MasterVendor::orderBy('Nama', 'asc')->get();
         $masterbarang = MasterBarang::get();
         return view('form.pengajuan-pembelian.show', compact('data', 'vendor', 'masterbarang'));
@@ -247,6 +247,7 @@ class PengajuanPembelianController extends Controller
     {
         //
     }
+
     public function UpdatePengajuan(Request $request, $id)
     {
         $pengajuan = PengajuanPembelian::findOrFail($id);
@@ -270,9 +271,11 @@ class PengajuanPembelianController extends Controller
         } else {
             $message = 'Status pengajuan berhasil diperbarui.';
         }
-        return redirect()->route('ajukan.show', $id)
+        return redirect()
+            ->route('ajukan.show', $id)
             ->with('success', $message);
     }
+
     /**
      * Remove the specified resource from storage.
      */

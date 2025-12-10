@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\HtaDanGpaController;
 use App\Http\Controllers\HtaGpaController;
 use App\Http\Controllers\MasterBarangController;
 use App\Http\Controllers\MasterDepartemenController;
@@ -180,24 +181,18 @@ Route::group(['middleware' => ['auth']], function () {
 
         Route::POST('/update-rekomendasi/{id}/{vendor}', [RekomendasiController::class, 'UpdateRekomendasi'])->name('rekomendasi.update-rekomendasi');
     });
-    Route::prefix('usulan-investasi')->group(function () {
-        Route::get('/', [UsulanInvestasiController::class, 'index'])->name('usulan-investasi.index');
-        Route::get('/create/{id}', [UsulanInvestasiController::class, 'create'])->name('usulan-investasi.create');
-        Route::post('/store', [UsulanInvestasiController::class, 'store'])->name('usulan-investasi.store');
-        Route::get('/edit/{id}', [UsulanInvestasiController::class, 'edit'])->name('usulan-investasi.edit');
-        Route::put('/update/{id}', [UsulanInvestasiController::class, 'update'])->name('usulan-investasi.update');
-        Route::get('/show/{id}', [UsulanInvestasiController::class, 'show'])->name('usulan-investasi.show');
-        Route::delete('/delete/{id}', [UsulanInvestasiController::class, 'destroy'])->name('usulan-investasi.destroy');
-        Route::get('/cetak/{id}', [UsulanInvestasiController::class, 'cetak'])->name('usulan-investasi.cetak');
-    });
-    Route::prefix('form')->group(function () {
-        Route::get('/hta/{id}', [HtaGpaController::class, 'Hta'])->name('hta.index');
-
-        Route::get('/form-hta/{IdPengajuan}/{barang}', [HtaGpaController::class, 'FormHta'])->name('hta.create');
-        Route::get('/lihat-hta/{IdPengajuan}/{barang}', [HtaGpaController::class, 'LihatHta'])->name('hta.show');
-        Route::POST('/simpan-hta/', [HtaGpaController::class, 'HtaStore'])->name('hta.store');
-
-        Route::get('/gpa/{id}', [HtaGpaController::class, 'Gpa'])->name('gpa.index');
-        Route::get('/form-gpa/{id}', [HtaGpaController::class, 'FormGpa'])->name('gpa.create');
+    // Route::prefix('usulan-investasi')->group(function () {
+    //     Route::get('/', [UsulanInvestasiController::class, 'index'])->name('usulan-investasi.index');
+    //     Route::get('/create/{id}', [UsulanInvestasiController::class, 'create'])->name('usulan-investasi.create');
+    //     Route::post('/store', [UsulanInvestasiController::class, 'store'])->name('usulan-investasi.store');
+    //     Route::get('/edit/{id}', [UsulanInvestasiController::class, 'edit'])->name('usulan-investasi.edit');
+    //     Route::put('/update/{id}', [UsulanInvestasiController::class, 'update'])->name('usulan-investasi.update');
+    //     Route::get('/show/{id}', [UsulanInvestasiController::class, 'show'])->name('usulan-investasi.show');
+    //     Route::delete('/delete/{id}', [UsulanInvestasiController::class, 'destroy'])->name('usulan-investasi.destroy');
+    //     Route::get('/cetak/{id}', [UsulanInvestasiController::class, 'cetak'])->name('usulan-investasi.cetak');
+    // });
+    Route::prefix('form-hta-atau-gpa')->group(function () {
+        Route::get('/hta/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'index'])->name('htagpa.form-hta');
+        Route::post('/simpan', [HtaDanGpaController::class, 'store'])->name('htagpa.store');
     });
 });
