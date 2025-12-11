@@ -360,7 +360,7 @@
                     </div>
                     {{-- END PERBANDINGAN VENDOR --}}
                     {{-- DAFTAR ITEM YANG DIAJUKAN --}}
-                    <div class="card mb-4">
+                    {{-- <div class="card mb-4">
                         <div class="card-header">
                             <h4 class="card-title mb-0">Daftar Item yang Diajukan</h4>
                         </div>
@@ -416,8 +416,80 @@
                                 </table>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">Daftar Item yang Diajukan</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width:40px;">No</th>
+                                            <th>Nama Barang</th>
+                                            <th class="text-center">HTA / GPA</th>
+                                            <th class="text-center">FUI</th>
+                                            <th class="text-center">Rekomendasi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if ($data->getPengajuanItem && count($data->getPengajuanItem))
+                                            @foreach ($data->getPengajuanItem as $i => $item)
+                                                <tr>
+                                                    <td class="text-center">{{ $i + 1 }}</td>
+                                                    <td>
+                                                        {{ $item->getBarang->Nama ?? '-' }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @php
+                                                            $hasHta = $item->getHtaGpa ? true : false;
+                                                        @endphp
+                                                        @if (!$hasHta)
+                                                            <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
+                                                                class="btn btn-warning">
+                                                                <i class="fa fa-exclamation-circle"></i>
+                                                                Lengkapi HTA
+                                                            </a>
+                                                        @else
+                                                            <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
+                                                                class="btn btn-success">
+                                                                <i class="fa fa-check-circle"></i>
+                                                                Lihat HTA
+                                                            </a>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                            class="btn btn-success">
+                                                            <i class="fa fa-lightbulb"></i> FUI
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-center">
 
+                                                        @php
+                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
+                                                        @endphp
+                                                        @if ($adaRekomendasi)
+                                                            <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                class="btn btn-info ms-2" target="_blank">
+                                                                <i class="fa fa-print"></i> Print
+                                                            </a>
+                                                        @endif
+                                                    </td>
+
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="6" class="text-center">Tidak ada data item.</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                     <div class="co2 text-end mt-3">
                         <a href="{{ route('ajukan.index') }}" class="btn btn-secondary me-2">
                             <i class="fa fa-arrow-left"></i> Kembali

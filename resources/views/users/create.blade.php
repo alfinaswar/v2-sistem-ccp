@@ -91,7 +91,12 @@
                                 <select name="departemen"
                                     class="select2 form-control @error('departemen') is-invalid @enderror" id="departemen">
                                     <option value="">Pilih Departemen</option>
-
+                                    @foreach ($departemen as $dep)
+                                        <option value="{{ $dep->id }}"
+                                            {{ old('departemen') == $dep->id ? 'selected' : '' }}>
+                                            {{ $dep->KodeDepartemen }} - {{ $dep->Nama }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 @error('departemen')
                                     <div class="text-danger mt-1">

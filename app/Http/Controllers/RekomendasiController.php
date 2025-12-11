@@ -111,7 +111,6 @@ class RekomendasiController extends Controller
             [
                 'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
                 'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
-                // 'TanggalPresentasi' => $request->TanggalPresentasi,
                 // 'VendorAcc' => $request->VendorAcc,
                 'UserNego' => auth()->user()->id,
             ]
@@ -183,6 +182,7 @@ class RekomendasiController extends Controller
         ]);
         return $pdf->stream('cetak_rekomendasi_' . $idPengajuan . '_' . $idPengajuanItem . '.pdf');
     }
+
     public function detail($idPengajuan, $idPengajuanItem)
     {
         $idPengajuan = decrypt($idPengajuan);
@@ -197,7 +197,7 @@ class RekomendasiController extends Controller
             },
             'getJenisPermintaan.getForm',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
-                $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
+                $query->where('id', $idPengajuanItem)->with('getBarang.getMerk', 'getRekomendasi.getUserNego');
             }
         ])->find($idPengajuan);
         // dd($data);
@@ -205,6 +205,7 @@ class RekomendasiController extends Controller
         $parameter = MasterParameter::get();
         return view('rekomendasi-pembelian.acc-rekomendasi', compact('data', 'parameter', 'negara'));
     }
+
     /**
      * Update the specified resource in storage.
      */
@@ -212,9 +213,52 @@ class RekomendasiController extends Controller
     {
         //
     }
-    public function Approval(Request $request)
+
+    public function UpdateRekomendasi(Request $request)
     {
-        dd($request->all());
+        $header = Rekomendasi::updateOrCreate(
+            [
+                'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
+                'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
+            ],
+            [
+                'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
+                'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
+                'VendorAcc' => $request->rekomendasi[0]['RekomendasiSelect'],
+                'DisetujuiOleh' => auth()->user()->id,
+                'DisetujuiPada' => now(),
+            ]
+        );
+
+        if (isset($request->rekomendasi) && is_array($request->rekomendasi)) {
+            foreach ($request->rekomendasi as $key => $value) {
+                $isi = RekomendasiDetail::updateOrCreate(
+                    [
+                        'IdPengajuan' => $value['IdPengajuan'],
+                        'PengajuanItemId' => $value['PengajuanItemId'],
+                        'IdRekomendasi' => $header->id,
+                        'IdVendor' => $value['IdVendor'] ?? null,
+                    ],
+                    [
+                        'NamaPermintaan' => $value['NamaPermintaan'] ?? null,
+                        'HargaAwal' => $value['HargaAwal'] ?? null,
+                        'HargaNego' => $value['HargaNego'] ?? null,
+                        'Spesifikasi' => $value['Spesifikasi'] ?? null,
+                        'NegaraProduksi' => $value['NegaraProduksi'] ?? null,
+                        'Garansi' => $value['Garansi'] ?? null,
+                        'Teknisi' => $value['Teknisi'] ?? null,
+                        'Bmhp' => $value['Bmhp'] ?? null,
+                        'SparePart' => $value['SparePart'] ?? null,
+                        'BackupUnit' => $value['BackupUnit'] ?? null,
+                        'Top' => $value['Top'] ?? null,
+                        'DistujuiOleh' => auth()->user()->id,
+                        'Rekomendasi' => $value['RekomendasiSelect'] ?? null,
+                        'Keterangan' => $value['Keterangan'] ?? null,
+                    ]
+                );
+            }
+        }
+        return redirect()->back()->with('success', 'Data berhasil disimpan.');
     }
 
     /**

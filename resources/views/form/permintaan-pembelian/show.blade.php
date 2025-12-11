@@ -229,53 +229,61 @@
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
 
-                            <!-- Button untuk Kepala Divisi - Diketahui oleh -->
-                            <form id="formKepalaDivisi" action="{{ route('pp.acc-kepala-divisi', $data->id) }}"
-                                method="POST" class="d-inline">
-                                @csrf
-                                <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
-                                    data-title="Konfirmasi"
-                                    data-text="Apakah Anda yakin ingin mengirimkan ke Kepala Divisi untuk diketahui?"
-                                    data-form="formKepalaDivisi">
-                                    <i class="fa fa-user"></i> Kepala Divisi
-                                </button>
-                            </form>
+                            @can('approve-kepala-divisi')
+                                <!-- Button untuk Kepala Divisi - Diketahui oleh -->
+                                <form id="formKepalaDivisi" action="{{ route('pp.acc-kepala-divisi', $data->id) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
+                                        data-title="Konfirmasi"
+                                        data-text="Apakah Anda yakin ingin mengirimkan ke Kepala Divisi untuk diketahui?"
+                                        data-form="formKepalaDivisi">
+                                        <i class="fa fa-user"></i> Kepala Divisi
+                                    </button>
+                                </form>
+                            @endcan
 
-                            <!-- Button untuk Kepala Divisi Penunjang Medis/Umum - Disetujui oleh -->
-                            <form id="formDivisiPenunjang"
-                                action="{{ route('pp.acc-kepala-divisi-penunjang-medis', $data->id) }}" method="POST"
-                                class="d-inline">
-                                @csrf
-                                <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
-                                    data-title="Konfirmasi"
-                                    data-text="Apakah Anda yakin ingin mengirimkan ke Kepala Divisi Penunjang Medis/Umum untuk disetujui?"
-                                    data-form="formDivisiPenunjang">
-                                    <i class="fa fa-user-md"></i> Kadiv Penunjang Medis / Umum
-                                </button>
-                            </form>
+                            @can('approve-kepala-divisi-penunjang')
+                                <!-- Button untuk Kepala Divisi Penunjang Medis/Umum - Disetujui oleh -->
+                                <form id="formDivisiPenunjang"
+                                    action="{{ route('pp.acc-kepala-divisi-penunjang-medis', $data->id) }}" method="POST"
+                                    class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
+                                        data-title="Konfirmasi"
+                                        data-text="Apakah Anda yakin ingin mengirimkan ke Kepala Divisi Penunjang Medis/Umum untuk disetujui?"
+                                        data-form="formDivisiPenunjang">
+                                        <i class="fa fa-user-md"></i> Kadiv Penunjang Medis / Umum
+                                    </button>
+                                </form>
+                            @endcan
 
-                            <!-- Button untuk Direktur - Diterima oleh -->
-                            <form id="formDirektur" action="{{ route('pp.acc-direktur', $data->id) }}" method="POST"
-                                class="d-inline">
-                                @csrf
-                                <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
-                                    data-title="Konfirmasi"
-                                    data-text="Apakah Anda yakin ingin mengirimkan ke Direktur untuk diterima?"
-                                    data-form="formDirektur">
-                                    <i class="fa fa-user-tie"></i> Direktur
-                                </button>
-                            </form>
+                            @can('approve-direktur')
+                                <!-- Button untuk Direktur - Diterima oleh -->
+                                <form id="formDirektur" action="{{ route('pp.acc-direktur', $data->id) }}" method="POST"
+                                    class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
+                                        data-title="Konfirmasi"
+                                        data-text="Apakah Anda yakin ingin mengirimkan ke Direktur untuk diterima?"
+                                        data-form="formDirektur">
+                                        <i class="fa fa-user-tie"></i> Direktur
+                                    </button>
+                                </form>
+                            @endcan
 
-                            <!-- Button untuk Logistik - Logistik / SMI -->
-                            <form id="formLogistik" action="{{ route('pp.acc-smi', $data->id) }}" method="POST"
-                                class="d-inline">
-                                @csrf
-                                <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
-                                    data-title="Konfirmasi" data-text="Apakah Anda yakin ingin mengirimkan ke Logistik?"
-                                    data-form="formLogistik">
-                                    <i class="fa fa-truck"></i> SMI</small>
-                                </button>
-                            </form>
+                            @can('approve-smi')
+                                <!-- Button untuk Logistik - Logistik / SMI -->
+                                <form id="formLogistik" action="{{ route('pp.acc-smi', $data->id) }}" method="POST"
+                                    class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
+                                        data-title="Konfirmasi" data-text="Apakah Anda yakin ingin mengirimkan ke Logistik?"
+                                        data-form="formLogistik">
+                                        <i class="fa fa-truck"></i> SMI</small>
+                                    </button>
+                                </form>
+                            @endcan
 
 
 

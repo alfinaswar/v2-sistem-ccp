@@ -402,7 +402,12 @@
                                                             </a>
                                                         @endif
                                                     </td>
-                                                    <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                            class="btn btn-success">
+                                                            <i class="fa fa-lightbulb"></i> FUI
+                                                        </a>
+                                                    </td>
                                                     <td class="text-center">
                                                         <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
                                                             class="btn btn-primary">

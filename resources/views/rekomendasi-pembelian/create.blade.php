@@ -242,9 +242,8 @@
                         </div>
                         <div class="mt-3 d-flex justify-content-end">
                             <button type="submit" name="action" value="draft" class="btn btn-warning me-2">Simpan
-                                Sebagai Draft</button>
-                            <button type="submit" name="action" value="submit"
-                                class="btn btn-success me-2">Ajukan</button>
+                                Rekomendasi</button>
+
                             <a href="{{ route('pp.show', $data->id) }}" class="btn btn-secondary">Kembali</a>
                         </div>
                     </form>

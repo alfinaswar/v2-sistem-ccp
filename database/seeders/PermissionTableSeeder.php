@@ -58,13 +58,17 @@ class PermissionTableSeeder extends Seeder
             'permintaan-create',
             'permintaan-edit',
             'permintaan-delete',
-            'approve-kepala-divisi-medis',
-            'approve-kepala-divisi-umum',
-            'approve-kepala-divisi-penunjang-medis',
-            'approve-kepala-divisi-penunjang-umum',
+            'approve-kepala-divisi',
+            'approve-kepala-divisi-penunjang',
             'approve-direktur',
             'approve-logistik',
             'approve-smi',
+            'approve-penilai1',
+            'approve-penilai2',
+            'approve-penilai3',
+            'approve-penilai4',
+            'approve-penilai5',
+            'approve-ccp',
         ];
 
         foreach ($permissions as $permission) {

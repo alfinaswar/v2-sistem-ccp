@@ -173,11 +173,252 @@
                             </div>
                         @endforeach
                     </div>
-                    <div class="mt-3 d-flex justify-content-end">
-                        <a href="{{ route('pp.show', $data->id) }}" class="btn btn-secondary">Kembali</a>
+
+                    <div class="row mt-4 justify-content-center">
+                        <div class="col-12">
+                            <h5 class="text-center mb-4"><strong>Persetujuan HTA / GPA</strong>
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-borderless" style="max-width:100%; margin: 0 auto;">
+                                    <colgroup>
+                                        <col style="width: 20%;">
+                                        <col style="width: 20%;">
+                                        <col style="width: 20%;">
+                                        <col style="width: 20%;">
+                                        <col style="width: 20%;">
+                                    </colgroup>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-center align-bottom">
+                                                <strong>Penilai 1</strong>
+                                            </td>
+                                            <td class="text-center align-bottom">
+                                                <strong>Penilai 2</strong>
+                                            </td>
+                                            <td class="text-center align-bottom">
+                                                <strong>Penilai 3</strong>
+                                            </td>
+                                            <td class="text-center align-bottom">
+                                                <strong>Penilai 4</strong>
+                                            </td>
+                                            <td class="text-center align-bottom">
+                                                <strong>Penilai 5</strong>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="height: 70px;" class="text-center">
+                                                @if (!empty($data->getHtaGpa->Penilai1_Oleh))
+                                                    <img src="{{ asset('storage/upload/tandatangan/' . $data->getHtaGpa->getPenilai1->tandatangan) }}"
+                                                        alt="TTD" style="max-width:110px; max-height:60px;">
+                                                @endif
+                                            </td>
+                                            <td style="height: 70px;" class="text-center">
+                                                @if (!empty($data->getHtaGpa->Penilai2_Oleh))
+                                                    <img src="{{ asset('storage/upload/tandatangan/' . $data->getHtaGpa->getPenilai2->tandatangan) }}"
+                                                        alt="TTD" style="max-width:110px; max-height:60px;">
+                                                @endif
+                                            </td>
+                                            <td style="height: 70px;" class="text-center">
+                                                @if (!empty($data->getHtaGpa->Penilai3_Oleh))
+                                                    <img src="{{ asset('storage/upload/tandatangan/' . $data->getHtaGpa->getPenilai3->tandatangan) }}"
+                                                        alt="TTD" style="max-width:110px; max-height:60px;">
+                                                @endif
+                                            </td>
+                                            <td style="height: 70px;" class="text-center">
+                                                @if (!empty($data->getHtaGpa->Penilai4_Oleh))
+                                                    <img src="{{ asset('storage/upload/tandatangan/' . $data->getHtaGpa->getPenilai4->tandatangan) }}"
+                                                        alt="TTD" style="max-width:110px; max-height:60px;">
+                                                @endif
+                                            </td>
+                                            <td style="height: 70px;" class="text-center">
+                                                @if (!empty($data->getHtaGpa->Penilai5_Oleh))
+                                                    <img src="{{ asset('storage/upload/tandatangan/' . $data->getHtaGpa->getPenilai5->tandatangan) }}"
+                                                        alt="TTD" style="max-width:110px; max-height:60px;">
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center" style="padding-bottom:0;">
+                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                            </td>
+                                            <td class="text-center" style="padding-bottom:0;">
+                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                            </td>
+                                            <td class="text-center" style="padding-bottom:0;">
+                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                            </td>
+                                            <td class="text-center" style="padding-bottom:0;">
+                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                            </td>
+                                            <td class="text-center" style="padding-bottom:0;">
+                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center align-top">
+                                                <span style="font-weight:600;">
+                                                    {{ $data->getHtaGpa->getPenilai1->name ?? '-' }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Pada:
+                                                    {{ $data->getHtaGpa->Penilai1_Pada ?? '-' }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center align-top">
+                                                <span style="font-weight:600;">
+                                                    {{ $data->getHtaGpa->getPenilai2->name ?? '-' }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Pada:
+                                                    {{ $data->getHtaGpa->Penilai2_Pada ?? '-' }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center align-top">
+                                                <span style="font-weight:600;">
+                                                    {{ $data->getHtaGpa->getPenilai3->name ?? '-' }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Pada:
+                                                    {{ $data->getHtaGpa->Penilai3_Pada ?? '-' }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center align-top">
+                                                <span style="font-weight:600;">
+                                                    {{ $data->getHtaGpa->getPenilai4->name ?? '-' }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Pada:
+                                                    {{ $data->getHtaGpa->Penilai4_Pada ?? '-' }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center align-top">
+                                                <span style="font-weight:600;">
+                                                    {{ $data->getHtaGpa->getPenilai5->name ?? '-' }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Pada:
+                                                    {{ $data->getHtaGpa->Penilai5_Pada ?? '-' }}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                        <div class="col-12 text-end mt-3">
+                            {{-- <a href="{{ route('pp.show', $data->id) }}" class="btn btn-secondary">Kembali</a> --}}
+
+                            @can('approve-penilai1')
+                                <!-- Button untuk Penilai 1 -->
+                                <form id="formPenilaian1"
+                                    action="{{ route('htagpa.acc-penilai1', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-success me-2"
+                                        onclick="confirmSweetAlert('formPenilaian1', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 1?')">
+                                        <i class="fa fa-check"></i> Proses ke Penilaian 1
+                                    </button>
+                                </form>
+                            @endcan
+
+                            @can('approve-penilai2')
+                                <!-- Button untuk Penilai 2 -->
+                                <form id="formPenilaian2"
+                                    action="{{ route('htagpa.acc-penilai2', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-success me-2"
+                                        onclick="confirmSweetAlert('formPenilaian2', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 2?')">
+                                        <i class="fa fa-check"></i> Proses ke Penilaian 2
+                                    </button>
+                                </form>
+                            @endcan
+
+                            @can('approve-penilai3')
+                                <!-- Button untuk Penilai 3 -->
+                                <form id="formPenilaian3"
+                                    action="{{ route('htagpa.acc-penilai3', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-success me-2"
+                                        onclick="confirmSweetAlert('formPenilaian3', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 3?')">
+                                        <i class="fa fa-check"></i> Proses ke Penilaian 3
+                                    </button>
+                                </form>
+                            @endcan
+
+                            @can('approve-penilai4')
+                                <!-- Button untuk Penilai 4 -->
+                                <form id="formPenilaian4"
+                                    action="{{ route('htagpa.acc-penilai4', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-success me-2"
+                                        onclick="confirmSweetAlert('formPenilaian4', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 4?')">
+                                        <i class="fa fa-check"></i> Proses ke Penilaian 4
+                                    </button>
+                                </form>
+                            @endcan
+
+                            @can('approve-penilai5')
+                                <!-- Button untuk Penilai 5 -->
+                                <form id="formPenilaian5"
+                                    action="{{ route('htagpa.acc-penilai5', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="button" class="btn btn-success me-2"
+                                        onclick="confirmSweetAlert('formPenilaian5', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 5?')">
+                                        <i class="fa fa-check"></i> Proses ke Penilaian 5
+                                    </button>
+                                </form>
+                            @endcan
+
+
+
+
+                        </div>
                     </div>
                 </div>
+
             </div>
+
         </div>
+
     </div>
 @endsection
+@push('js')
+    @if (Session::get('error'))
+        <script>
+            setTimeout(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: '{{ Session::get('error') }}',
+                    iconColor: '#d33',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#d33',
+                });
+            }, 500);
+        </script>
+    @endif
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmSweetAlert(formId, title, text) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Proses!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
+@endpush

@@ -51,7 +51,7 @@
                             </ol>
                         </div>
                     </div>
-                    <form id="formRekomendasi" action="{{ route('rekomendasi.store') }}" method="POST"
+                    <form id="formRekomendasi" action="{{ route('rekomendasi.update-rekomendasi') }}" method="POST"
                         enctype="multipart/form-data">
                         @csrf
                         <ul class="nav nav-tabs tab-style-1 d-sm-flex d-block" role="tablist" id="vendorTabs">
@@ -235,6 +235,25 @@
                                                         placeholder="Masukkan Keterangan">{{ isset($Vendor->getRekomendasi->Keterangan) ? $Vendor->getRekomendasi->Keterangan : old("rekomendasi.$vIdx.Keterangan") }}</textarea>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td class="text-center">12</td>
+                                                <td class="fw-bold">Rekomendasi Vendor</td>
+                                                <td>
+                                                    <select class="form-select mb-2"
+                                                        name="rekomendasi[{{ $vIdx }}][RekomendasiSelect]">
+                                                        <option value="">Pilih Rekomendasi</option>
+                                                        <option value="1"
+                                                            {{ isset($Vendor->getRekomendasi->RekomendasiSelect) && $Vendor->getRekomendasi->RekomendasiSelect == 1 ? 'selected' : '' }}>
+                                                            Rekomendasi 1</option>
+                                                        <option value="2"
+                                                            {{ isset($Vendor->getRekomendasi->RekomendasiSelect) && $Vendor->getRekomendasi->RekomendasiSelect == 2 ? 'selected' : '' }}>
+                                                            Rekomendasi 2</option>
+                                                        <option value="3"
+                                                            {{ isset($Vendor->getRekomendasi->RekomendasiSelect) && $Vendor->getRekomendasi->RekomendasiSelect == 3 ? 'selected' : '' }}>
+                                                            Rekomendasi 3</option>
+                                                    </select>
+
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -282,38 +301,32 @@
                                 </tr>
                                 <tr>
                                     <td class="text-center align-top">
-                                        <small>Nama Lengkap</small><br>
+
                                         <span style="font-weight:600;">
-                                            {{ $data->UserNego ?? '-' }}
+                                            {{ $data->getPengajuanItem[0]->getRekomendasi->getUserNego->name ?? '' }}
                                         </span>
                                     </td>
                                     <td class="text-center align-top">
-                                        <small>Nama Lengkap</small><br>
+
                                         <span style="font-weight:600;">
-                                            {{ $data->UserNego ?? '-' }}
+                                            {{ $data->getPengajuanItem[0]->DisetujuiOleh ?? '-' }}
                                         </span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                         <div class="mt-3 d-flex justify-content-end">
-                            <button type="submit" name="action" value="draft" class="btn btn-warning me-2">Simpan
-                                Sebagai Draft</button>
+                            <button type="submit" name="action" value="draft" class="btn btn-warning me-2">Simpan dan
+                                Setujui</button>
                     </form>
-                    <button type="submit" name="action" value="submit" class="btn btn-success me-2">Setujui</button>
+
                     <a href="{{ route('pp.show', $data->id) }}" class="btn btn-secondary">Kembali</a>
                 </div>
             </div>
         </div>
 
-        <form id="formAjukanHtaGpa" action="{{ route('rekomendasi.setujui-rekomendasi') }}" method="POST"
-            style="display:none;">
-            @csrf
-            <input type="hidden" name="IdPengajuan" value="{{ $data->id }}">
-            <input type="hidden" name="PengajuanItemId" value="{{ $data->getPengajuanItem[0]->id ?? '' }}">
-            <input type="hidden" name="IdBarang" value="{{ $data->getPengajuanItem[0]->IdBarang ?? '' }}">
-            <input type="hidden" name="Status" value="Disetujui">
-        </form>
+
+
 
     </div>
     </div>
@@ -335,24 +348,26 @@
     @endif
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('btnAjukan').addEventListener('click', function(e) {
-                e.preventDefault();
-
-                Swal.fire({
-                    title: 'Ajukan Penilaian?',
-                    text: "Apakah Anda yakin ingin mengajukan data penilaian ini?",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, Ajukan!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('formAjukanHtaGpa').submit();
-                    }
+            const btnAcc = document.getElementById('btnAccRekomendasi');
+            if (btnAcc) {
+                btnAcc.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Setujui Rekomendasi?',
+                        text: "Apakah Anda yakin ingin menyetujui rekomendasi ini?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Setujui!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            document.getElementById('formAccRekomendasi').submit();
+                        }
+                    });
                 });
-            });
+            }
         });
     </script>
     <script>

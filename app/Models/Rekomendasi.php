@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Rekomendasi extends Model
 {
     use HasFactory, SoftDeletes;
+
     /**
      * The table associated with the model.
      *
      * @var string
      */
     protected $table = 'rekomendasis';
+
     /**
      * The attributes that aren't mass assignable.
      *
@@ -30,5 +32,15 @@ class Rekomendasi extends Model
     public function getRekomedasiDetail()
     {
         return $this->hasMany(RekomendasiDetail::class, 'IdRekomendasi', 'id');
+    }
+
+    public function getUserNego()
+    {
+        return $this->hasOne(User::class, 'id', 'UserNego');
+    }
+
+    public function getDisetujuiOleh()
+    {
+        return $this->hasOne(User::class, 'id', 'UserNego');
     }
 }

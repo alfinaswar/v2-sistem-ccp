@@ -34,7 +34,6 @@ class PengajuanPembelian extends Model
         return $this->hasOne(MasterJenisPengajuan::class, 'id', 'Jenis');
     }
 
-
     /**
      * Get all of the comments for the PengajuanPembelian
      *
@@ -55,4 +54,8 @@ class PengajuanPembelian extends Model
         return $this->hasMany(PengajuanItem::class, 'IdPengajuan', 'id');
     }
 
+    public function getHtaGpa()
+    {
+        return $this->hasOne(HtaDanGpa::class, 'PengajuanItemId', 'id');
+    }
 }

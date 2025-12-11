@@ -20,6 +20,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RekomendasiController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UsulanInventasiController;
 use App\Http\Controllers\UsulanInvestasiController;
 use App\Models\PengajuanPembelian;
 use Illuminate\Support\Facades\Route;
@@ -180,22 +181,28 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/cetak-review/{IdPengajuan}/{barang}', [RekomendasiController::class, 'Cetak'])->name('rekomendasi.detail-print');
         Route::get('/lihat-review/{IdPengajuan}/{barang}', [RekomendasiController::class, 'detail'])->name('rekomendasi.detail-view');
         Route::post('/setujui-rekomendasi', [RekomendasiController::class, 'Approval'])->name('rekomendasi.setujui-rekomendasi');
-        Route::POST('/update-rekomendasi/{id}/{vendor}', [RekomendasiController::class, 'UpdateRekomendasi'])->name('rekomendasi.update-rekomendasi');
+        Route::POST('/update-rekomendasi', [RekomendasiController::class, 'UpdateRekomendasi'])->name('rekomendasi.update-rekomendasi');
     });
-    // Route::prefix('usulan-investasi')->group(function () {
-    //     Route::get('/', [UsulanInvestasiController::class, 'index'])->name('usulan-investasi.index');
-    //     Route::get('/create/{id}', [UsulanInvestasiController::class, 'create'])->name('usulan-investasi.create');
-    //     Route::post('/store', [UsulanInvestasiController::class, 'store'])->name('usulan-investasi.store');
-    //     Route::get('/edit/{id}', [UsulanInvestasiController::class, 'edit'])->name('usulan-investasi.edit');
-    //     Route::put('/update/{id}', [UsulanInvestasiController::class, 'update'])->name('usulan-investasi.update');
-    //     Route::get('/show/{id}', [UsulanInvestasiController::class, 'show'])->name('usulan-investasi.show');
-    //     Route::delete('/delete/{id}', [UsulanInvestasiController::class, 'destroy'])->name('usulan-investasi.destroy');
-    //     Route::get('/cetak/{id}', [UsulanInvestasiController::class, 'cetak'])->name('usulan-investasi.cetak');
-    // });
+    Route::prefix('usulan-investasi')->group(function () {
+        Route::get('/', [UsulanInvestasiController::class, 'index'])->name('usulan-investasi.index');
+        Route::get('/create/{IdPengajuan}/{barang}', [UsulanInvestasiController::class, 'create'])->name('usulan-investasi.create');
+        Route::post('/store', [UsulanInvestasiController::class, 'store'])->name('usulan-investasi.store');
+        Route::get('/edit/{id}', [UsulanInvestasiController::class, 'edit'])->name('usulan-investasi.edit');
+        Route::put('/update/{id}', [UsulanInvestasiController::class, 'update'])->name('usulan-investasi.update');
+        Route::get('/show/{id}', [UsulanInvestasiController::class, 'show'])->name('usulan-investasi.show');
+        Route::delete('/delete/{id}', [UsulanInvestasiController::class, 'destroy'])->name('usulan-investasi.destroy');
+        Route::get('/cetak/{id}', [UsulanInvestasiController::class, 'cetak'])->name('usulan-investasi.cetak');
+    });
     Route::prefix('form-hta-atau-gpa')->group(function () {
         Route::get('/hta/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'index'])->name('htagpa.form-hta');
         Route::post('/simpan', [HtaDanGpaController::class, 'store'])->name('htagpa.store');
         Route::post('/ajukan-hta', [HtaDanGpaController::class, 'ajukan'])->name('htagpa.ajukan');
         Route::get('/show/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'show'])->name('htagpa.show');
+
+        Route::post('/acc-penilai1/{id}', [HtaDanGpaController::class, 'accPenilai1'])->name('htagpa.acc-penilai1');
+        Route::post('/acc-penilai2/{id}', [HtaDanGpaController::class, 'accPenilai2'])->name('htagpa.acc-penilai2');
+        Route::post('/acc-penilai3/{id}', [HtaDanGpaController::class, 'accPenilai3'])->name('htagpa.acc-penilai3');
+        Route::post('/acc-penilai4/{id}', [HtaDanGpaController::class, 'accPenilai4'])->name('htagpa.acc-penilai4');
+        Route::post('/acc-penilai5/{id}', [HtaDanGpaController::class, 'accPenilai5'])->name('htagpa.acc-penilai5');
     });
 });

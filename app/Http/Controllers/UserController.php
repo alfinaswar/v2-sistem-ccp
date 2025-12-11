@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MasterPerusahaan;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\MasterDepartemen;
 use App\Models\MasterJabatan;
+use App\Models\MasterPerusahaan;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 use DB;
 use Hash;
-use Illuminate\Support\Arr;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class UserController extends Controller
 {
@@ -36,9 +37,10 @@ class UserController extends Controller
     public function create(): View
     {
         $jabatan = MasterJabatan::get();
+        $departemen = MasterDepartemen::get();
         $perusahaan = MasterPerusahaan::get();
         $roles = Role::pluck('name', 'name')->all();
-        return view('users.create', compact('roles', 'perusahaan', 'jabatan'));
+        return view('users.create', compact('roles', 'perusahaan', 'jabatan', 'departemen'));
     }
 
     /**
@@ -84,7 +86,8 @@ class UserController extends Controller
             ->performedOn($user)
             ->log('Membuat user baru: ' . $user->name . ' (' . $user->email . ')');
 
-        return redirect()->route('users.index')
+        return redirect()
+            ->route('users.index')
             ->with('success', 'User created successfully');
     }
 
@@ -109,11 +112,12 @@ class UserController extends Controller
     public function edit($id): View
     {
         $jabatan = MasterJabatan::get();
+        $departemen = MasterDepartemen::get();
         $user = User::find($id);
         $roles = Role::pluck('name', 'name')->all();
         $userRole = $user->roles->pluck('name', 'name')->all();
         $perusahaan = MasterPerusahaan::get();
-        return view('users.edit', compact('jabatan', 'user', 'roles', 'userRole', 'perusahaan'));
+        return view('users.edit', compact('jabatan', 'user', 'roles', 'userRole', 'perusahaan', 'departemen'));
     }
 
     /**
@@ -135,7 +139,6 @@ class UserController extends Controller
             'foto' => 'nullable',
             'tandatangan' => 'nullable',
         ]);
-
 
         $input = $request->all();
         if ($request->hasFile('foto')) {
@@ -162,7 +165,8 @@ class UserController extends Controller
 
         $user->assignRole($request->input('roles'));
 
-        return redirect()->route('users.index')
+        return redirect()
+            ->route('users.index')
             ->with('success', 'User updated successfully');
     }
 
@@ -175,7 +179,8 @@ class UserController extends Controller
     public function destroy($id): RedirectResponse
     {
         User::find($id)->delete();
-        return redirect()->route('users.index')
+        return redirect()
+            ->route('users.index')
             ->with('success', 'User deleted successfully');
     }
 }

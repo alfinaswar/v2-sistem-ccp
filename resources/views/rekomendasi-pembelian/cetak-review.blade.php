@@ -185,24 +185,35 @@
     <div class="signature">
         <div style="text-align: right; margin-bottom: 10px;">
             <span>
-                {{ $rekomendasi->getRekomedasiDetail[0]->getPengajuan->getPerusahaan->Kota ?? '.............' }},
-                {{ isset($rekomendasi->getRekomedasiDetail[0]->created_at) ? \Carbon\Carbon::parse($rekomendasi->getRekomedasiDetail[0]->created_at)->format('d-m-Y') : date('d-m-Y') }}
+                Pekanbaru,
+                {{ isset($rekomendasi->getRekomedasiDetail[0]->created_at)
+                    ? \Carbon\Carbon::parse($rekomendasi->getRekomedasiDetail[0]->created_at)->format('d-m-Y')
+                    : date('d-m-Y') }}
             </span>
         </div>
 
-        <table style="width: 100%; margin-top: 40px; border: none;">
+        <table style="width: 100%; margin-top: 40px; border: none; table-layout: fixed;">
             <tr>
-                <td style="width:33%; text-align:center; vertical-align:top;">
-                    <b>Yang Menegosiasi</b>
-                    <div style="height:60px;"></div>
-                    <hr style="width:80%; margin: 10px auto 0 auto;">
+                <!-- Kolom TTD 1 -->
+                <td style="width:33%; text-align: center; vertical-align: top;">
+                    <div style="font-weight: bold;">Yang Menegosiasi</div>
+                    <div style="height: 65px;"></div>
+                    <span style="display: block; font-weight: 500;">
+                        {{ $rekomendasi->getUserNego->name ?? '-' }}
+                    </span>
+                    <hr style="width: 80%; margin: 10px auto 0 auto; border: 0; border-top: 1.3px solid #aaa;">
                 </td>
-                <td style="width:34%;"></td>
-                <td style="width:33%; text-align:center; vertical-align:top;">
-                    <b>Disetujui</b><br>
-                    <b>Procurement Group</b>
-                    <div style="height:48px;"></div>
-                    <hr style="width:80%; margin: 10px auto 0 auto;">
+                <!-- Kolom Kosong Tengah -->
+                <td style="width:34%;">&nbsp;</td>
+                <!-- Kolom TTD 2 -->
+                <td style="width:33%; text-align: center; vertical-align: top;">
+                    <div style="font-weight: bold;">Disetujui</div>
+                    <div style="font-size:13px; font-weight:600;">Procurement Group</div>
+                    <div style="height: 65px;"></div>
+                    <span style="display: block; font-weight: 500;">
+                        {{ $rekomendasi->getDisetujuiOleh->name ?? '-' }}
+                    </span>
+                    <hr style="width: 80%; margin: 10px auto 0 auto; border: 0; border-top: 1.3px solid #aaa;">
                 </td>
             </tr>
         </table>

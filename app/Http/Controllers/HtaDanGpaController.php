@@ -37,6 +37,7 @@ class HtaDanGpaController extends Controller
     {
         //
     }
+
     public function ajukan(Request $request)
     {
         $htaDanGpa = HtaDanGpa::where('IdPengajuan', $request->IdPengajuan)
@@ -118,6 +119,7 @@ class HtaDanGpaController extends Controller
                 $query->where('PengajuanItemId', $idPengajuanItem);
             },
             'getJenisPermintaan.getForm',
+            'getHtaGpa',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
@@ -149,5 +151,90 @@ class HtaDanGpaController extends Controller
     public function destroy(HtaDanGpa $htaDanGpa)
     {
         //
+    }
+
+    public function accPenilai1(Request $request, $id)
+    {
+        $htaDanGpa = HtaDanGpa::findOrFail($id);
+
+        $htaDanGpa->Penilai1_Oleh = auth()->user()->id ?? 'N/A';
+        $htaDanGpa->Penilai1_Status = 'Y';
+        $htaDanGpa->Penilai1_Pada = now();
+
+        $htaDanGpa->save();
+
+        return redirect()->back()->with('success', 'Penilaian Tahap 1 telah berhasil disetujui.');
+    }
+
+    public function accPenilai2(Request $request, $id)
+    {
+        $htaDanGpa = HtaDanGpa::findOrFail($id);
+
+        // Cek apakah Penilai1 sudah diisi
+        if (empty($htaDanGpa->Penilai1_Status) || $htaDanGpa->Penilai1_Status != 'Y') {
+            return redirect()->back()->with('error', 'Penilaian Tahap 1 harus disetujui sebelum dapat melanjutkan ke Tahap 2.');
+        }
+
+        $htaDanGpa->Penilai2_Oleh = auth()->user()->id ?? 'N/A';
+        $htaDanGpa->Penilai2_Status = 'Y';
+        $htaDanGpa->Penilai2_Pada = now();
+
+        $htaDanGpa->save();
+
+        return redirect()->back()->with('success', 'Penilaian Tahap 2 telah berhasil disetujui.');
+    }
+
+    public function accPenilai3(Request $request, $id)
+    {
+        $htaDanGpa = HtaDanGpa::findOrFail($id);
+
+        // Cek apakah Penilai2 sudah diisi
+        if (empty($htaDanGpa->Penilai2_Status) || $htaDanGpa->Penilai2_Status != 'Y') {
+            return redirect()->back()->with('error', 'Penilaian Tahap 2 harus disetujui sebelum dapat melanjutkan ke Tahap 3.');
+        }
+
+        $htaDanGpa->Penilai3_Oleh = auth()->user()->id ?? 'N/A';
+        $htaDanGpa->Penilai3_Status = 'Y';
+        $htaDanGpa->Penilai3_Pada = now();
+
+        $htaDanGpa->save();
+
+        return redirect()->back()->with('success', 'Penilaian Tahap 3 telah berhasil disetujui.');
+    }
+
+    public function accPenilai4(Request $request, $id)
+    {
+        $htaDanGpa = HtaDanGpa::findOrFail($id);
+
+        // Cek apakah Penilai3 sudah diisi
+        if (empty($htaDanGpa->Penilai3_Status) || $htaDanGpa->Penilai3_Status != 'Y') {
+            return redirect()->back()->with('error', 'Penilaian Tahap 3 harus disetujui sebelum dapat melanjutkan ke Tahap 4.');
+        }
+
+        $htaDanGpa->Penilai4_Oleh = auth()->user()->id ?? 'N/A';
+        $htaDanGpa->Penilai4_Status = 'Y';
+        $htaDanGpa->Penilai4_Pada = now();
+
+        $htaDanGpa->save();
+
+        return redirect()->back()->with('success', 'Penilaian Tahap 4 telah berhasil disetujui.');
+    }
+
+    public function accPenilai5(Request $request, $id)
+    {
+        $htaDanGpa = HtaDanGpa::findOrFail($id);
+
+        // Cek apakah Penilai4 sudah diisi
+        if (empty($htaDanGpa->Penilai4_Status) || $htaDanGpa->Penilai4_Status != 'Y') {
+            return redirect()->back()->with('error', 'Penilaian Tahap 4 harus disetujui sebelum dapat melanjutkan ke Tahap 5.');
+        }
+
+        $htaDanGpa->Penilai5_Oleh = auth()->user()->id ?? 'N/A';
+        $htaDanGpa->Penilai5_Status = 'Y';
+        $htaDanGpa->Penilai5_Pada = now();
+
+        $htaDanGpa->save();
+
+        return redirect()->back()->with('success', 'Penilaian Tahap 5 telah berhasil disetujui.');
     }
 }

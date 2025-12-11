@@ -44,9 +44,7 @@ class PengajuanPembelianController extends Controller
                         <a href="' . route('ajukan.show', $id) . '" class="btn btn-sm btn-info" title="Detail">
                             <i class="fa fa-eye"></i>
                         </a>
-                        <a href="' . route('ajukan.edit', $id) . '" class="btn btn-sm btn-warning" title="Edit">
-                            <i class="fa fa-edit"></i>
-                        </a>
+
                         <button class="btn btn-sm btn-danger btn-delete" data-id="' . $id . '" title="Hapus">
                             <i class="fa fa-trash"></i>
                         </button>
@@ -95,9 +93,7 @@ class PengajuanPembelianController extends Controller
         return view('form.pengajuan-pembelian.create', compact('JenisPengajuan', 'masterbarang', 'permintaan', 'vendor', 'CekHta'));
     }
 
-    public function SimpanDraft($id)
-    {
-    }
+    public function SimpanDraft($id) {}
 
     /**
      * Store a newly created resource in storage.
