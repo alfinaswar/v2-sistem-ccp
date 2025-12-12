@@ -21,27 +21,8 @@ class PermintaanPembelianController extends Controller
     {
         if ($request->ajax()) {
             // Siapkan base query tanpa get()
-            if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('Direktur')) {
-                $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
-                    ->orderBy('id', 'desc');
-            } else {
-                if (auth()->user()->hasRole('SMI') || auth()->user()->hasRole('Kadiv Penunjang Medis')) {
-                    $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
-                        ->where('Jenis', '=', '1')
-                        ->where('KodePerusahaan', '=', auth()->user()->kodeperusahaan)
-                        ->orderBy('id', 'desc');
-                } elseif (auth()->user()->hasRole('Logistik') || auth()->user()->hasRole('Kadiv Logistik')) {
-                    $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
-                        ->where('Jenis', '=', '2')
-                        ->where('KodePerusahaan', '=', auth()->user()->kodeperusahaan)
-                        ->orderBy('id', 'desc');
-                } else {
-
-                    $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
-                        ->where('KodePerusahaan', '=', auth()->user()->kodeperusahaan)
-                        ->orderBy('id', 'desc');
-                }
-            }
+            $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
+                ->orderBy('id', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()
