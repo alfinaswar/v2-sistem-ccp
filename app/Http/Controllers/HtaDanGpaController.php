@@ -115,11 +115,15 @@ class HtaDanGpaController extends Controller
     {
         $data = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
-            'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
+            'getHtaGpa' => function ($query) use ($idPengajuanItem) {
                 $query->where('PengajuanItemId', $idPengajuanItem);
             },
             'getJenisPermintaan.getForm',
-            'getHtaGpa',
+            'getHtaGpa.getPenilai1',
+            'getHtaGpa.getPenilai2',
+            'getHtaGpa.getPenilai3',
+            'getHtaGpa.getPenilai4',
+            'getHtaGpa.getPenilai5',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
@@ -156,7 +160,7 @@ class HtaDanGpaController extends Controller
     public function accPenilai1(Request $request, $id)
     {
         $htaDanGpa = HtaDanGpa::findOrFail($id);
-
+        // dd($htaDanGpa);
         $htaDanGpa->Penilai1_Oleh = auth()->user()->id ?? 'N/A';
         $htaDanGpa->Penilai1_Status = 'Y';
         $htaDanGpa->Penilai1_Pada = now();
@@ -169,8 +173,6 @@ class HtaDanGpaController extends Controller
     public function accPenilai2(Request $request, $id)
     {
         $htaDanGpa = HtaDanGpa::findOrFail($id);
-
-        // Cek apakah Penilai1 sudah diisi
         if (empty($htaDanGpa->Penilai1_Status) || $htaDanGpa->Penilai1_Status != 'Y') {
             return redirect()->back()->with('error', 'Penilaian Tahap 1 harus disetujui sebelum dapat melanjutkan ke Tahap 2.');
         }

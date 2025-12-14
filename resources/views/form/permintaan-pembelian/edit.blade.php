@@ -4,11 +4,10 @@
     <div class="page-header">
         <div class="row">
             <div class="col">
-                <h3 class="page-title">Edit Permintaan Pembelian</h3>
+                <h3 class="page-title">Permintaan Pembelian</h3>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('pp.index') }}">Permintaan Pembelian</a>
-                    </li>
+                    <li class="breadcrumb-item"><a href="{{ route('pp.index') }}">Permintaan Pembelian</a></li>
                     <li class="breadcrumb-item active">Edit Permintaan Pembelian</li>
                 </ul>
             </div>
@@ -16,14 +15,14 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <form action="{{ route('pp.update', $permintaan->id) }}" method="POST">
+            <form action="{{ route('pp.update', $data->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="card mb-4">
                     <div class="card-header bg-dark">
                         <h4 class="card-title mb-0">Edit Formulir Permintaan Pembelian</h4>
                         <p class="card-text mb-0">
-                            Silakan edit data permintaan pembelian di bawah ini.
+                            Silakan ubah data permintaan pembelian di bawah ini.
                         </p>
                     </div>
                     <div class="card-body">
@@ -35,7 +34,7 @@
                                     <option value="">Pilih Departemen</option>
                                     @foreach ($departemen ?? [] as $d)
                                         <option value="{{ $d->id }}"
-                                            {{ old('Departemen', $permintaan->Departemen) == $d->id ? 'selected' : '' }}>
+                                            {{ old('Departemen', $data->Departemen) == $d->id ? 'selected' : '' }}>
                                             {{ $d->Nama }}
                                         </option>
                                     @endforeach
@@ -48,8 +47,7 @@
                                 <label for="tanggal" class="form-label"><strong>Tanggal</strong></label>
                                 <input type="date" name="Tanggal" id="tanggal"
                                     class="form-control @error('Tanggal') is-invalid @enderror"
-                                    value="{{ old('Tanggal', $permintaan->Tanggal ?? date('Y-m-d')) }}"
-                                    min="{{ date('Y-m-d') }}">
+                                    value="{{ old('Tanggal', $data->Tanggal ? (is_object($data->Tanggal) ? $data->Tanggal->format('Y-m-d') : $data->Tanggal) : date('Y-m-d')) }}">
                                 @error('Tanggal')
                                     <div class="text-danger mt-1">{{ $message }}</div>
                                 @enderror
@@ -61,7 +59,7 @@
                                     <option value="">Pilih Jenis Permintaan</option>
                                     @foreach ($jenisPengajuan as $jenis)
                                         <option value="{{ $jenis->id }}"
-                                            {{ old('Jenis', $permintaan->Jenis) == $jenis->id ? 'selected' : '' }}>
+                                            {{ old('Jenis', $data->Jenis) == $jenis->id ? 'selected' : '' }}>
                                             {{ $jenis->Nama }}
                                         </option>
                                     @endforeach
@@ -76,14 +74,14 @@
                                     class="form-control @error('Tujuan') is-invalid @enderror" required>
                                     <option value="">Pilih Tujuan</option>
                                     <option value="Pembelian Baru"
-                                        {{ old('Tujuan', $permintaan->Tujuan) == 'Pembelian Baru' ? 'selected' : '' }}>
-                                        Pembelian Baru</option>
+                                        {{ old('Tujuan', $data->Tujuan) == 'Pembelian Baru' ? 'selected' : '' }}>Pembelian
+                                        Baru</option>
                                     <option value="Penggantian"
-                                        {{ old('Tujuan', $permintaan->Tujuan) == 'Penggantian' ? 'selected' : '' }}>
-                                        Penggantian</option>
+                                        {{ old('Tujuan', $data->Tujuan) == 'Penggantian' ? 'selected' : '' }}>Penggantian
+                                    </option>
                                     <option value="Perbaikan"
-                                        {{ old('Tujuan', $permintaan->Tujuan) == 'Perbaikan' ? 'selected' : '' }}>
-                                        Perbaikan</option>
+                                        {{ old('Tujuan', $data->Tujuan) == 'Perbaikan' ? 'selected' : '' }}>Perbaikan
+                                    </option>
                                 </select>
                                 @error('Tujuan')
                                     <div class="text-danger mt-1">{{ $message }}</div>
@@ -92,7 +90,7 @@
                         </div>
                         <h5 class="mb-3"><strong>Detail Permintaan Pembelian</strong></h5>
                         <p class="mb-3">
-                            Edit daftar barang yang diminta pembeliannya.
+                            Ubah barang yang diminta.
                         </p>
                         <div class="table-responsive">
                             <table class="table align-middle" id="table-detail-pembelian">
@@ -108,89 +106,117 @@
                                 </thead>
                                 <tbody>
                                     @php
-                                        // Jika terdapat error validasi, ambil isian old, jika tidak ambil existing yang ada di database
-                                        if (count(old('NamaBarang', [])) > 0) {
-                                            $oldBarang = old('NamaBarang', []);
-                                            $oldJumlah = old('Jumlah', []);
-                                            $oldSatuan = old('Satuan', []);
-                                            $oldPenempatan = old('RencanaPenempatan', []);
-                                            $oldKeterangan = old('Keterangan', []);
-                                            $rows = max(
-                                                1,
-                                                max(
-                                                    count($oldBarang),
-                                                    count($oldJumlah),
-                                                    count($oldSatuan),
-                                                    count($oldPenempatan),
-                                                    count($oldKeterangan),
-                                                ),
-                                            );
-                                        } else {
-                                            $detail = $permintaan->detail ?? [];
-                                            $rows = count($detail) > 0 ? count($detail) : 1;
-                                            $oldBarang = [];
-                                            $oldJumlah = [];
-                                            $oldSatuan = [];
-                                            $oldPenempatan = [];
-                                            $oldKeterangan = [];
-                                            for ($z = 0; $z < $rows; $z++) {
-                                                $oldBarang[$z] = $detail[$z]->Barang ?? '';
-                                                $oldJumlah[$z] = $detail[$z]->Jumlah ?? 1;
-                                                $oldSatuan[$z] = $detail[$z]->Satuan ?? '';
-                                                $oldPenempatan[$z] = $detail[$z]->RencanaPenempatan ?? '';
-                                                $oldKeterangan[$z] = $detail[$z]->Keterangan ?? '';
-                                            }
-                                        }
+                                        $oldNamaBarang = old('NamaBarang');
+                                        $oldJumlah = old('Jumlah');
+                                        $oldSatuan = old('Satuan');
+                                        $oldRencanaPenempatan = old('RencanaPenempatan');
+                                        $oldKeterangan = old('Keterangan');
+                                        $useOld = is_array($oldNamaBarang) && count($oldNamaBarang) > 0;
+                                        $rowCount = 0;
                                     @endphp
-                                    @for ($i = 0; $i < $rows; $i++)
-                                        <tr>
-                                            <td>
-                                                <select name="NamaBarang[]" class="form-control select2" required>
-                                                    <option value="">Pilih Barang</option>
-                                                    @foreach ($barang ?? [] as $b)
-                                                        <option value="{{ $b->id }}"
-                                                            data-jenis="{{ $b->Jenis }}"
-                                                            {{ isset($oldBarang[$i]) && $oldBarang[$i] == $b->id ? 'selected' : '' }}>
-                                                            {{ $b->Nama }} - {{ $b->getMerk->Nama }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="Jumlah[]" class="form-control jumlah-input"
-                                                    min="1" value="{{ isset($oldJumlah[$i]) ? $oldJumlah[$i] : 1 }}"
-                                                    required>
-                                            </td>
-                                            <td>
-                                                <select name="Satuan[]" class="select2" required>
-                                                    <option value="">Pilih Satuan</option>
-                                                    @foreach ($satuan ?? [] as $s)
-                                                        <option value="{{ $s->id }}"
-                                                            {{ isset($oldSatuan[$i]) && $oldSatuan[$i] == $s->id ? 'selected' : '' }}>
-                                                            {{ $s->NamaSatuan }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="RencanaPenempatan[]" class="form-control"
-                                                    placeholder="Misal: Gudang A"
-                                                    value="{{ isset($oldPenempatan[$i]) ? $oldPenempatan[$i] : '' }}"
-                                                    required>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="Keterangan[]" class="form-control"
-                                                    placeholder="Keterangan tambahan"
-                                                    value="{{ isset($oldKeterangan[$i]) ? $oldKeterangan[$i] : '' }}">
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                                                    {{ $rows == 1 ? 'disabled' : '' }}>
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endfor
+
+                                    @if ($useOld)
+                                        @foreach ($oldNamaBarang as $i => $nb)
+                                            <tr>
+                                                <td>
+                                                    <select name="NamaBarang[]" class="form-control select2" required>
+                                                        <option value="">Pilih Barang</option>
+                                                        @foreach ($barang ?? [] as $b)
+                                                            <option value="{{ $b->id }}"
+                                                                data-jenis="{{ $b->Jenis }}"
+                                                                {{ $nb == $b->id ? 'selected' : '' }}>
+                                                                {{ $b->NamaBarang }} - {{ $b->getMerk->Nama }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="Jumlah[]" class="form-control jumlah-input"
+                                                        min="1"
+                                                        value="{{ isset($oldJumlah[$i]) ? $oldJumlah[$i] : 1 }}" required>
+                                                </td>
+                                                <td>
+                                                    <select name="Satuan[]" class="select2" required>
+                                                        <option value="">Pilih Satuan</option>
+                                                        @foreach ($satuan ?? [] as $s)
+                                                            <option value="{{ $s->id }}"
+                                                                {{ isset($oldSatuan[$i]) && $oldSatuan[$i] == $s->id ? 'selected' : '' }}>
+                                                                {{ $s->NamaSatuan }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="RencanaPenempatan[]" class="form-control"
+                                                        placeholder="Misal: Gudang A"
+                                                        value="{{ isset($oldRencanaPenempatan[$i]) ? $oldRencanaPenempatan[$i] : '' }}"
+                                                        required>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="Keterangan[]" class="form-control"
+                                                        placeholder="Keterangan tambahan"
+                                                        value="{{ isset($oldKeterangan[$i]) ? $oldKeterangan[$i] : '' }}">
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                                                        {{ $i == 0 ? 'disabled' : '' }}>
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            @php $rowCount++; @endphp
+                                        @endforeach
+                                    @else
+                                        @foreach ($data->getDetail as $key => $list)
+                                            <tr>
+                                                <td>
+                                                    <select name="NamaBarang[]" class="form-control select2" required>
+                                                        <option value="">Pilih Barang</option>
+                                                        @foreach ($barang ?? [] as $b)
+                                                            <option value="{{ $b->id }}"
+                                                                data-jenis="{{ $b->Jenis }}"
+                                                                {{ $list->NamaBarang == $b->id ? 'selected' : '' }}>
+                                                                {{ $b->NamaBarang }} - {{ $b->getMerk->Nama }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="Jumlah[]"
+                                                        class="form-control jumlah-input" min="1"
+                                                        value="{{ $list->Jumlah }}" required>
+                                                </td>
+                                                <td>
+                                                    <select name="Satuan[]" class="select2" required>
+                                                        <option value="">Pilih Satuan</option>
+                                                        @foreach ($satuan ?? [] as $s)
+                                                            <option value="{{ $s->id }}"
+                                                                {{ $list->Satuan == $s->id ? 'selected' : '' }}>
+                                                                {{ $s->NamaSatuan }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="RencanaPenempatan[]" class="form-control"
+                                                        placeholder="Misal: Gudang A"
+                                                        value="{{ $list->RencanaPenempatan }}" required>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="Keterangan[]" class="form-control"
+                                                        placeholder="Keterangan tambahan"
+                                                        value="{{ $list->Keterangan }}">
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                                                        {{ $key == 0 ? 'disabled' : '' }}>
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            @php $rowCount++; @endphp
+                                        @endforeach
+                                    @endif
                                 </tbody>
                                 <tfoot>
                                     <tr>
@@ -204,7 +230,6 @@
                                         <td colspan="6" class="text-end">
                                             <strong style="font-size: 1rem;">
                                                 Total Jumlah: <span id="total-jumlah-view" style="font-size: 1rem;">
-                                                    {{ array_sum($oldJumlah ?? [1]) }}
                                                 </span>
                                             </strong>
                                         </td>
@@ -225,11 +250,12 @@
             </form>
         </div>
     </div>
-
 @endsection
 
 @push('js')
     <script>
+        // Fungsi duplikasi baris dan hapus baris
+
         function updateTotalJumlah() {
             let total = 0;
             $('#table-detail-pembelian tbody .jumlah-input').each(function() {
@@ -243,6 +269,7 @@
             let barang = @json($barang ?? []);
             let html = `<option value="">Pilih Barang</option>`;
             barang.forEach(function(b) {
+                // Field b.Jenis is now expected "MEDIS" or "UMUM"
                 if (!filterJenis || b.Jenis === filterJenis) {
                     let merkNama = (b.get_merk && b.get_merk.Nama) ? b.get_merk.Nama : '';
                     html +=
@@ -260,18 +287,17 @@
                     });
                 }
             }
-
             let jenisPengajuanArr = @json($jenisPengajuan ?? []);
-            let jenisMedisPengajuan = null;
-            let jenisUmumPengajuan = null;
+            let JENIS_ID_MEDIS = null;
+            let JENIS_ID_UMUM = null;
             jenisPengajuanArr.forEach(j => {
-                const namaLower = (j.Nama || '').toLowerCase();
-                if (namaLower.indexOf('medis') !== -1) jenisMedisPengajuan = j.id;
-                if (namaLower.indexOf('umum') !== -1) jenisUmumPengajuan = j.id;
+                let n = (j.Nama || '').toLowerCase();
+                if (n.includes('medis')) JENIS_ID_MEDIS = String(j.id);
+                if (n.includes('umum')) JENIS_ID_UMUM = String(j.id);
             });
-
             const JENIS_MEDIS = "MEDIS";
             const JENIS_UMUM = "UMUM";
+            let currentFilterJenis = null;
 
             function filterBarangSelects(filterJenis) {
                 $('#table-detail-pembelian tbody tr').each(function() {
@@ -280,9 +306,9 @@
                     let html = getBarangOptions(filterJenis);
                     $select.html(html);
                     if (currentVal && $select.find(`option[value="${currentVal}"]`).length) {
-                        $select.val(currentVal).trigger('change');
+                        $select.val(currentVal).trigger("change");
                     } else {
-                        $select.val('').trigger('change');
+                        $select.val('').trigger("change");
                     }
                 });
             }
@@ -323,21 +349,11 @@
                 `;
             }
 
-            let currentFilterJenis = null;
-
             $('#jenis').on('change', function() {
                 let selectedJenis = $(this).val();
-                if (
-                    selectedJenis &&
-                    typeof jenisMedisPengajuan !== 'undefined' && jenisMedisPengajuan &&
-                    String(selectedJenis) === String(jenisMedisPengajuan)
-                ) {
+                if (selectedJenis && JENIS_ID_MEDIS && String(selectedJenis) === JENIS_ID_MEDIS) {
                     currentFilterJenis = JENIS_MEDIS;
-                } else if (
-                    selectedJenis &&
-                    typeof jenisUmumPengajuan !== 'undefined' && jenisUmumPengajuan &&
-                    String(selectedJenis) === String(jenisUmumPengajuan)
-                ) {
+                } else if (selectedJenis && JENIS_ID_UMUM && String(selectedJenis) === JENIS_ID_UMUM) {
                     currentFilterJenis = JENIS_UMUM;
                 } else {
                     currentFilterJenis = null;
@@ -346,15 +362,10 @@
             });
 
             if ($('#jenis').val()) {
-                if (
-                    typeof jenisMedisPengajuan !== 'undefined' && jenisMedisPengajuan &&
-                    String($('#jenis').val()) === String(jenisMedisPengajuan)
-                ) {
+                let valJenis = $('#jenis').val();
+                if (JENIS_ID_MEDIS && String(valJenis) === JENIS_ID_MEDIS) {
                     currentFilterJenis = JENIS_MEDIS;
-                } else if (
-                    typeof jenisUmumPengajuan !== 'undefined' && jenisUmumPengajuan &&
-                    String($('#jenis').val()) === String(jenisUmumPengajuan)
-                ) {
+                } else if (JENIS_ID_UMUM && String(valJenis) === JENIS_ID_UMUM) {
                     currentFilterJenis = JENIS_UMUM;
                 } else {
                     currentFilterJenis = null;
@@ -362,13 +373,11 @@
                 filterBarangSelects(currentFilterJenis);
             }
 
-            let rowTemplate = generateRowTemplate(currentFilterJenis);
-
             $('#btn-tambah-baris').on('click', function() {
                 let $tbody = $('#table-detail-pembelian tbody');
-                let row = $(generateRowTemplate(currentFilterJenis));
-                $tbody.append(row);
-                initSelect2(row);
+                let $row = $(generateRowTemplate(currentFilterJenis));
+                $tbody.append($row);
+                initSelect2($row);
                 updateRemoveButtons();
                 updateTotalJumlah();
             });
@@ -398,7 +407,6 @@
             $('#table-detail-pembelian').on('input change', '.jumlah-input', function() {
                 updateTotalJumlah();
             });
-
             updateTotalJumlah();
         });
     </script>

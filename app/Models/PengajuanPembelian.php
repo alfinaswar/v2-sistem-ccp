@@ -34,11 +34,6 @@ class PengajuanPembelian extends Model
         return $this->hasOne(MasterJenisPengajuan::class, 'id', 'Jenis');
     }
 
-    /**
-     * Get all of the comments for the PengajuanPembelian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function getVendor()
     {
         return $this->hasMany(ListVendor::class, 'IdPengajuan', 'id');
@@ -56,6 +51,11 @@ class PengajuanPembelian extends Model
 
     public function getHtaGpa()
     {
-        return $this->hasOne(HtaDanGpa::class, 'PengajuanItemId', 'id');
+        return $this->hasOne(HtaDanGpa::class, 'IdPengajuan', 'id');
+    }
+
+    public function getRekomendasi()
+    {
+        return $this->hasMany(Rekomendasi::class, 'IdPengajuan', 'id');
     }
 }

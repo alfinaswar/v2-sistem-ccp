@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             MasterMerekSeeder::class,
             MasterParameterSeeder::class,
             MasterPerusahaanSeeder::class,
+            DepartemenSeeder::class,
             CountriesTableSeeder::class,
             JenisPengajuanSeeder::class,
             MasterFormSeeder::class,

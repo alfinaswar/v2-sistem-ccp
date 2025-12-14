@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MasterBarang;
 use App\Models\MasterDepartemen;
 use App\Models\MasterJenisPengajuan;
+use App\Models\MasterPerusahaan;
 use App\Models\MasterSatuan;
 use App\Models\PermintaanPembelian;
 use App\Models\PermintaanPembelianDetail;
@@ -20,9 +21,18 @@ class PermintaanPembelianController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Siapkan base query tanpa get()
-            $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh')
+            $query = PermintaanPembelian::with('getJenisPermintaan', 'getPerusahaan', 'getDepartemen', 'getDiajukanOleh', 'getDepartemen')
                 ->orderBy('id', 'desc');
+
+            if ($request->filled('perusahaan')) {
+                $query->where('KodePerusahaan', $request->perusahaan);
+            }
+            if ($request->filled('jenis')) {
+                $query->where('Jenis', $request->jenis);
+            }
+            if ($request->filled('departemen')) {
+                $query->where('Departemen', $request->departemen);
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -64,7 +74,10 @@ class PermintaanPembelianController extends Controller
                 ->rawColumns(['action', 'NomorPermintaan', 'Status'])
                 ->make(true);
         }
-        return view('form.permintaan-pembelian.index');
+        $perusahaan = MasterPerusahaan::get();
+        $jenisPermintaan = MasterJenisPengajuan::get();
+        $departemen = MasterDepartemen::get();
+        return view('form.permintaan-pembelian.index', compact('perusahaan', 'jenisPermintaan', 'departemen'));
     }
 
     /**
@@ -194,7 +207,8 @@ class PermintaanPembelianController extends Controller
         $departemen = MasterDepartemen::get();
         $satuan = MasterSatuan::get();
         $data = PermintaanPembelian::with('getDetail.getBarang')->find($id);
-        return view('form.permintaan-pembelian.edit', compact('barang', 'departemen', 'satuan', 'data'));
+        $jenisPengajuan = MasterJenisPengajuan::get();
+        return view('form.permintaan-pembelian.edit', compact('barang', 'departemen', 'satuan', 'data', 'jenisPengajuan'));
     }
 
     /**
@@ -206,6 +220,7 @@ class PermintaanPembelianController extends Controller
             'Tanggal' => 'required|date',
             'Departemen' => 'required',
             'Jenis' => 'required',
+            'Tujuan' => 'required',
             'NamaBarang' => 'required|array|min:1',
             'Jumlah' => 'required|array|min:1',
             'Satuan' => 'required|array|min:1',
@@ -224,6 +239,7 @@ class PermintaanPembelianController extends Controller
             'Tanggal' => $request->Tanggal,
             'Departemen' => $request->Departemen,
             'Jenis' => $request->Jenis,
+            'Tujuan' => $request->Tujuan,
             'UserUpdate' => auth()->user()->name ?? null,
         ]);
 

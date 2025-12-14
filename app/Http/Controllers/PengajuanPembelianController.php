@@ -7,6 +7,7 @@ use App\Models\HtaMedis;
 use App\Models\ListVendor;
 use App\Models\ListVendorDetail;
 use App\Models\MasterBarang;
+use App\Models\MasterDepartemen;
 use App\Models\MasterJenisPengajuan;
 use App\Models\MasterVendor;
 use App\Models\PengajuanItem;
@@ -87,10 +88,10 @@ class PengajuanPembelianController extends Controller
     {
         $vendor = MasterVendor::where('Status', 'Y')->orderBy('Nama', 'asc')->get();
         $masterbarang = MasterBarang::get();
-        $permintaan = PermintaanPembelian::with('getPerusahaan', 'getDepartemen', 'getDiajukanOleh', 'getDetail')->find($id);
-        $CekHta = PengajuanPembelian::where('IdPermintaan', $id)->first();
+        $permintaan = PermintaanPembelian::with('getPerusahaan', 'getDepartemen', 'getDiajukanOleh', 'getDetail', 'getPengajuanPembelian.getVendor.getVendorDetail')->find($id);
         $JenisPengajuan = MasterJenisPengajuan::get();
-        return view('form.pengajuan-pembelian.create', compact('JenisPengajuan', 'masterbarang', 'permintaan', 'vendor', 'CekHta'));
+        $departemen = MasterDepartemen::get();
+        return view('form.pengajuan-pembelian.create', compact('JenisPengajuan', 'masterbarang', 'permintaan', 'vendor', 'departemen'));
     }
 
     public function SimpanDraft($id) {}
@@ -113,20 +114,31 @@ class PengajuanPembelianController extends Controller
         ]);
 
         $nomor = $this->generateNomorPengajuan();
-        $pengajuan = PengajuanPembelian::create([
-            'IdPermintaan' => $request->pengajuan['id_permintaan'],
-            'KodePengajuan' => $nomor,
-            'Tanggal' => $request->pengajuan['tanggal'],
-            'Jenis' => $request->pengajuan['jenis'],
-            'Tujuan' => $request->pengajuan['tujuan'],
-            'PerkiraanUtilitasiBulanan' => $request->pengajuan['perkiraan_utilitasi_bulanan'],
-            'PerkiraanBepPadaTahun' => $request->pengajuan['perkiraan_bep_pada_tahun'],
-            'Rkap' => $request->pengajuan['rkap'],
-            'NominalRkap' => preg_replace('/\D/', '', $request->pengajuan['nominal_rkap']),
-            'KodePerusahaan' => auth()->user()->kodeperusahaan,
-            'UserCreate' => auth()->user()->name,
-        ]);
+
+        $pengajuan = PengajuanPembelian::updateOrCreate(
+            [
+                'IdPermintaan' => $request->pengajuan['id_permintaan'],
+            ],
+            [
+                'KodePengajuan' => $nomor,
+                'Tanggal' => $request->pengajuan['tanggal'],
+                'Jenis' => $request->pengajuan['jenis'],
+                'Tujuan' => $request->pengajuan['tujuan'],
+                'PerkiraanUtilitasiBulanan' => $request->pengajuan['perkiraan_utilitasi_bulanan'],
+                'PerkiraanBepPadaTahun' => $request->pengajuan['perkiraan_bep_pada_tahun'],
+                'Rkap' => $request->pengajuan['rkap'],
+                'NominalRkap' => preg_replace('/\D/', '', $request->pengajuan['nominal_rkap']),
+                'DepartemenId' => $request->pengajuan['departemen'],
+                'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                'UserCreate' => auth()->user()->name,
+            ]
+        );
+
         foreach ($request->vendors as $key => $vendorData) {
+            if (!isset($vendorData['vendor_id']) || $vendorData['vendor_id'] === null) {
+                continue;
+            }
+
             $filename = null;
             if (isset($vendorData['penawaran_file']) && is_array($vendorData['penawaran_file'])) {
                 $fileArr = $vendorData['penawaran_file'];
@@ -143,48 +155,66 @@ class PengajuanPembelianController extends Controller
                 $file->storeAs('penawaran_vendor', $filename, 'public');
             }
 
-            $ListVendor = ListVendor::create([
-                'IdPengajuan' => $pengajuan->id,
-                'VendorKe' => $key + 1,
-                'NamaVendor' => $vendorData['vendor_id'],
-                'SuratPenawaranVendor' => $filename,
-                'HargaTanpaDiskon' => preg_replace('/\D/', '', $vendorData['total_harga_sebelum_diskon']),
-                'TotalDiskon' => preg_replace('/\D/', '', $vendorData['total_diskon']),
-                'Ppn' => $vendorData['ppn_persen'],
-                'TotalPpn' => preg_replace('/\D/', '', $vendorData['total_ppn']),
-                'TotalHarga' => preg_replace('/\D/', '', $vendorData['grand_total']),
-                'KodePerusahaan' => auth()->user()->kodeperusahaan,
-                'UserCreate' => auth()->user()->name,
-            ]);
+            $ListVendor = ListVendor::updateOrCreate(
+                [
+                    'IdPengajuan' => $pengajuan->id,
+                    'VendorKe' => $key + 1,
+                ],
+                [
+                    'NamaVendor' => $vendorData['vendor_id'],
+                    'SuratPenawaranVendor' => $filename,
+                    'HargaTanpaDiskon' => preg_replace('/\D/', '', $vendorData['total_harga_sebelum_diskon']),
+                    'HargaDenganDiskon' => preg_replace('/\D/', '', $vendorData['total_harga_setelah_diskon']),
+                    'TotalDiskon' => preg_replace('/\D/', '', $vendorData['total_diskon']),
+                    'Ppn' => $vendorData['ppn_persen'],
+                    'TotalPpn' => preg_replace('/\D/', '', $vendorData['total_ppn']),
+                    'TotalHarga' => preg_replace('/\D/', '', $vendorData['grand_total']),
+                    'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                    // Masukkan UserCreate atau UserUpdate sesuai kebutuhan
+                    'UserCreate' => auth()->user()->name,
+                    'UserUpdate' => auth()->user()->name,
+                ]
+            );
+
             if (isset($vendorData['details']) && is_array($vendorData['details'])) {
                 foreach ($vendorData['details'] as $detailB) {
-                    ListVendorDetail::create([
-                        'IdPengajuan' => $pengajuan->id,
-                        'IdListVendor' => $ListVendor->id,
-                        'NamaBarang' => $detailB['barang_id'] ?? null,
-                        'NamaVendor' => null,
-                        'Jumlah' => $detailB['jumlah'],
-                        'HargaSatuan' => preg_replace('/\D/', '', $detailB['harga_satuan']),
-                        'Diskon' => preg_replace('/\D/', '', $detailB['diskon_item']),
-                        'JenisDiskon' => $detailB['jenis_diskon_item'],
-                        'TotalDiskon' => preg_replace('/\D/', '', $detailB['total_diskon']),
-                        'TotalHarga' => preg_replace('/\D/', '', $detailB['total_harga']),
-                        'KodePerusahaan' => auth()->user()->kodeperusahaan,
-                        'UserCreate' => auth()->user()->name,
-                    ]);
+                    ListVendorDetail::updateOrCreate(
+                        [
+                            'IdPengajuan' => $pengajuan->id,
+                            'IdListVendor' => $ListVendor->id,
+                            'NamaBarang' => $detailB['barang_id'] ?? null,
+                        ],
+                        [
+                            'NamaVendor' => null,
+                            'Jumlah' => $detailB['jumlah'],
+                            'HargaSatuan' => preg_replace('/\D/', '', $detailB['harga_satuan']),
+                            'Diskon' => preg_replace('/\D/', '', $detailB['diskon_item']),
+                            'JenisDiskon' => $detailB['jenis_diskon_item'],
+                            'TotalDiskon' => preg_replace('/\D/', '', $detailB['total_diskon']),
+                            'TotalHarga' => preg_replace('/\D/', '', $detailB['total_harga']),
+                            'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                            'UserCreate' => auth()->user()->name,
+                        ]
+                    );
                 }
             }
         }
         foreach ($request->vendors[0]['details'] as $key => $listalat) {
-            PengajuanItem::create([
-                'IdPengajuan' => $pengajuan->id,
-                'IdBarang' => $listalat['barang_id'],
-                'Jumlah' => $listalat['jumlah'] ?? null,
-                'Satuan' => $listalat['satuan'] ?? null,
-                'HargaSatuan' => isset($listalat['harga_satuan']) ? preg_replace('/\D/', '', $listalat['harga_satuan']) : null,
-                'HargaNego' => isset($listalat['harga_nego']) ? preg_replace('/\D/', '', $listalat['harga_nego']) : null,
-                'UserCreate' => auth()->user()->name,
-            ]);
+            PengajuanItem::updateOrCreate(
+                [
+                    'IdPengajuan' => $pengajuan->id,
+                    'IdBarang' => $listalat['barang_id'],
+                ],
+                [
+                    'Jumlah' => $listalat['jumlah'] ?? null,
+                    'Satuan' => $listalat['satuan'] ?? null,
+                    'HargaSatuan' => isset($listalat['harga_satuan']) ? preg_replace('/\D/', '', $listalat['harga_satuan']) : null,
+                    'HargaNego' => isset($listalat['harga_nego']) ? preg_replace('/\D/', '', $listalat['harga_nego']) : null,
+                    'UserCreate' => auth()->user()->name,
+                    // Tambah UserUpdate jika ingin mencatat update
+                    'UserUpdate' => auth()->user()->name,
+                ]
+            );
         }
 
         activity('pengajuan_pembelian')
@@ -195,7 +225,7 @@ class PengajuanPembelianController extends Controller
                 'vendors' => $request->vendors,
             ])
             ->log('Membuat pengajuan pembelian baru dengan kode ' . $pengajuan->KodePengajuan);
-        return redirect()->route('ajukan.index')->with('success', 'Pengajuan Berhasil Dibuat, Silahkan Isi HTA atau GPA');
+        return redirect()->back()->with('success', 'Pengajuan Berhasil Dibuat, Silahkan Isi HTA atau GPA');
     }
 
     private function generateNomorPengajuan()

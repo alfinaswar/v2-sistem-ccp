@@ -39,7 +39,9 @@ return new class extends Migration {
             $table->string('DiajukanOleh')->nullable();
             $table->string('DiajukanPada')->nullable();
             $table->string('Direktur')->nullable();
-            $table->string('DirekturPada')->nullable();
+            $table->dateTime('DirekturPada')->nullable();
+            $table->string('KadivJangMed')->nullable();
+            $table->dateTime('KadivJangMedPada')->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();
             $table->string('UserDelete')->nullable();

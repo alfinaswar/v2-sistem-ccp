@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class MasterBarang extends Model
 {
     use HasFactory, SoftDeletes;
+
     /**
      * The table associated with the model.
      *
      * @var string
      */
     protected $table = 'master_barangs';
+
     /**
      * The attributes that aren't mass assignable.
      *
@@ -31,6 +33,7 @@ class MasterBarang extends Model
     {
         return $this->hasOne(MasterSatuan::class, 'id', 'Satuan');
     }
+
     public function getMerk()
     {
         return $this->hasOne(MasterMerk::class, 'id', 'Merek');

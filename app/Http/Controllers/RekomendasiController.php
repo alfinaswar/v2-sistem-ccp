@@ -227,6 +227,7 @@ class RekomendasiController extends Controller
                 'VendorAcc' => $request->rekomendasi[0]['RekomendasiSelect'],
                 'DisetujuiOleh' => auth()->user()->id,
                 'DisetujuiPada' => now(),
+                'KodePerusahaan' => auth()->user()->kodeperusahaan,
             ]
         );
 

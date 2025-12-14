@@ -46,13 +46,13 @@
                             <tbody>
                                 @foreach ($data as $key => $user)
                                     <tr>
-                                        <td>{{ ++$i }}</td>
+                                        <td>{{ $key + 1 }}</td>
                                         <td>{{ $user->name }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>{{ $user->getPerusahaan->Nama }}</td>
                                         <td>
-                                            @if(!empty($user->getRoleNames()))
-                                                @foreach($user->getRoleNames() as $v)
+                                            @if (!empty($user->getRoleNames()))
+                                                @foreach ($user->getRoleNames() as $v)
                                                     <span class="badge bg-success">{{ $v }}</span>
                                                 @endforeach
                                             @endif
@@ -73,7 +73,7 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        {!! $data->render() !!}
+
                     </div>
                 </div>
             </div>

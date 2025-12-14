@@ -22,8 +22,8 @@
                 </div>
                 <form action="{{ route('usulan-investasi.store') }}" method="POST">
                     @csrf
-                    <input type="text" value="{{ $data->id }}" name="IdPengajuan">
-                    <input type="text" value="{{ $IdPePengajuan }}" name="PengjuanItemId">
+                    <input type="hidden" value="{{ $data->id }}" name="IdPengajuan">
+                    <input type="hidden" value="{{ $PengajuanItemId }}" name="PengajuanItemId">
                     <div class="card-body">
                         <div class="row mb-4">
                             <div class="col-md-6">
@@ -43,7 +43,8 @@
                                             <option value="">-- Pilih Departemen --</option>
                                             @foreach ($departemen as $d)
                                                 <option value="{{ $d->id }}"
-                                                    {{ old('Divisi') == $d->id ? 'selected' : '' }}>{{ $d->Nama }}
+                                                    {{ old('Divisi') == $d->id || (!old('Divisi') && isset($data->DepartemenId) && $data->DepartemenId == $d->id) ? 'selected' : '' }}>
+                                                    {{ $d->Nama }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -69,13 +70,18 @@
                                         <label class="form-label fw-bold">Kategori</label>
                                         <select name="Kategori" class="form-select">
                                             <option value="">-- Pilih Kategori --</option>
-                                            <option value="Baru" {{ old('Kategori') == 'Baru' ? 'selected' : '' }}>Baru
+                                            <option value="Pembelian Baru"
+                                                {{ old('Kategori2', $data->Tujuan ?? '') == 'Pembelian Baru' ? 'selected' : '' }}>
+                                                Pembelian Baru
                                             </option>
                                             <option value="Penggantian"
-                                                {{ old('Kategori') == 'Penggantian' ? 'selected' : '' }}>Penggantian
+                                                {{ old('Kategori2', $data->Tujuan ?? '') == 'Penggantian' ? 'selected' : '' }}>
+                                                Penggantian
                                             </option>
                                             <option value="Perbaikan"
-                                                {{ old('Kategori') == 'Perbaikan' ? 'selected' : '' }}>Perbaikan</option>
+                                                {{ old('Kategori2', $data->Tujuan ?? '') == 'Perbaikan' ? 'selected' : '' }}>
+                                                Perbaikan
+                                            </option>
                                         </select>
                                         @error('Kategori')
                                             <div class="text-danger mt-1">{{ $message }}</div>
@@ -100,7 +106,8 @@
                                             <option value="">-- Pilih Departemen --</option>
                                             @foreach ($departemen as $d)
                                                 <option value="{{ $d->id }}"
-                                                    {{ old('Divisi2') == $d->id ? 'selected' : '' }}>{{ $d->Nama }}
+                                                    {{ old('Divisi') == $d->id || (!old('Divisi') && isset($data->DepartemenId) && $data->DepartemenId == $d->id) ? 'selected' : '' }}>
+                                                    {{ $d->Nama }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -126,13 +133,18 @@
                                         <label class="form-label fw-bold">Kategori</label>
                                         <select name="Kategori2" class="form-select">
                                             <option value="">-- Pilih Kategori --</option>
-                                            <option value="Baru" {{ old('Kategori2') == 'Baru' ? 'selected' : '' }}>Baru
+                                            <option value="Pembelian Baru"
+                                                {{ old('Kategori2', $data->Tujuan ?? '') == 'Pembelian Baru' ? 'selected' : '' }}>
+                                                Pembelian Baru
                                             </option>
                                             <option value="Penggantian"
-                                                {{ old('Kategori2') == 'Penggantian' ? 'selected' : '' }}>Penggantian
+                                                {{ old('Kategori2', $data->Tujuan ?? '') == 'Penggantian' ? 'selected' : '' }}>
+                                                Penggantian
                                             </option>
                                             <option value="Perbaikan"
-                                                {{ old('Kategori2') == 'Perbaikan' ? 'selected' : '' }}>Perbaikan</option>
+                                                {{ old('Kategori2', $data->Tujuan ?? '') == 'Perbaikan' ? 'selected' : '' }}>
+                                                Perbaikan
+                                            </option>
                                         </select>
                                         @error('Kategori2')
                                             <div class="text-danger mt-1">{{ $message }}</div>
@@ -158,6 +170,7 @@
                                         <tr>
                                             <th style="width:5%">No</th>
                                             <th>Nama Barang</th>
+                                            <th>Vendor</th>
                                             <th width="10%">Jumlah</th>
                                             <th>Harga</th>
                                             <th>Diskon</th>
@@ -174,6 +187,7 @@
                                             {
                                                 return 'Rp ' . number_format($angka, 0, ',', '.');
                                             }
+                                            // Helper JS: format input ke rupiah
                                         @endphp
                                         @forelse ($data->getVendor as $key => $rekom)
                                             @php
@@ -191,14 +205,18 @@
                                                 );
                                                 $ppn = old('items.' . $key . '.Ppn', $rekom->Ppn ?? 0);
 
-                                                // Pastikan nilainya numerik
-                                                $jumlah = is_numeric($jumlah) ? $jumlah : 0;
-                                                $harga = is_numeric($harga) ? $harga : 0;
-                                                $diskon = is_numeric($diskon) ? $diskon : 0;
-                                                $ppn = is_numeric($ppn) ? $ppn : 0;
+                                                // Konversi kembali string bertitik/berkoma ke numerik untuk kalkulasi
+                                                $harga_num = preg_replace('/[^\d]/', '', $harga);
+                                                $harga_num = $harga_num !== '' ? (int) $harga_num : 0;
 
-                                                $subtotal = $jumlah * $harga - $diskon;
-                                                $totalPpn = $subtotal * ($ppn / 100);
+                                                $diskon_num = preg_replace('/[^\d]/', '', $diskon);
+                                                $diskon_num = $diskon_num !== '' ? (int) $diskon_num : 0;
+
+                                                $jumlah_num = is_numeric($jumlah) ? $jumlah : 0;
+                                                $ppn_num = is_numeric($ppn) ? $ppn : 0;
+
+                                                $subtotal = $jumlah_num * $harga_num - $diskon_num;
+                                                $totalPpn = $subtotal * ($ppn_num / 100);
                                                 $total = $subtotal + $totalPpn;
                                                 $grandTotal += $total;
                                             @endphp
@@ -209,14 +227,28 @@
                                                         name="items[{{ $key }}][NamaBarang]"
                                                         style="width: 100%;" data-placeholder="Pilih barang">
                                                         @foreach ($barang as $b)
-                                                            <option value="{{ $b->Nama }}"
+                                                            <option value="{{ $b->id }}"
                                                                 {{ old('items.' . $key . '.NamaBarang', $rekom->getVendorDetail[0]->NamaBarang ?? '') == $b->Nama ? 'selected' : '' }}>
                                                                 {{ $b->Nama }}
                                                             </option>
                                                         @endforeach
-                                                    </select><br>
-                                                    <label><b>{{ $rekom->getNamaVendor->Nama }}</b></label>
+                                                    </select>
+
                                                     @error('items.' . $key . '.NamaBarang')
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+                                                <td>
+                                                    <select class="form-select select2"
+                                                        name="items[{{ $key }}][Vendor]" style="width: 100%;"
+                                                        data-placeholder="Pilih Vendor">
+
+                                                        <option value="{{ $rekom->getNamaVendor->id }}"
+                                                            {{ old('items.' . $key . '.Vendor', $rekom->getNamaVendor[0]->id ?? '') == $rekom->getNamaVendor->id ? 'selected' : '' }}>
+                                                            {{ $rekom->getNamaVendor->Nama }}
+                                                        </option>
+                                                    </select>
+                                                    @error('items.' . $key . '.Vendor')
                                                         <div class="text-danger mt-1">{{ $message }}</div>
                                                     @enderror
                                                 </td>
@@ -231,11 +263,11 @@
                                                 <td>
                                                     <div class="input-group">
                                                         <span class="input-group-text">Rp</span>
-                                                        <input type="number" step="0.01"
-                                                            name="items[{{ $key }}][Harga]" class="form-control"
-                                                            placeholder="Masukkan harga..." value="{{ $harga }}">
+                                                        <input type="text" name="items[{{ $key }}][Harga]"
+                                                            class="form-control rupiah-input"
+                                                            placeholder="Masukkan harga..."
+                                                            value="{{ old('items.' . $key . '.Harga', isset($harga) ? number_format((int) preg_replace('/[^\d]/', '', $harga), 0, ',', '.') : 0) }}">
                                                     </div>
-                                                    <small class="text-muted">{{ rupiah($harga) }}</small>
                                                     @error('items.' . $key . '.Harga')
                                                         <div class="text-danger mt-1">{{ $message }}</div>
                                                     @enderror
@@ -243,12 +275,11 @@
                                                 <td>
                                                     <div class="input-group">
                                                         <span class="input-group-text">Rp</span>
-                                                        <input type="number" step="0.01"
-                                                            name="items[{{ $key }}][Diskon]"
-                                                            class="form-control" placeholder="Masukkan diskon..."
-                                                            value="{{ $diskon }}">
+                                                        <input type="text" name="items[{{ $key }}][Diskon]"
+                                                            class="form-control rupiah-input"
+                                                            placeholder="Masukkan diskon..."
+                                                            value="{{ old('items.' . $key . '.Diskon', isset($diskon) ? number_format((int) preg_replace('/[^\d]/', '', $diskon), 0, ',', '.') : 0) }}">
                                                     </div>
-                                                    <small class="text-muted">{{ rupiah($diskon) }}</small>
                                                     @error('items.' . $key . '.Diskon')
                                                         <div class="text-danger mt-1">{{ $message }}</div>
                                                     @enderror
@@ -272,7 +303,6 @@
                                                             class="form-control" placeholder="Total otomatis"
                                                             value="{{ number_format($total, 0, ',', '.') }}" readonly>
                                                     </div>
-                                                    <small class="text-muted">{{ rupiah($total) }}</small>
                                                     @error('items.' . $key . '.Total')
                                                         <div class="text-danger mt-1">{{ $message }}</div>
                                                     @enderror
@@ -290,6 +320,32 @@
                                             </td>
                                         </tr>
                                     </tbody>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            function formatRupiah(angka) {
+                                                angka = angka.replace(/[^,\d]/g, '');
+                                                var split = angka.split(',');
+                                                var sisa = split[0].length % 3,
+                                                    rupiah = split[0].substr(0, sisa),
+                                                    ribuan = split[0].substr(sisa).match(/\d{3}/g);
+
+                                                if (ribuan) {
+                                                    rupiah += (sisa ? '.' : '') + ribuan.join('.');
+                                                }
+                                                rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+                                                return rupiah;
+                                            }
+                                            document.querySelectorAll('.rupiah-input').forEach(function(input) {
+                                                input.addEventListener('input', function(e) {
+                                                    var caret = input.selectionStart;
+                                                    var value = input.value;
+                                                    var cleanValue = value.replace(/[^,\d]/g, '');
+                                                    var formatted = formatRupiah(cleanValue);
+                                                    input.value = formatted;
+                                                });
+                                            });
+                                        });
+                                    </script>
                                 </table>
                                 @if ($errors->has('items'))
                                     <div class="text-danger mt-1">{{ $errors->first('items') }}</div>
@@ -316,7 +372,7 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text">Rp</span>
                                                     <input type="text" name="BiayaAkhir" class="form-control rupiah"
-                                                        value="{{ old('BiayaAkhir', isset($data2->getVendor[0]->HargaTanpaDiskon) ? number_format($data2->getVendor[0]->HargaTanpaDiskon, 0, ',', '.') : '') }}">
+                                                        value="{{ old('BiayaAkhir', isset($data2->getVendor[0]->getVendorDetail[0]->HargaSatuan) ? number_format($data2->getVendor[0]->getVendorDetail[0]->HargaSatuan, 0, ',', '.') : '') }}">
                                                 </div>
                                                 @error('BiayaAkhir')
                                                     <div class="text-danger mt-1">{{ $message }}</div>
@@ -324,8 +380,8 @@
                                             </td>
                                             <td>
                                                 <input type="hidden" name="VendorDipilih"
-                                                    value="{{ old('VendorDipilih', $data2->getVendor[0]->NamaVendor ?? '') }}">
-                                                <span>{{ $data2->getVendor[0]->NamaVendor ?? '' }}</span>
+                                                    value="{{ old('VendorDipilih', $data2->getVendor[0]->getNamaVendor->id ?? '') }}">
+                                                <span>{{ $data2->getVendor[0]->getNamaVendor->Nama ?? '' }}</span>
                                                 @error('VendorDipilih')
                                                     <div class="text-danger mt-1">{{ $message }}</div>
                                                 @enderror
@@ -335,7 +391,7 @@
                                                     <span class="input-group-text">Rp</span>
                                                     <input type="text" name="HargaDiskonPpn"
                                                         class="form-control rupiah"
-                                                        value="{{ old('HargaDiskonPpn', isset($data2->getVendor[0]->TotalDiskon) ? number_format($data2->getVendor[0]->TotalDiskon, 0, ',', '.') : '') }}">
+                                                        value="{{ old('HargaDiskonPpn', isset($data2->getVendor[0]->getVendorDetail[0]->HargaSatuan) ? number_format($data2->getVendor[0]->getVendorDetail[0]->HargaSatuan, 0, ',', '.') : '') }}">
                                                 </div>
                                                 @error('HargaDiskonPpn')
                                                     <div class="text-danger mt-1">{{ $message }}</div>
@@ -345,7 +401,7 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text">Rp</span>
                                                     <input type="text" name="Total" class="form-control rupiah"
-                                                        value="{{ old('Total', isset($data2->getVendor[0]->TotalHarga) ? number_format($data2->getVendor[0]->TotalHarga, 0, ',', '.') : '') }}">
+                                                        value="{{ old('Total', isset($data2->getVendor[0]->getVendorDetail[0]->TotalHarga) ? number_format($data2->getVendor[0]->getVendorDetail[0]->TotalHarga, 0, ',', '.') : '') }}">
                                                 </div>
                                                 @error('Total')
                                                     <div class="text-danger mt-1">{{ $message }}</div>

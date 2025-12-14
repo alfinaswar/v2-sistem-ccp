@@ -13,7 +13,7 @@ class JenisPengajuanSeeder extends Seeder
         DB::table('master_jenis_pengajuans')->insert([
             [
                 'id' => 1,
-                'Nama' => 'MEDIS',
+                'Nama' => 'Medis',
                 'Form' => 1,
                 'UserCreate' => 'Administrator',
                 'UserUpdate' => null,
@@ -24,7 +24,7 @@ class JenisPengajuanSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'Nama' => 'UMUM',
+                'Nama' => 'Umum',
                 'Form' => 2,
                 'UserCreate' => 'Administrator',
                 'UserUpdate' => null,

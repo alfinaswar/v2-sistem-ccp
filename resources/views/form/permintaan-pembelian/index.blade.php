@@ -33,6 +33,38 @@
                     </p>
                 </div>
                 <div class="card-body">
+
+                    <!-- Filter section -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="filter-perusahaan" class="form-label">Filter Perusahaan / RS</label>
+                            <select class="form-select select2" id="filter-perusahaan">
+                                <option value="">-- Semua Perusahaan --</option>
+                                @foreach ($perusahaan as $item)
+                                    <option value="{{ $item->Kode }}">{{ $item->Nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filter-jenis" class="form-label">Filter Jenis Permintaan</label>
+                            <select class="form-select select2" id="filter-jenis">
+                                <option value="">-- Semua Jenis --</option>
+                                @foreach ($jenisPermintaan as $item)
+                                    <option value="{{ $item->id }}">{{ $item->Nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filter-departemen" class="form-label">Filter Departemen</label>
+                            <select class="form-select select2" id="filter-departemen">
+                                <option value="">-- Semua Departemen --</option>
+                                @foreach ($departemen as $item)
+                                    <option value="{{ $item->id }}">{{ $item->Nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="permintaanTable" width="100%">
                             <thead>
@@ -53,6 +85,8 @@
                         </table>
                     </div>
                 </div>
+
+
             </div>
         </div>
     </div>
@@ -118,6 +152,11 @@
                     bDestroy: true,
                     ajax: {
                         url: "{{ route('pp.index') }}",
+                        data: function(d) {
+                            d.perusahaan = $('#filter-perusahaan').val();
+                            d.jenis = $('#filter-jenis').val();
+                            d.departemen = $('#filter-departemen').val();
+                        },
                     },
                     language: {
                         processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Memuat...</span>',
@@ -173,6 +212,11 @@
                     ]
                 });
             }
+
+            // Trigger reload when filter changes
+            $('#filter-perusahaan, #filter-jenis, #filter-departemen').on('change', function() {
+                $('#permintaanTable').DataTable().ajax.reload();
+            });
 
             loadDataTable();
         });

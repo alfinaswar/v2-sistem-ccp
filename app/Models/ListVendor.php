@@ -37,6 +37,7 @@ class ListVendor extends Model
     {
         return $this->hasOne(HtaDanGpaDetail::class, 'IdVendor', 'NamaVendor');
     }
+
     public function getRekomendasi()
     {
         return $this->hasOne(RekomendasiDetail::class, 'IdVendor', 'NamaVendor');

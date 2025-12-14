@@ -225,11 +225,11 @@
                             </div>
                         </div>
                         <div class="col-12 text-end mt-3">
-                            <a href="{{ route('pp.index') }}" class="btn btn-primary me-2">
+                            <a href="{{ route('pp.index') }}" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
 
-                            @can('approve-kepala-divisi')
+                            @can('permintaan-approve-kepala-divisi')
                                 <!-- Button untuk Kepala Divisi - Diketahui oleh -->
                                 <form id="formKepalaDivisi" action="{{ route('pp.acc-kepala-divisi', $data->id) }}"
                                     method="POST" class="d-inline">
@@ -243,7 +243,7 @@
                                 </form>
                             @endcan
 
-                            @can('approve-kepala-divisi-penunjang')
+                            @can('permintaan-approve-penunjang')
                                 <!-- Button untuk Kepala Divisi Penunjang Medis/Umum - Disetujui oleh -->
                                 <form id="formDivisiPenunjang"
                                     action="{{ route('pp.acc-kepala-divisi-penunjang-medis', $data->id) }}" method="POST"
@@ -258,7 +258,7 @@
                                 </form>
                             @endcan
 
-                            @can('approve-direktur')
+                            @can('permintaan-approve-direktur')
                                 <!-- Button untuk Direktur - Diterima oleh -->
                                 <form id="formDirektur" action="{{ route('pp.acc-direktur', $data->id) }}" method="POST"
                                     class="d-inline">
@@ -272,7 +272,7 @@
                                 </form>
                             @endcan
 
-                            @can('approve-smi')
+                            @can('permintaan-approve-logistik')
                                 <!-- Button untuk Logistik - Logistik / SMI -->
                                 <form id="formLogistik" action="{{ route('pp.acc-smi', $data->id) }}" method="POST"
                                     class="d-inline">

@@ -117,8 +117,8 @@
                                                             name="vendor[{{ $vIdx }}][IdParameter][]" readonly>
                                                     </td>
                                                     <td>
-                                                        <textarea class="form-control" name="vendor[{{ $vIdx }}][Deskripsi][]" rows="4"
-                                                            placeholder="Masukkan deskripsi">{!! $Vendor->getHtaGpa->Deskripsi[0] ?? '' !!}</textarea>
+                                                        <textarea class="form-control" name="vendor[{{ $vIdx }}][Deskripsi][]" rows="10"
+                                                            placeholder="Masukkan deskripsi">{!! $Vendor->getHtaGpa->Deskripsi[$key] ?? '' !!}</textarea>
                                                     </td>
                                                     <td>
                                                         {{-- @php

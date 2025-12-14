@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->string('Diskon')->nullable();
             $table->string('JenisDiskon')->nullable();
             $table->string('TotalDiskon')->nullable();
+            $table->string('TotalHarga')->nullable();
             $table->string('KodePerusahaan')->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();

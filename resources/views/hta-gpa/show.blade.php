@@ -255,6 +255,9 @@
                                             </td>
                                         </tr>
                                         <tr>
+                                            {{-- @php
+                                                dd($data->getHtaGpa);
+                                            @endphp --}}
                                             <td class="text-center align-top">
                                                 <span style="font-weight:600;">
                                                     {{ $data->getHtaGpa->getPenilai1->name ?? '-' }}
@@ -309,74 +312,80 @@
                         <div class="col-12 text-end mt-3">
                             {{-- <a href="{{ route('pp.show', $data->id) }}" class="btn btn-secondary">Kembali</a> --}}
 
-                            @can('approve-penilai1')
-                                <!-- Button untuk Penilai 1 -->
-                                <form id="formPenilaian1"
-                                    action="{{ route('htagpa.acc-penilai1', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
-                                    method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="button" class="btn btn-success me-2"
-                                        onclick="confirmSweetAlert('formPenilaian1', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 1?')">
-                                        <i class="fa fa-check"></i> Proses ke Penilaian 1
-                                    </button>
-                                </form>
+                            @can('hta-gpa-approve-penilai1')
+                                @if (empty($data->getHtaGpa->getPenilai1->name))
+                                    <!-- Button untuk Penilai 1 -->
+                                    <form id="formPenilaian1"
+                                        action="{{ route('htagpa.acc-penilai1', $data->getHtaGpa->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="button" class="btn btn-success me-2"
+                                            onclick="confirmSweetAlert('formPenilaian1', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 1?')">
+                                            <i class="fa fa-check"></i> Proses ke Penilaian 1
+                                        </button>
+                                    </form>
+                                @endif
                             @endcan
 
-                            @can('approve-penilai2')
-                                <!-- Button untuk Penilai 2 -->
-                                <form id="formPenilaian2"
-                                    action="{{ route('htagpa.acc-penilai2', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
-                                    method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="button" class="btn btn-success me-2"
-                                        onclick="confirmSweetAlert('formPenilaian2', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 2?')">
-                                        <i class="fa fa-check"></i> Proses ke Penilaian 2
-                                    </button>
-                                </form>
+                            @can('hta-gpa-approve-penilai2')
+                                @if (empty($data->getHtaGpa->getPenilai2->name))
+                                    <!-- Button untuk Penilai 2 -->
+                                    <form id="formPenilaian2"
+                                        action="{{ route('htagpa.acc-penilai2', $data->getHtaGpa->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="button" class="btn btn-success me-2"
+                                            onclick="confirmSweetAlert('formPenilaian2', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 2?')">
+                                            <i class="fa fa-check"></i> Proses ke Penilaian 2
+                                        </button>
+                                    </form>
+                                @endif
                             @endcan
 
-                            @can('approve-penilai3')
-                                <!-- Button untuk Penilai 3 -->
-                                <form id="formPenilaian3"
-                                    action="{{ route('htagpa.acc-penilai3', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
-                                    method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="button" class="btn btn-success me-2"
-                                        onclick="confirmSweetAlert('formPenilaian3', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 3?')">
-                                        <i class="fa fa-check"></i> Proses ke Penilaian 3
-                                    </button>
-                                </form>
+                            @can('hta-gpa-approve-penilai3')
+                                @if (empty($data->getHtaGpa->getPenilai3->name))
+                                    <!-- Button untuk Penilai 3 -->
+                                    <form id="formPenilaian3"
+                                        action="{{ route('htagpa.acc-penilai3', $data->getHtaGpa->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="button" class="btn btn-success me-2"
+                                            onclick="confirmSweetAlert('formPenilaian3', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 3?')">
+                                            <i class="fa fa-check"></i> Proses ke Penilaian 3
+                                        </button>
+                                    </form>
+                                @endif
                             @endcan
 
-                            @can('approve-penilai4')
-                                <!-- Button untuk Penilai 4 -->
-                                <form id="formPenilaian4"
-                                    action="{{ route('htagpa.acc-penilai4', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
-                                    method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="button" class="btn btn-success me-2"
-                                        onclick="confirmSweetAlert('formPenilaian4', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 4?')">
-                                        <i class="fa fa-check"></i> Proses ke Penilaian 4
-                                    </button>
-                                </form>
+                            @can('hta-gpa-approve-penilai4')
+                                @if (empty($data->getHtaGpa->getPenilai4->name))
+                                    <!-- Button untuk Penilai 4 -->
+                                    <form id="formPenilaian4"
+                                        action="{{ route('htagpa.acc-penilai4', $data->getHtaGpa->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="button" class="btn btn-success me-2"
+                                            onclick="confirmSweetAlert('formPenilaian4', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 4?')">
+                                            <i class="fa fa-check"></i> Proses ke Penilaian 4
+                                        </button>
+                                    </form>
+                                @endif
                             @endcan
 
-                            @can('approve-penilai5')
-                                <!-- Button untuk Penilai 5 -->
-                                <form id="formPenilaian5"
-                                    action="{{ route('htagpa.acc-penilai5', $data->getVendor[0]->getHtaGpa->IdHtaGpa) }}"
-                                    method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="button" class="btn btn-success me-2"
-                                        onclick="confirmSweetAlert('formPenilaian5', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 5?')">
-                                        <i class="fa fa-check"></i> Proses ke Penilaian 5
-                                    </button>
-                                </form>
+                            @can('hta-gpa-approve-penilai5')
+                                @if (empty($data->getHtaGpa->getPenilai5->name))
+                                    <!-- Button untuk Penilai 5 -->
+                                    <form id="formPenilaian5"
+                                        action="{{ route('htagpa.acc-penilai5', $data->getHtaGpa->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="button" class="btn btn-success me-2"
+                                            onclick="confirmSweetAlert('formPenilaian5', 'Konfirmasi', 'Apakah Anda yakin ingin melanjutkan ke Penilaian 5?')">
+                                            <i class="fa fa-check"></i> Proses ke Penilaian 5
+                                        </button>
+                                    </form>
+                                @endif
                             @endcan
-
-
-
-
                         </div>
                     </div>
                 </div>

@@ -23,4 +23,19 @@ class UsulanInvestasiDetail extends Model
      * @var array
      */
     protected $guarded = ['id'];
+
+    public function getNamaBarang()
+    {
+        return $this->hasOne(MasterBarang::class, 'id', 'NamaBarang');
+    }
+
+    public function getVendor()
+    {
+        return $this->hasOne(MasterVendor::class, 'id', 'Vendor');
+    }
+
+    public function getVendorDipilih()
+    {
+        return $this->hasOne(MasterVendor::class, 'id', 'Vendor');
+    }
 }

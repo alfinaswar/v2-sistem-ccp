@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->string('Hta')->nullable();
             $table->string('SuratPenawaranVendor')->nullable();
             $table->string('HargaTanpaDiskon')->nullable();
+            $table->string('HargaDenganDiskon')->nullable();
             $table->string('TotalDiskon')->nullable();
             $table->string('Ppn')->nullable();
             $table->string('TotalPpn')->nullable();

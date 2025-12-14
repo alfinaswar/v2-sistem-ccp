@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('usulan_investasi_details', function (Blueprint $table) {
             $table->id();
             $table->string('IdUsulan')->nullable();
+            $table->string('Vendor')->nullable();
             $table->string('NamaBarang')->nullable();
             $table->string('Jumlah')->nullable();
             $table->string('Harga')->nullable();

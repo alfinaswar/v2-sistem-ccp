@@ -33,12 +33,44 @@ class UsulanInvestasi extends Model
     {
         return $this->hasMany(UsulanInvestasiDetail::class, 'IdUsulan', 'id');
     }
+
     public function getBarang()
     {
         return $this->hasOne(MasterBarang::class, 'id', 'IdBarang');
     }
+
     public function getVendor()
     {
         return $this->hasOne(MasterVendor::class, 'id', 'IdVendor');
+    }
+
+    public function getDepartemen()
+    {
+        return $this->hasOne(MasterDepartemen::class, 'id', 'Divisi');
+    }
+
+    public function getKadiv()
+    {
+        return $this->hasOne(User::class, 'id', 'NamaKadiv');
+    }
+
+    public function getDepartemen2()
+    {
+        return $this->hasOne(MasterDepartemen::class, 'id', 'Divisi2');
+    }
+
+    public function getKadiv2()
+    {
+        return $this->hasOne(User::class, 'id', 'NamaKadiv2');
+    }
+
+    public function getAccDirektur()
+    {
+        return $this->hasOne(User::class, 'id', 'Direktur');
+    }
+
+    public function getAccKadiv()
+    {
+        return $this->hasOne(User::class, 'id', 'KadivJangMed');
     }
 }

@@ -89,15 +89,21 @@ class DepartemenSeeder extends Seeder
             ['DEP070', 70, 'Unit Mutu & Akreditasi'],
         ];
 
-        foreach ($departemen as $d) {
-            DB::table('master_departemens')->insert([
-                'KodeDepartemen' => $d[0],
-                'IdDepartemen' => $d[1],
-                'Nama' => $d[2],
-                'UserCreate' => 'Administrator',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+        // Ambil seluruh KodePerusahaan dari master_perusahaans
+        $kodePerusahaans = DB::table('master_perusahaans')->pluck('Kode');
+
+        foreach ($kodePerusahaans as $kodePerusahaan) {
+            foreach ($departemen as $d) {
+                DB::table('master_departemens')->insert([
+                    'KodeDepartemen' => $d[0],
+                    'IdDepartemen' => $d[1],
+                    'Nama' => $d[2],
+                    'KodePerusahaan' => $kodePerusahaan,
+                    'UserCreate' => 'Administrator',
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
         }
     }
 }

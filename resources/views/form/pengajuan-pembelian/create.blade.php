@@ -39,13 +39,37 @@
                                 <input type="hidden" name="pengajuan[id_permintaan]" value="{{ $permintaan->id }}">
                             </div>
                             <div class="col-md-4">
+                                <label for="departemen" class="form-label"><strong>Permintaan Dari
+                                        Departemen</strong></label>
+                                <select name="pengajuan[departemen]" id="departemen"
+                                    class="form-select select2 @error('pengajuan.departemen') is-invalid @enderror"
+                                    readonly>
+                                    @if (isset($permintaan->getDepartemen))
+                                        <option value="{{ $permintaan->Departemen }}" selected>
+                                            {{ $permintaan->getDepartemen->Nama ?? '-' }}
+                                        </option>
+                                    @else
+                                        <option value="">Pilih Departemen</option>
+                                        @foreach ($departemen as $dept)
+                                            <option value="{{ $dept->Kode }}"
+                                                {{ old('pengajuan.departemen') == $dept->Kode ? 'selected' : '' }}>
+                                                {{ $dept->Nama ?? '-' }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                @error('pengajuan.departemen')
+                                    <div class="text-danger mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
                                 <label for="jenis" class="form-label"><strong>Jenis</strong></label>
                                 <select name="pengajuan[jenis]" id="jenis"
-                                    class="form-select @error('pengajuan.jenis') is-invalid @enderror">
+                                    class="form-select select2 @error('pengajuan.jenis') is-invalid @enderror" readonly>
                                     <option value="">Pilih Jenis Pengajuan</option>
                                     @foreach ($JenisPengajuan as $jenis)
                                         <option value="{{ $jenis->id }}"
-                                            {{ old('pengajuan.jenis') == $jenis->id ? 'selected' : '' }}>
+                                            {{ old('pengajuan.jenis', $permintaan->Jenis) == $jenis->id ? 'selected' : '' }}>
                                             {{ $jenis->Nama ?? '-' }}
                                         </option>
                                     @endforeach
@@ -57,30 +81,30 @@
                             <div class="col-md-4">
                                 <label for="tujuan" class="form-label"><strong>Tujuan Pengajuan</strong></label>
                                 <select name="pengajuan[tujuan]" id="tujuan"
-                                    class="form-select @error('pengajuan.tujuan') is-invalid @enderror">
+                                    class="form-select select2 @error('pengajuan.tujuan') is-invalid @enderror">
                                     <option value="">Pilih Tujuan Pengajuan</option>
                                     <option value="Pembelian Baru"
-                                        {{ old('pengajuan.tujuan') == 'Pembelian Baru' ? 'selected' : '' }}>Pembelian Baru
+                                        {{ old('pengajuan.tujuan', $permintaan->Tujuan ?? '') == 'Pembelian Baru' ? 'selected' : '' }}>
+                                        Pembelian Baru
                                     </option>
                                     <option value="Penggantian"
-                                        {{ old('pengajuan.tujuan') == 'Penggantian' ? 'selected' : '' }}>Penggantian
+                                        {{ old('pengajuan.tujuan', $permintaan->Tujuan ?? '') == 'Penggantian' ? 'selected' : '' }}>
+                                        Penggantian
                                     </option>
                                     <option value="Perbaikan"
-                                        {{ old('pengajuan.tujuan') == 'Perbaikan' ? 'selected' : '' }}>
+                                        {{ old('pengajuan.tujuan', $permintaan->Tujuan ?? '') == 'Perbaikan' ? 'selected' : '' }}>
                                         Perbaikan</option>
                                 </select>
                                 @error('pengajuan.tujuan')
                                     <div class="text-danger mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
-                        <div class="row g-3 mb-4">
                             <div class="col-md-4">
                                 <label for="perkiraan_utilisasi" class="form-label"><strong>Perkiraan Utilitasi
                                         Bulanan</strong></label>
                                 <input type="text" name="pengajuan[perkiraan_utilitasi_bulanan]" id="perkiraan_utilisasi"
                                     class="form-control @error('pengajuan.perkiraan_utilitasi_bulanan') is-invalid @enderror"
-                                    value="{{ old('pengajuan.perkiraan_utilitasi_bulanan') }}"
+                                    value="{{ old('pengajuan.perkiraan_utilitasi_bulanan', isset($permintaan->getPengajuanPembelian) ? $permintaan->getPengajuanPembelian->PerkiraanUtilitasiBulanan : '') }}"
                                     placeholder="Contoh: 200 jam/bulan, 30 unit/bulan, dll">
                                 <small class="text-danger">Ketik "-" jika barang jasa / umum</small>
                                 @error('pengajuan.perkiraan_utilitasi_bulanan')
@@ -90,20 +114,25 @@
                             <div class="col-md-4">
                                 <label for="perkiraan_bep" class="form-label"><strong>Perkiraan BEP Pada
                                         Tahun</strong></label>
+                                @php
+                                    $selectedBepTahun = old(
+                                        'pengajuan.perkiraan_bep_pada_tahun',
+                                        isset($permintaan->getPengajuanPembelian)
+                                            ? $permintaan->getPengajuanPembelian->PerkiraanBepPadaTahun
+                                            : '',
+                                    );
+                                    $tahunSekarang = date('Y');
+                                @endphp
                                 <select name="pengajuan[perkiraan_bep_pada_tahun]" id="perkiraan_bep"
                                     class="form-select select2 @error('pengajuan.perkiraan_bep_pada_tahun') is-invalid @enderror">
                                     <option value="">Pilih tahun perkiraan BEP</option>
-                                    @php
-                                        $tahunSekarang = date('Y');
-                                    @endphp
                                     @for ($tahun = $tahunSekarang; $tahun >= 2010; $tahun--)
                                         <option value="{{ $tahun }}"
-                                            {{ old('pengajuan.perkiraan_bep_pada_tahun') == $tahun ? 'selected' : '' }}>
+                                            {{ $selectedBepTahun == $tahun ? 'selected' : '' }}>
                                             {{ $tahun }}
                                         </option>
                                     @endfor
-                                    <option value="-"
-                                        {{ old('pengajuan.perkiraan_bep_pada_tahun') == '-' ? 'selected' : '' }}>-</option>
+                                    <option value="-" {{ $selectedBepTahun == '-' ? 'selected' : '' }}>-</option>
                                 </select>
                                 <small class="text-danger">Ketik "-" jika barang jasa / umum</small>
                                 @error('pengajuan.perkiraan_bep_pada_tahun')
@@ -114,7 +143,8 @@
                                 <label for="rkap" class="form-label"><strong>RAB Project / RKAP</strong></label>
                                 <input type="text" name="pengajuan[rkap]" id="rkap"
                                     class="form-control @error('pengajuan.rkap') is-invalid @enderror"
-                                    value="{{ old('pengajuan.rkap') }}" placeholder="Masukkan RKAP">
+                                    value="{{ old('pengajuan.rkap', isset($permintaan->getPengajuanPembelian) ? $permintaan->getPengajuanPembelian->Rkap : '') }}"
+                                    placeholder="Masukkan RKAP">
                                 <small class="text-danger">Ketik "-" jika barang medis</small>
                                 @error('pengajuan.rkap')
                                     <div class="text-danger mt-1">{{ $message }}</div>
@@ -124,17 +154,14 @@
                             <div class="col-md-2">
                                 <label for="nominal_rkap" class="form-label"><strong>Nominal RKAP</strong></label>
                                 <input type="text" name="pengajuan[nominal_rkap]" id="nominal_rkap"
-                                    class="form-control @error('pengajuan.nominal_rkap') is-invalid @enderror"
-                                    value="{{ old('pengajuan.nominal_rkap') }}" placeholder="Contoh: 1.000.000"
-                                    oninput="formatRupiahInput(this)">
+                                    class="form-control @error('pengajuan.nominal_rkap') is-invalid @enderror currency-input-global"
+                                    value="{{ old('pengajuan.nominal_rkap', isset($permintaan->getPengajuanPembelian) ? $permintaan->getPengajuanPembelian->NominalRkap : '') }}"
+                                    placeholder="Contoh: 1.000.000">
                                 @error('pengajuan.nominal_rkap')
                                     <div class="text-danger mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-
                         </div>
-
-                        {{-- Table list vendor 3 TAB --}}
                         <div class="row">
                             <div class="col-xxl-12 col-xl-12">
                                 <div class="card">
@@ -145,18 +172,65 @@
                                         {{-- Tab Nav --}}
                                         <ul class="nav nav-tabs mb-3" id="vendorTab" role="tablist">
                                             @for ($i = 0; $i < 3; $i++)
+                                                @php
+                                                    $canActivate = true;
+                                                    if ($i > 0) {
+                                                        $prevVendorFilled = false;
+                                                        if (
+                                                            isset(
+                                                                $permintaan->getPengajuanPembelian->getVendor[$i - 1],
+                                                            ) &&
+                                                            $permintaan->getPengajuanPembelian->getVendor[$i - 1]
+                                                                ->NamaVendor
+                                                        ) {
+                                                            $prevVendorFilled = true;
+                                                        } elseif (old("vendors.$i.vendor_id")) {
+                                                            $prevVendorFilled = true;
+                                                        } elseif (
+                                                            request()->old('vendors.' . ($i - 1) . '.vendor_id')
+                                                        ) {
+                                                            $prevVendorFilled = true;
+                                                        }
+                                                        $canActivate = $prevVendorFilled;
+                                                    }
+                                                @endphp
                                                 <li class="nav-item" role="presentation">
                                                     <button class="nav-link {{ $i == 0 ? 'active' : '' }}"
                                                         id="vendor-tab-{{ $i }}" data-bs-toggle="tab"
                                                         data-bs-target="#vendor-panel-{{ $i }}" type="button"
                                                         role="tab" aria-controls="vendor-panel-{{ $i }}"
-                                                        aria-selected="{{ $i == 0 ? 'true' : 'false' }}">
+                                                        aria-selected="{{ $i == 0 ? 'true' : 'false' }}"
+                                                        {{ $i > 0 && !$canActivate ? 'disabled style=pointer-events:none;opacity:0.6;' : '' }}>
                                                         Vendor {{ $i + 1 }}
                                                     </button>
                                                 </li>
                                             @endfor
+                                            <script>
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    for (let i = 1; i < 3; i++) {
+                                                        let btn = document.getElementById("vendor-tab-" + i);
+                                                        if (btn) {
+                                                            btn.addEventListener('click', function(e) {
+                                                                let prevSelect = document.querySelector(`#vendor_list_${i-1}_id`);
+                                                                if (prevSelect && (!prevSelect.value || prevSelect.value === "")) {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    btn.blur();
+                                                                    alert("Isi vendor sebelumnya terlebih dahulu.");
+                                                                    return false;
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                });
+                                            </script>
                                         </ul>
                                         <div class="tab-content" id="vendorTabContent">
+                                            <div class="alert alert-info mb-3" role="alert">
+                                                <strong>Petunjuk:</strong> Untuk setiap tab vendor, isilah data vendor
+                                                secara berurutan, mulai dari Vendor 1. Tab vendor berikutnya baru bisa diisi
+                                                setelah vendor sebelumnya lengkap dipilih.
+                                            </div>
                                             @for ($i = 0; $i < 3; $i++)
                                                 <div class="tab-pane fade {{ $i == 0 ? 'show active' : '' }}"
                                                     id="vendor-panel-{{ $i }}" role="tabpanel"
@@ -185,8 +259,10 @@
                                                                                         <option
                                                                                             value="{{ $v->id }}"
                                                                                             data-namapic="{{ $v->NamaPic ?? '' }}"
-                                                                                            data-nohppic="{{ $v->NoHpPic ?? '' }}">
+                                                                                            data-nohppic="{{ $v->NoHpPic ?? '' }}"
+                                                                                            {{ isset($permintaan->getPengajuanPembelian->getVendor[$i]) && $permintaan->getPengajuanPembelian->getVendor[$i]->NamaVendor == $v->id ? 'selected' : '' }}>
                                                                                             {{ $v->Nama }}
+
                                                                                         </option>
                                                                                     @endforeach
                                                                                 </select>
@@ -239,6 +315,69 @@
                                                                 <small class="form-text text-muted">Anda bisa drag and drop
                                                                     file di
                                                                     area ini atau klik untuk memilih file.</small>
+                                                                @php
+                                                                    // Cek jika data penawaran vendor ada
+                                                                    $has_penawaran = false;
+                                                                    $preview_files = [];
+                                                                    if (
+                                                                        isset(
+                                                                            $permintaan->getPengajuanPembelian
+                                                                                ->getVendor[$i],
+                                                                        ) &&
+                                                                        $permintaan->getPengajuanPembelian->getVendor[
+                                                                            $i
+                                                                        ]->SuratPenawaranVendor
+                                                                    ) {
+                                                                        $has_penawaran = true;
+                                                                        // handle multiple file (assuming it's stored as JSON or separated by ; )
+    $raw =
+        $permintaan->getPengajuanPembelian
+            ->getVendor[$i]->SuratPenawaranVendor;
+    if (is_array($raw)) {
+        $preview_files = $raw;
+    } else {
+        $decoded = @json_decode($raw, true);
+        if (is_array($decoded)) {
+            $preview_files = $decoded;
+        } else {
+            $preview_files = preg_split(
+                '/[;,]/',
+                                                                                    $raw,
+                                                                                    -1,
+                                                                                    PREG_SPLIT_NO_EMPTY,
+                                                                                );
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                @endphp
+                                                                @if ($has_penawaran && !empty($preview_files))
+                                                                    <div class="mt-2">
+                                                                        <strong>Preview Surat Penawaran Vendor:</strong>
+                                                                        <ul class="list-unstyled">
+                                                                            @foreach ($preview_files as $f)
+                                                                                <li>
+                                                                                    <a href="{{ asset('storage/penawaran_vendor/' . $f) }}"
+                                                                                        target="_blank"
+                                                                                        class="btn btn-sm btn-info">
+                                                                                        <i class="fa fa-eye"></i> Preview
+                                                                                        @php
+                                                                                            $namafile = basename($f);
+                                                                                            $namafile =
+                                                                                                strlen($namafile) > 30
+                                                                                                    ? substr(
+                                                                                                            $namafile,
+                                                                                                            0,
+                                                                                                            27,
+                                                                                                        ) . '...'
+                                                                                                    : $namafile;
+                                                                                        @endphp
+                                                                                        {{ $namafile }}
+                                                                                    </a>
+                                                                                </li>
+                                                                            @endforeach
+                                                                        </ul>
+                                                                    </div>
+                                                                @endif
                                                                 @error('vendors.' . $i . '.penawaran_file')
                                                                     <div class="text-danger mt-1">
                                                                         {{ $message }}
@@ -266,6 +405,17 @@
                                                             </thead>
                                                             <tbody id="table-detail-body-{{ $i }}">
                                                                 @forelse ($permintaan->getDetail as $key => $barang)
+                                                                    @php
+                                                                        // Prepare values for fields from DB and format with JS later
+                                                                        // When value from DB is numeric (not formatted), just put the raw value, it will be formatted via JS
+                                                                        $vendorDetail = isset(
+                                                                            $permintaan->getPengajuanPembelian
+                                                                                ->getVendor[$i]->getVendorDetail[$key],
+                                                                        )
+                                                                            ? $permintaan->getPengajuanPembelian
+                                                                                ->getVendor[$i]->getVendorDetail[$key]
+                                                                            : null;
+                                                                    @endphp
                                                                     <tr>
                                                                         <td width="15%">
                                                                             <select
@@ -301,7 +451,8 @@
                                                                                 </option>
                                                                                 @foreach ($vendor as $v)
                                                                                     <option value="{{ $v->id }}">
-                                                                                        {{ $v->Nama }}</option>
+                                                                                        {{ $v->Nama }}
+                                                                                    </option>
                                                                                 @endforeach
                                                                             </select>
                                                                         </td>
@@ -318,16 +469,21 @@
                                                                                 name="vendors[{{ $i }}][details][{{ $key }}][harga_satuan]"
                                                                                 class="form-control harga-satuan-input-{{ $i }} currency-input-{{ $i }}"
                                                                                 placeholder="Harga Satuan"
-                                                                                oninput="hitungOtomatis{{ $i }}(this); formatRupiahInput{{ $i }}(this);"
-                                                                                onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                                oninput="hitungOtomatis{{ $i }}(this); formatRupiahInput(this);"
+                                                                                onkeyup="formatRupiahInput(this);"
+                                                                                value="{{ $vendorDetail ? number_format((int) str_replace(['.', ','], '', $vendorDetail->HargaSatuan), 0, ',', '.') : '' }}">
                                                                         </td>
                                                                         <td>
                                                                             <select
                                                                                 name="vendors[{{ $i }}][details][{{ $key }}][jenis_diskon_item]"
                                                                                 class="form-control jenis-diskon-item-select-{{ $i }}"
-                                                                                onchange="hitungOtomatis{{ $i }}(this)">
-                                                                                <option value="Rp">Rp</option>
-                                                                                <option value="Persen">Persen</option>
+                                                                                onchange="hitungOtomatis{{ $i }}(this); formatDiskonItemInput(this, {{ $i }}, {{ $key }});">
+                                                                                <option value="Rp"
+                                                                                    {{ $vendorDetail && $vendorDetail->JenisDiskon == 'Rp' ? 'selected' : '' }}>
+                                                                                    Rp</option>
+                                                                                <option value="Persen"
+                                                                                    {{ $vendorDetail && $vendorDetail->JenisDiskon == 'Persen' ? 'selected' : '' }}>
+                                                                                    Persen</option>
                                                                             </select>
                                                                         </td>
                                                                         <td>
@@ -335,23 +491,49 @@
                                                                                 name="vendors[{{ $i }}][details][{{ $key }}][diskon_item]"
                                                                                 class="form-control diskon-item-input-{{ $i }} currency-input-{{ $i }}"
                                                                                 placeholder="Diskon"
-                                                                                oninput="hitungOtomatis{{ $i }}(this);"
-                                                                                onkeyup="">
+                                                                                oninput="
+                                                                                    hitungOtomatis{{ $i }}(this);
+                                                                                    var jenisDiskon = document.getElementsByName('vendors[{{ $i }}][details][{{ $key }}][jenis_diskon_item]')[0]?.value;
+                                                                                    if(jenisDiskon === 'Rp'){
+                                                                                        formatRupiahInput(this);
+                                                                                        this.removeAttribute('max');
+                                                                                        this.type = 'text';
+                                                                                    } else if(jenisDiskon === 'Persen'){
+                                                                                        // Batas maksimum 100 jika tipe Persen
+                                                                                        this.type='number';
+                                                                                        this.setAttribute('max', '100');
+                                                                                        if(this.value > 100) this.value = 100;
+                                                                                    }
+                                                                                "
+                                                                                onkeyup="
+                                                                                    var jenisDiskon = document.getElementsByName('vendors[{{ $i }}][details][{{ $key }}][jenis_diskon_item]')[0]?.value;
+                                                                                    if(jenisDiskon === 'Rp'){
+                                                                                        formatRupiahInput(this);
+                                                                                        this.removeAttribute('max');
+                                                                                        this.type = 'text';
+                                                                                    } else if(jenisDiskon === 'Persen'){
+                                                                                        this.type='number';
+                                                                                        this.setAttribute('max', '100');
+                                                                                        if(this.value > 100) this.value = 100;
+                                                                                    }
+                                                                                "
+                                                                                value="{{ $vendorDetail && $vendorDetail->JenisDiskon == 'Rp' ? (is_numeric($vendorDetail->Diskon) ? number_format((int) str_replace(['.', ','], '', $vendorDetail->Diskon), 0, ',', '.') : $vendorDetail->Diskon) : ($vendorDetail ? $vendorDetail->Diskon : '') }}">
                                                                         </td>
-
                                                                         <td>
                                                                             <input type="text"
                                                                                 name="vendors[{{ $i }}][details][{{ $key }}][total_diskon]"
                                                                                 class="form-control total-diskon-input-{{ $i }} currency-input-{{ $i }}"
                                                                                 placeholder="Total Diskon" readonly
-                                                                                onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                                onkeyup="formatRupiahInput(this);"
+                                                                                value="{{ $vendorDetail ? number_format((int) str_replace(['.', ','], '', $vendorDetail->TotalDiskon), 0, ',', '.') : '' }}">
                                                                         </td>
                                                                         <td>
                                                                             <input type="text"
                                                                                 name="vendors[{{ $i }}][details][{{ $key }}][total_harga]"
                                                                                 class="form-control total-harga-input-{{ $i }} currency-input-{{ $i }}"
                                                                                 placeholder="Total Harga" readonly
-                                                                                onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                                onkeyup="formatRupiahInput{{ $i }}(this);"
+                                                                                value="{{ $vendorDetail ? number_format((int) str_replace(['.', ','], '', $vendorDetail->TotalHarga), 0, ',', '.') : '' }}">
                                                                         </td>
                                                                     </tr>
                                                                 @empty
@@ -363,6 +545,17 @@
                                                                 @endforelse
                                                             </tbody>
                                                             <tfoot>
+                                                                @php
+                                                                    $vendorMain = isset(
+                                                                        $permintaan->getPengajuanPembelian->getVendor[
+                                                                            $i
+                                                                        ],
+                                                                    )
+                                                                        ? $permintaan->getPengajuanPembelian->getVendor[
+                                                                            $i
+                                                                        ]
+                                                                        : null;
+                                                                @endphp
                                                                 <tr>
                                                                     <td colspan="6" class="text-end"><strong>Total
                                                                             Harga Sebelum
@@ -374,7 +567,21 @@
                                                                             class="form-control currency-input-{{ $i }}"
                                                                             placeholder="Total Harga Sebelum Diskon"
                                                                             readonly
-                                                                            onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                            value="{{ $vendorMain ? 'Rp ' . number_format((int) str_replace(['.', ','], '', $vendorMain->HargaTanpaDiskon), 0, ',', '.') : '' }}">
+                                                                    </td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                    <td colspan="6" class="text-end"><strong>Total
+                                                                            Diskon</strong>
+                                                                    </td>
+                                                                    <td colspan="2">
+                                                                        <input type="text"
+                                                                            name="vendors[{{ $i }}][total_diskon]"
+                                                                            id="total-diskon-{{ $i }}"
+                                                                            class="form-control currency-input-{{ $i }}"
+                                                                            placeholder="Total Semua Diskon" readonly
+                                                                            value="{{ $vendorMain ? 'Rp ' . number_format((int) str_replace(['.', ','], '', $vendorMain->TotalDiskon), 0, ',', '.') : '' }}">
                                                                     </td>
                                                                 </tr>
                                                                 <tr>
@@ -388,20 +595,7 @@
                                                                             class="form-control currency-input-{{ $i }}"
                                                                             placeholder="Total Harga Setelah Diskon"
                                                                             readonly
-                                                                            onkeyup="formatRupiahInput{{ $i }}(this);">
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td colspan="6" class="text-end"><strong>Total
-                                                                            Diskon</strong>
-                                                                    </td>
-                                                                    <td colspan="2">
-                                                                        <input type="text"
-                                                                            name="vendors[{{ $i }}][total_diskon]"
-                                                                            id="total-diskon-{{ $i }}"
-                                                                            class="form-control currency-input-{{ $i }}"
-                                                                            placeholder="Total Semua Diskon" readonly
-                                                                            onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                            value="{{ $vendorMain ? 'Rp ' . number_format((int) str_replace(['.', ','], '', $vendorMain->HargaDenganDiskon), 0, ',', '.') : '' }}">
                                                                     </td>
                                                                 </tr>
                                                                 <tr>
@@ -413,7 +607,8 @@
                                                                             name="vendors[{{ $i }}][ppn_persen]"
                                                                             id="ppn-persen-{{ $i }}"
                                                                             class="form-control" placeholder="PPN (%)"
-                                                                            oninput="hitungOtomatisGlobal{{ $i }}()">
+                                                                            oninput="hitungOtomatisGlobal{{ $i }}()"
+                                                                            value="{{ $vendorMain ? $vendorMain->Ppn : '' }}">
                                                                     </td>
                                                                     <td></td>
                                                                 </tr>
@@ -426,26 +621,26 @@
                                                                             id="total-ppn-{{ $i }}"
                                                                             class="form-control currency-input-{{ $i }}"
                                                                             placeholder="Total Semua PPN" readonly
-                                                                            onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                            value="{{ $vendorMain ? 'Rp ' . number_format((int) str_replace(['.', ','], '', $vendorMain->TotalPpn), 0, ',', '.') : '' }}">
                                                                     </td>
                                                                 </tr>
                                                                 <tr>
-                                                                    <td colspan="6" class="text-end"><strong>Grand
-                                                                            Total</strong>
+                                                                    <td colspan="6" class="text-end"><strong>Total
+                                                                            Harga</strong>
                                                                     </td>
                                                                     <td colspan="2">
                                                                         <input type="text"
                                                                             name="vendors[{{ $i }}][grand_total]"
                                                                             id="grand-total-{{ $i }}"
                                                                             class="form-control currency-input-{{ $i }}"
-                                                                            placeholder="Grand Total" readonly
-                                                                            onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                            placeholder="Total Harga" readonly
+                                                                            value="{{ $vendorMain ? 'Rp ' . number_format((int) str_replace(['.', ','], '', $vendorMain->TotalHarga), 0, ',', '.') : '' }}">
                                                                     </td>
                                                                 </tr>
                                                             </tfoot>
                                                         </table>
                                                         <script>
-                                                            // Javascript khusus vendor tab [{{ $i }}]
+                                                            // --- FORMATTING & AUTOCALC vendor tab [{{ $i }}] ---
                                                             function formatRupiah{{ $i }}(angka, prefix = "Rp ") {
                                                                 if (angka === null || angka === undefined) return '';
                                                                 let number_string = angka.toString().replace(/[^,\d]/g, ''),
@@ -463,10 +658,10 @@
                                                                 return prefix + rupiah;
                                                             }
 
-                                                            // Format input otomatis untuk vendor {{ $i }}
                                                             function formatRupiahInput{{ $i }}(input) {
-                                                                if (input.hasAttribute('readonly')) return;
-                                                                let nilai = input.value.replace(/[^,\d]/g, '');
+                                                                // Format to rupiah no matter initial value
+                                                                let nilaiOrigin = input.value;
+                                                                let nilai = nilaiOrigin.replace(/[^,\d]/g, '');
                                                                 if (!nilai) {
                                                                     input.value = '';
                                                                     return;
@@ -477,7 +672,7 @@
 
                                                             function parseNum{{ $i }}(val) {
                                                                 if (typeof val === 'string') {
-                                                                    val = val.replace(/[^0-9\,\-]/g, "");
+                                                                    val = val.replace(/[^0-9,\-]/g, "");
                                                                     val = val.replace(/\./g, "");
                                                                     val = val.replace(',', '.');
                                                                 }
@@ -485,7 +680,6 @@
                                                                 return isNaN(x) ? 0 : x;
                                                             }
 
-                                                            // Helper: trigger perhitungan global per tab
                                                             function hitungOtomatisGlobal{{ $i }}() {
                                                                 let $first = $(
                                                                     "#table-detail-body-{{ $i }} input, #table-detail-body-{{ $i }} select"
@@ -493,7 +687,6 @@
                                                                 if ($first.length) hitungOtomatis{{ $i }}($first[0]);
                                                             }
 
-                                                            // Logic perhitungan tab {{ $i }} (vendor {{ $i }})
                                                             function hitungOtomatis{{ $i }}(elem) {
                                                                 let $row = $(elem).closest('tr');
                                                                 let jumlah = parseNum{{ $i }}($row.find('.jumlah-vendor-input-{{ $i }}').val());
@@ -566,7 +759,40 @@
                                                                 $('#grand-total-{{ $i }}').val(formatRupiah{{ $i }}(grandTotal.toFixed(0)));
                                                             }
 
+                                                            // Init formatting & hitung otomatis di document ready agar saat datanya dari DB, langsung keformat & terhitung:
                                                             $(document).ready(function() {
+                                                                // Format currency input saat page load
+                                                                $('.currency-input-{{ $i }}').each(function() {
+                                                                    formatRupiahInput{{ $i }}(this);
+                                                                });
+
+                                                                // Untuk setiap baris, trigger hitung setelah format
+                                                                $('#table-detail-body-{{ $i }} tr').each(function(idx, tr) {
+                                                                    // pastikan kalau ada input harga_satuan nya, lakukan format dan trigger hitung
+                                                                    $(tr).find('.harga-satuan-input-{{ $i }}').each(function() {
+                                                                        formatRupiahInput{{ $i }}(this);
+                                                                    });
+                                                                });
+
+                                                                // Panggil hitung otomatis untuk semua baris jika ada data
+                                                                // (semua baris diproses satu-satu, supaya datanya konsisten)
+                                                                setTimeout(function() {
+                                                                    $('#table-detail-body-{{ $i }} tr').each(function(idx, tr) {
+                                                                        // Trigger hitung otomatis untuk setiap input field utama (harga_satuan/input diskon)
+                                                                        var hargaInput = $(tr).find('.harga-satuan-input-{{ $i }}');
+                                                                        if (hargaInput.length > 0 && hargaInput.val() != "") {
+                                                                            hitungOtomatis{{ $i }}(hargaInput[0]);
+                                                                        }
+                                                                    });
+
+                                                                    // Sync value awal Nama Vendor pada tabel dengan dropdown utama & lock
+                                                                    var mainVendorSelect = $('#vendor_list_{{ $i }}_id');
+                                                                    var vendorValue = mainVendorSelect.val();
+                                                                    $('#table-detail-body-{{ $i }} select.vendor-name-in-table').each(function() {
+                                                                        $(this).val(vendorValue).prop('disabled', true).trigger('change');
+                                                                    });
+                                                                }, 10);
+
                                                                 $('#table-detail-vendor-{{ $i }}').on('input change blur',
                                                                     '.jumlah-vendor-input-{{ $i }}, .harga-satuan-input-{{ $i }}, .diskon-item-input-{{ $i }}, .jenis-diskon-item-select-{{ $i }}',
                                                                     function() {
@@ -608,33 +834,6 @@
                                                                 $('#ppn-persen-{{ $i }}').on('input change', function() {
                                                                     hitungOtomatisGlobal{{ $i }}();
                                                                 });
-
-                                                                setTimeout(function() {
-                                                                    let $first = $(
-                                                                        "#table-detail-body-{{ $i }} input, #table-detail-body-{{ $i }} select"
-                                                                    ).first();
-                                                                    if ($first.length) hitungOtomatis{{ $i }}($first[0]);
-                                                                    $('.currency-input-{{ $i }}').each(function() {
-                                                                        var $input = $(this);
-                                                                        var $row = $input.closest('tr');
-                                                                        if ($input.is('.diskon-item-input-{{ $i }}')) {
-                                                                            var jenisDiskon = $row.find(
-                                                                                '.jenis-diskon-item-select-{{ $i }}').val();
-                                                                            if (jenisDiskon === 'Rp') {
-                                                                                formatRupiahInput{{ $i }}(this);
-                                                                            }
-                                                                        } else {
-                                                                            formatRupiahInput{{ $i }}(this);
-                                                                        }
-                                                                    });
-
-                                                                    // Sync value awal Nama Vendor pada tabel dengan dropdown utama & lock
-                                                                    var mainVendorSelect = $('#vendor_list_{{ $i }}_id');
-                                                                    var vendorValue = mainVendorSelect.val();
-                                                                    $('#table-detail-body-{{ $i }} select.vendor-name-in-table').each(function() {
-                                                                        $(this).val(vendorValue).prop('disabled', true).trigger('change');
-                                                                    });
-                                                                }, 500);
                                                             });
                                                         </script>
                                                     </div>
@@ -664,6 +863,7 @@
 
 @push('js')
     <script>
+        // Global rupiah formatting for other fields (outside vendor tabs)
         function formatRupiahInput(input) {
             let angka = input.value.replace(/[^,\d]/g, '').toString();
             let split = angka.split(',');
@@ -679,6 +879,26 @@
             rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
             input.value = rupiah;
         }
+        $(document).ready(function() {
+            let $rkap = $('#nominal_rkap');
+            if ($rkap.length) {
+                formatRupiahInput($rkap[0]);
+                $rkap.on('keyup blur', function() {
+                    formatRupiahInput(this);
+                });
+            }
+            // Pemanggilan format untuk field lain yang perlu langsung diformat, misal dengan class tertentu
+            $('.currency-input-global').each(function() {
+                formatRupiahInput(this);
+            });
+
+            // Pastikan pada saat pertama kali load semua input dengan class currency-input-global sudah diformat
+            setTimeout(function() {
+                $('.currency-input-global').each(function() {
+                    formatRupiahInput(this);
+                });
+            }, 0);
+        });
     </script>
     <script>
         // Fungsi untuk update info vendor & sinkronisasi dropdown vendor di tabel, untuk 3 tab vendor

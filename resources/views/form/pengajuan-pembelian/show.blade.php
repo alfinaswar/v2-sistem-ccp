@@ -460,13 +460,32 @@
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
-                                                        <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                            class="btn btn-success">
-                                                            <i class="fa fa-lightbulb"></i> FUI
-                                                        </a>
+                                                        @php
+                                                            $adaFui = $item->getFui ? true : false;
+                                                        @endphp
+                                                        @if (!$adaFui)
+                                                            <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                class="btn btn-warning">
+                                                                <i class="fa fa-lightbulb"></i> Lengkapi FUI
+                                                            </a>
+                                                        @else
+                                                            <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
+                                                                class="btn btn-info">
+                                                                <i class="fa fa-print"></i>
+                                                                Cetak FUI
+                                                            </a>
+                                                            <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
+                                                                class="btn btn-success">
+                                                                <i class="fa fa-eye"></i>
+                                                                Lihat FUI
+                                                            </a>
+                                                        @endif
                                                     </td>
                                                     <td class="text-center">
-
+                                                        <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                            class="btn btn-primary">
+                                                            <i class="fa fa-pen"></i> Buat Rekomendasi
+                                                        </a>
                                                         @php
                                                             $adaRekomendasi = $item->getRekomendasi ? true : false;
                                                         @endphp
@@ -474,6 +493,10 @@
                                                             <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                 class="btn btn-info ms-2" target="_blank">
                                                                 <i class="fa fa-print"></i> Print
+                                                            </a>
+                                                            <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                class="btn btn-secondary ms-2" target="_blank">
+                                                                <i class="fa fa-eye"></i> Lihat
                                                             </a>
                                                         @endif
                                                     </td>

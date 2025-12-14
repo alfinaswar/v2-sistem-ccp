@@ -183,32 +183,38 @@
                             @endcan
                         </ul>
                     </li>
-                    @can('manajemen-user')
+                    @can('kelola-pengguna')
                         <li class="submenu-open">
                             <h6 class="submenu-hdr">Kelola Pengguna</h6>
                             <ul>
-                                <li class="{{ Request::segment(1) == 'users' ? 'active' : '' }}">
-                                    <a href="{{ route('users.index') }}">
-                                        <i data-feather="user"></i>
-                                        <span>Akun</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::segment(1) == 'roles' ? 'active' : '' }}">
-                                    <a href="{{ route('roles.index') }}">
-                                        <i data-feather="shield"></i>
-                                        <span>Role</span>
-                                    </a>
-                                </li>
-                                <li class="{{ Request::segment(1) == 'permission' ? 'active' : '' }}">
-                                    <a href="{{ route('permission.index') }}">
-                                        <i data-feather="lock"></i>
-                                        <span>Permission</span>
-                                    </a>
-                                </li>
+                                @can('user-list')
+                                    <li class="{{ Request::segment(1) == 'users' ? 'active' : '' }}">
+                                        <a href="{{ route('users.index') }}">
+                                            <i data-feather="user"></i>
+                                            <span>Akun</span>
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('role-list')
+                                    <li class="{{ Request::segment(1) == 'roles' ? 'active' : '' }}">
+                                        <a href="{{ route('roles.index') }}">
+                                            <i data-feather="shield"></i>
+                                            <span>Role</span>
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('permission-list')
+                                    <li class="{{ Request::segment(1) == 'permission' ? 'active' : '' }}">
+                                        <a href="{{ route('permission.index') }}">
+                                            <i data-feather="lock"></i>
+                                            <span>Permission</span>
+                                        </a>
+                                    </li>
+                                @endcan
                             </ul>
                         </li>
                     @endcan
-                    @can('master-data')
+                    @can('data-master')
                         <li class="submenu-open">
                             <h6 class="submenu-hdr">Master Data</h6>
                             <ul>
@@ -220,76 +226,96 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        <li>
-                                            <a href="{{ route('perusahaan.index') }}"
-                                                class="{{ Request::segment(2) == 'perusahaan' ? 'active' : '' }}">
-                                                <i data-feather="briefcase"></i>
-                                                <span>Perusahaan</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('departemen.index') }}"
-                                                class="{{ Request::segment(2) == 'departemen' ? 'active' : '' }}">
-                                                <i data-feather="grid"></i>
-                                                <span>Departemen</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('jabatan.index') }}"
-                                                class="{{ Request::segment(2) == 'jabatan' ? 'active' : '' }}">
-                                                <i data-feather="grid"></i>
-                                                <span>Jabatan</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('satuan.index') }}"
-                                                class="{{ Request::segment(2) == 'satuan' ? 'active' : '' }}">
-                                                <i data-feather="tag"></i>
-                                                <span>Satuan Barang</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('merk.index') }}"
-                                                class="{{ Request::segment(2) == 'merk' ? 'active' : '' }}">
-                                                <i data-feather="award"></i>
-                                                <span>Merek</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('barang.index') }}"
-                                                class="{{ Request::segment(2) == 'barang' ? 'active' : '' }}">
-                                                <i data-feather="box"></i>
-                                                <span>Barang</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('vendor.index') }}"
-                                                class="{{ Request::segment(2) == 'vendor' ? 'active' : '' }}">
-                                                <i data-feather="truck"></i>
-                                                <span>Vendor</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('parameter.index') }}"
-                                                class="{{ Request::segment(2) == 'parameter' ? 'active' : '' }}">
-                                                <i data-feather="sliders"></i>
-                                                <span>Parameter</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('nama-form.index') }}"
-                                                class="{{ Request::segment(2) == 'form' ? 'active' : '' }}">
-                                                <i data-feather="file-text"></i>
-                                                <span>Master Form</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('jenis-pengajuan.index') }}"
-                                                class="{{ Request::segment(2) == 'jenis-pengajuan' ? 'active' : '' }}">
-                                                <i data-feather="list"></i>
-                                                <span>Master Jenis Pengajuan</span>
-                                            </a>
-                                        </li>
+                                        @can('perusahaan-list')
+                                            <li>
+                                                <a href="{{ route('perusahaan.index') }}"
+                                                    class="{{ Request::segment(2) == 'perusahaan' ? 'active' : '' }}">
+                                                    <i data-feather="briefcase"></i>
+                                                    <span>Perusahaan</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('departemen-list')
+                                            <li>
+                                                <a href="{{ route('departemen.index') }}"
+                                                    class="{{ Request::segment(2) == 'departemen' ? 'active' : '' }}">
+                                                    <i data-feather="grid"></i>
+                                                    <span>Departemen</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('jabatan-list')
+                                            <li>
+                                                <a href="{{ route('jabatan.index') }}"
+                                                    class="{{ Request::segment(2) == 'jabatan' ? 'active' : '' }}">
+                                                    <i data-feather="grid"></i>
+                                                    <span>Jabatan</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('satuan-barang-list')
+                                            <li>
+                                                <a href="{{ route('satuan.index') }}"
+                                                    class="{{ Request::segment(2) == 'satuan' ? 'active' : '' }}">
+                                                    <i data-feather="tag"></i>
+                                                    <span>Satuan Barang</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('master-merk-list')
+                                            <li>
+                                                <a href="{{ route('merk.index') }}"
+                                                    class="{{ Request::segment(2) == 'merk' ? 'active' : '' }}">
+                                                    <i data-feather="award"></i>
+                                                    <span>Merek</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('barang-list')
+                                            <li>
+                                                <a href="{{ route('barang.index') }}"
+                                                    class="{{ Request::segment(2) == 'barang' ? 'active' : '' }}">
+                                                    <i data-feather="box"></i>
+                                                    <span>Barang</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('vendor-list')
+                                            <li>
+                                                <a href="{{ route('vendor.index') }}"
+                                                    class="{{ Request::segment(2) == 'vendor' ? 'active' : '' }}">
+                                                    <i data-feather="truck"></i>
+                                                    <span>Vendor</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('parameter-list')
+                                            <li>
+                                                <a href="{{ route('parameter.index') }}"
+                                                    class="{{ Request::segment(2) == 'parameter' ? 'active' : '' }}">
+                                                    <i data-feather="sliders"></i>
+                                                    <span>Parameter</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('nama-form-list')
+                                            <li>
+                                                <a href="{{ route('nama-form.index') }}"
+                                                    class="{{ Request::segment(2) == 'form' ? 'active' : '' }}">
+                                                    <i data-feather="file-text"></i>
+                                                    <span>Master Form</span>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('jenis-pengajuan-list')
+                                            <li>
+                                                <a href="{{ route('jenis-pengajuan.index') }}"
+                                                    class="{{ Request::segment(2) == 'jenis-pengajuan' ? 'active' : '' }}">
+                                                    <i data-feather="list"></i>
+                                                    <span>Master Jenis Pengajuan</span>
+                                                </a>
+                                            </li>
+                                        @endcan
                                         {{-- Tambahkan menu master data lain di sini jika diperlukan --}}
                                     </ul>
                                 </li>

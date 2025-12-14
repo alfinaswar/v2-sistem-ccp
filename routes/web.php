@@ -190,8 +190,12 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/edit/{id}', [UsulanInvestasiController::class, 'edit'])->name('usulan-investasi.edit');
         Route::put('/update/{id}', [UsulanInvestasiController::class, 'update'])->name('usulan-investasi.update');
         Route::get('/show/{IdPengajuan}/{barang}', [UsulanInvestasiController::class, 'show'])->name('usulan-investasi.show');
+        Route::get('/print/{IdPengajuan}/{barang}', [UsulanInvestasiController::class, 'print'])->name('usulan-investasi.print');
         Route::delete('/delete/{id}', [UsulanInvestasiController::class, 'destroy'])->name('usulan-investasi.destroy');
         Route::get('/cetak/{id}', [UsulanInvestasiController::class, 'cetak'])->name('usulan-investasi.cetak');
+
+        Route::post('/setujui-kadiv/{id}', [UsulanInvestasiController::class, 'approveKadiv'])->name('rekomendasi.setujui-kadiv');
+        Route::post('/setujui-direktur/{id}', [UsulanInvestasiController::class, 'approveDirektur'])->name('rekomendasi.setujui-direktur');
     });
     Route::prefix('form-hta-atau-gpa')->group(function () {
         Route::get('/hta/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'index'])->name('htagpa.form-hta');

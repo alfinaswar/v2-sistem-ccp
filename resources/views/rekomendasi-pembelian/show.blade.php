@@ -408,13 +408,18 @@
                                                         @endphp
                                                         @if (!$adaFui)
                                                             <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                class="btn btn-success">
+                                                                class="btn btn-warning">
                                                                 <i class="fa fa-lightbulb"></i> Lengkapi FUI
                                                             </a>
                                                         @else
+                                                            <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
+                                                                class="btn btn-info">
+                                                                <i class="fa fa-print"></i>
+                                                                Cetak FUI
+                                                            </a>
                                                             <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
                                                                 class="btn btn-success">
-                                                                <i class="fa fa-check-circle"></i>
+                                                                <i class="fa fa-eye"></i>
                                                                 Lihat FUI
                                                             </a>
                                                         @endif
@@ -432,10 +437,12 @@
                                                                 class="btn btn-info ms-2" target="_blank">
                                                                 <i class="fa fa-print"></i> Print
                                                             </a>
-                                                            <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                class="btn btn-secondary ms-2" target="_blank">
-                                                                <i class="fa fa-eye"></i> Lihat
-                                                            </a>
+                                                            @can('rekomendasi-show')
+                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                    class="btn btn-secondary ms-2" target="_blank">
+                                                                    <i class="fa fa-eye"></i> Lihat
+                                                                </a>
+                                                            @endcan
                                                         @endif
                                                     </td>
 
