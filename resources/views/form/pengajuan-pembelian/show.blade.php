@@ -444,6 +444,8 @@
                                             <th>Nama Barang</th>
                                             <th class="text-center">HTA / GPA</th>
                                             <th class="text-center">Usulan Investasi</th>
+                                            <th class="text-center">Lembar Disposisi</th>
+                                            <th class="text-center">Feasibility Study</th>
                                             <th class="text-center">Rekomendasi</th>
                                         </tr>
                                     </thead>
@@ -463,7 +465,7 @@
                                                             <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
                                                                 class="btn btn-warning">
                                                                 <i class="fa fa-exclamation-circle"></i>
-                                                                Lengkapi Data HTA
+                                                                Lengkapi HTA
                                                             </a>
                                                         @else
                                                             @if ($data->Status == 'Draft')
@@ -476,8 +478,13 @@
                                                             <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
                                                                 class="btn btn-success">
                                                                 <i class="fa fa-check-circle"></i>
-                                                                Lihat Data HTA
+                                                                Lihat
                                                             </a>
+                                                            {{-- <a href="{{ route('htagpa.print', [$data->id, $item->id]) }}"
+                                                                class="btn btn-info" target="_blank">
+                                                                <i class="fa fa-print"></i>
+                                                                Cetak HTA
+                                                            </a> --}}
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
@@ -517,6 +524,29 @@
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
+                                                        @php
+                                                            $adaLembarDisposisi = $item->getDisposisi ? true : false;
+                                                        @endphp
+                                                        @if ($adaLembarDisposisi)
+                                                            <a href="{{ route('lembar-disposisi.show', [$data->id, $item->id]) }}"
+                                                                class="btn btn-success">
+                                                                <i class="fa fa-eye"></i>
+                                                                Lihat Lembar Disposisi
+                                                            </a>
+                                                        @else
+                                                            <a href="{{ route('lembar-disposisi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                class="btn btn-primary">
+                                                                <i class="fa fa-edit"></i>
+                                                                Isi Lembar Disposisi
+                                                            </a>
+                                                        @endif
+
+                                                    </td>
+                                                    <td class="text-center">
+                                                        wqe
+                                                    </td>
+
+                                                    <td class="text-center">
 
                                                         @php
                                                             $adaRekomendasi = $item->getRekomendasi ? true : false;
@@ -524,12 +554,12 @@
                                                         @if ($adaRekomendasi)
                                                             <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                 class="btn btn-info ms-2" target="_blank">
-                                                                <i class="fa fa-print"></i> Cetak Rekomendasi Pembelian
+                                                                <i class="fa fa-print"></i> Cetak
                                                             </a>
                                                             @can('rekomendasi-show')
                                                                 <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                     class="btn btn-secondary ms-2" target="_blank">
-                                                                    <i class="fa fa-eye"></i> Lihat Rekomendasi Pembelian
+                                                                    <i class="fa fa-eye"></i> Lihat
                                                                 </a>
                                                             @endcan
                                                         @else

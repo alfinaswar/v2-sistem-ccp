@@ -255,7 +255,7 @@ class PengajuanPembelianController extends Controller
     public function show($id)
     {
         $id = decrypt($id);
-        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang', 'getPengajuanItem.getHtaGpa', 'getPengajuanItem.getRekomendasi', 'getPengajuanItem.getFui', 'getDepartemen')->find($id);
+        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang', 'getPengajuanItem.getHtaGpa', 'getPengajuanItem.getRekomendasi', 'getPengajuanItem.getFui', 'getPengajuanItem.getDisposisi', 'getDepartemen')->find($id);
         // dd($data);
         $vendor = MasterVendor::orderBy('Nama', 'asc')->get();
         $masterbarang = MasterBarang::get();

@@ -10,19 +10,17 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('penilai_hta_gpas', function (Blueprint $table) {
+        Schema::create('lembar_disposisi_approvals', function (Blueprint $table) {
             $table->id();
-            $table->string('IdHtaGpa')->nullable();
-            $table->string('TipeInputPenilai')->nullable();
+            $table->string('IdLembarDisposisi')->nullable();
             $table->string('IdUser')->nullable();
-            $table->string('PenilaiKe')->nullable();
             $table->string('Nama')->nullable();
             $table->string('Jabatan')->nullable();
-            $table->string('Email')->nullable();
+            $table->string('Departemen')->nullable();
+            $table->string('Justifikasi')->nullable();
+            $table->enum('Status', ['Y', 'N'])->nullable();
+            $table->dateTime('ApprovePada')->nullable();
             $table->string('ApprovalToken')->nullable();
-            $table->string('UserAcc')->nullable();
-            $table->string('AccPada')->nullable();
-            $table->enum('StatusAcc', ['Y', 'N'])->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();
             $table->string('UserDelete')->nullable();
@@ -36,6 +34,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('penilai_hta_gpas');
+        Schema::dropIfExists('lembar_disposisi_approvals');
     }
 };

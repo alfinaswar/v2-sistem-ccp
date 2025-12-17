@@ -9,8 +9,10 @@ use App\Models\MasterParameter;
 use App\Models\PengajuanPembelian;
 use App\Models\PenilaiHtaGpa;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class HtaDanGpaController extends Controller
 {
@@ -22,7 +24,10 @@ class HtaDanGpaController extends Controller
         $data = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
-                $query->where('PengajuanItemId', $idPengajuanItem);
+                $query->where('PengajuanItemId', $idPengajuanItem)->with('getPenilai');
+            },
+            'getHtaGpa' => function ($query) use ($idPengajuanItem) {
+                $query->where('PengajuanItemId', $idPengajuanItem)->with('getPenilai');
             },
             'getJenisPermintaan.getForm',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
@@ -121,10 +126,10 @@ class HtaDanGpaController extends Controller
             ->first();
 
         if (!$cariHTA) {
+
             return redirect()->back()->with('error', 'Data HTA tidak ditemukan.');
         }
 
-        // Rewrite to handle flat arrays, not array of objects
         $count = count($request->TipeInputPenilai);
         for ($i = 0; $i < $count; $i++) {
             PenilaiHtaGpa::updateOrCreate(
@@ -134,16 +139,20 @@ class HtaDanGpaController extends Controller
                 ],
                 [
                     'IdUser' => $request->NamaPenilai[$i] ?? null,
+                    'TipeInputPenilai' => $request->TipeInputPenilai[$i] ?? null,
                     'Nama' => $request->NamaPenilaiManual[$i] ?? null,
                     'Jabatan' => null,
                     'Email' => $request->EmailPenilai[$i] ?? null,
+                    'ApprovalToken' => Str::uuid(),
                     'UserCreate' => auth()->user()->name,
                 ]
             );
         }
+
         $idPengajuan = $request->IdPengajuan;
         $idPengajuanItem = $request->PengajuanItemId;
-        // === KIRIM EMAIL ===
+
+
         $pengajuan = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getHtaGpa' => function ($query) use ($idPengajuanItem) {
@@ -160,16 +169,28 @@ class HtaDanGpaController extends Controller
             }
         ])->find($idPengajuan);
 
-        $emailTujuan = PenilaiHtaGpa::where('IdHtaGpa', $cariHTA->id)
-            ->pluck('Email')
-            ->filter()
-            ->toArray();
+        $parameter = MasterParameter::get();
+        $penilaiList = PenilaiHtaGpa::where('IdHtaGpa', $cariHTA->id)->get();
 
-        if (count($emailTujuan) > 0) {
-            Mail::to($emailTujuan)
-                ->send(new NotifikasiPengajuanMail($pengajuan, $cariHTA));
+        foreach ($penilaiList as $penilai) {
+            if (empty($penilai->Email)) {
+                continue;
+            }
+            if (empty($penilai->ApprovalToken)) {
+                $penilai->ApprovalToken = Str::uuid();
+                $penilai->save();
+            }
+
+            Mail::to($penilai->Email)
+                ->send(
+                    new NotifikasiPengajuanMail(
+                        $pengajuan,
+                        $cariHTA,
+                        $parameter,
+                        $penilai
+                    )
+                );
         }
-
         return redirect()->back()->with('success', 'Data berhasil disimpan & email notifikasi terkirim.');
     }
 
@@ -194,11 +215,36 @@ class HtaDanGpaController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
-        // dd($data);
+
         $parameter = MasterParameter::get();
         return view('hta-gpa.show', compact('data', 'parameter'));
     }
+    public function print($idPengajuan, $idPengajuanItem)
+    {
+        $data = PengajuanPembelian::with([
+            'getVendor.getVendorDetail',
+            'getHtaGpa' => function ($query) use ($idPengajuanItem) {
+                $query->where('PengajuanItemId', $idPengajuanItem);
+            },
+            'getJenisPermintaan.getForm',
+            'getHtaGpa.getPenilai1',
+            'getHtaGpa.getPenilai2',
+            'getHtaGpa.getPenilai3',
+            'getHtaGpa.getPenilai4',
+            'getHtaGpa.getPenilai5',
+            'getHtaGpa.getPenilai',
+            'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
+                $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
+            }
+        ])->find($idPengajuan);
 
+        $parameter = MasterParameter::get();
+
+        $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter'))
+            ->setPaper([0, 0, 612, 936], 'portrait'); // 8.5in x 13in in points
+
+        return $pdf->stream('hta-gpa-' . $idPengajuan . '-' . $idPengajuanItem . '.pdf');
+    }
     /**
      * Show the form for editing the specified resource.
      */
@@ -304,5 +350,43 @@ class HtaDanGpaController extends Controller
         $htaDanGpa->save();
 
         return redirect()->back()->with('success', 'Penilaian Tahap 5 telah berhasil disetujui.');
+    }
+    public function approve($token)
+    {
+        // dd($token);
+        $penilai = PenilaiHtaGpa::where('ApprovalToken', $token)->firstOrFail();
+
+        if (!is_null($penilai->StatusAcc)) {
+            return view('emails.setelah-approval', [
+                'message' => 'Persetujuan sudah diproses sebelumnya.'
+            ]);
+        }
+
+        $penilai->update([
+            'StatusAcc' => 'Y',
+            'AccPada' => Carbon::now(),
+        ]);
+
+        return view('emails.setelah-approval', [
+            'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
+        ]);
+    }
+
+    public function reject($token)
+    {
+        $penilai = PenilaiHtaGpa::where('ApprovalToken', $token)->firstOrFail();
+        if (!is_null($penilai->StatusAcc)) {
+            return view('emails.setelah-approval', [
+                'message' => 'Persetujuan sudah diproses sebelumnya.'
+            ]);
+        }
+        $penilai->update([
+            'StatusAcc' => 'N',
+            'AccPada' => Carbon::now(),
+        ]);
+
+        return view('emails.setelah-approval', [
+            'message' => 'Penilaian telah ditolak.'
+        ]);
     }
 }

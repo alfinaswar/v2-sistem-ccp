@@ -1,0 +1,289 @@
+@extends('layouts.app')
+
+@section('content')
+    <div class="page-header">
+        <div class="row">
+            <div class="col">
+                <h3 class="page-title">Lembar Disposisi</h3>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('lembar-disposisi.index') }}">Lembar Disposisi</a></li>
+                    <li class="breadcrumb-item active">Tambah Lembar Disposisi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card mb-4">
+                <div class="card-header bg-dark">
+                    <h4 class="card-title mb-0">Formulir Lembar Disposisi</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('lembar-disposisi.store') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="IdPengajuan" value="{{ $idPengajuan }}">
+                        <input type="hidden" name="PengajuanItemId" value="{{ $idPengajuanItem }}">
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="NamaBarang" class="form-label"><strong>NAMA BARANG / JASA YANG AKAN
+                                                DIBELI</strong></label>
+                                        <select name="NamaBarang" id="NamaBarang"
+                                            class="form-select select2 @error('NamaBarang') is-invalid @enderror"
+                                            style="width: 100%;">
+                                            <option value="{{ $data->getBarang->id ?? '' }}" selected>
+                                                {{ $data->getBarang->Nama ?? '-' }}
+                                            </option>
+                                        </select>
+                                        @error('NamaBarang')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    {{-- @php
+                                        dd($data->getPengajuanPembelian);
+                                    @endphp --}}
+                                    <div class="mb-3">
+                                        <label for="Harga" class="form-label"><strong>HARGA</strong></label>
+                                        <input type="text" name="Harga" id="Harga"
+                                            class="form-control @error('Harga') is-invalid @enderror"
+                                            value="{{ old('Harga', $data->getRekomendasi->getRekomedasiDetail[0]->HargaNego ?? 0) }}"
+                                            placeholder="contoh: 1.000.000" readonly>
+                                        <small class="form-text text-muted">Harga yang telah dinegosiasi</small>
+                                        @error('Harga')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="RencanaVendor" class="form-label"><strong>RENCANA
+                                                VENDOR</strong></label>
+                                        <select name="RencanaVendor" id="RencanaVendor"
+                                            class="form-select select2 @error('RencanaVendor') is-invalid @enderror"
+                                            style="width: 100%;">
+                                            @if (isset($data->getRekomendasi->getRekomedasiDetail[0]->getNamaVendor))
+                                                <option
+                                                    value="{{ $data->getRekomendasi->getRekomedasiDetail[0]->getNamaVendor->id }}"
+                                                    selected>
+                                                    {{ $data->getRekomendasi->getRekomedasiDetail[0]->getNamaVendor->Nama }}
+                                                </option>
+                                            @elseif(old('RencanaVendor'))
+                                                <option value="{{ old('RencanaVendor') }}" selected>
+                                                    {{ old('RencanaVendor') }}
+                                                </option>
+                                            @else
+                                                <option value="" selected>Pilih vendor</option>
+                                            @endif
+                                            {{-- NOTE:
+                                                Pada implementasi sebenarnya, perlu menampilkan daftar vendor
+                                                yang tersedia pada select2 dengan AJAX atau passing variable list vendor dari controller
+                                            --}}
+                                        </select>
+                                        @error('RencanaVendor')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="TujuanPenempatan" class="form-label"><strong>TUJUAN
+                                                PENGGUNAAN/RUANGAN</strong></label>
+                                        <input type="text" name="TujuanPenempatan" id="TujuanPenempatan"
+                                            class="form-control @error('TujuanPenempatan') is-invalid @enderror"
+                                            value="{{ old('TujuanPenempatan', $data->getPengajuanPembelian->getPermintaan->getDetail[0]->RencanaPenempatan ?? 'Tidak Diisi Dipermintaan') }}"
+                                            placeholder="Masukkan tujuan penggunaan atau ruangan">
+                                        @error('TujuanPenempatan')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label d-block"><strong>FORM PERMINTAAN DARI USER</strong></label>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="FormPermintaan"
+                                                    id="FormPermintaan_ada" value="Y"
+                                                    {{ old('FormPermintaan', 'N') == 'Y' ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="FormPermintaan_ada">Ya, Ada</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="FormPermintaan"
+                                                    id="FormPermintaan_tidak" value="N"
+                                                    {{ old('FormPermintaan', 'N') == 'N' ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="FormPermintaan_tidak">Tidak ada</label>
+                                            </div>
+                                        </div>
+                                        @error('FormPermintaan')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    {{-- <div class="mb-3">
+                                        <label for="catatan_tambahan" class="form-label"><strong>CATATAN
+                                                TAMBAHAN</strong></label>
+                                        <textarea name="catatan_tambahan" id="catatan_tambahan"
+                                            class="form-control @error('catatan_tambahan') is-invalid @enderror" rows="2"
+                                            placeholder="Tulis catatan tambahan di sini">{{ old('catatan_tambahan') }}</textarea>
+                                        @error('catatan_tambahan')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div> --}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="alert alert-info mb-3" role="alert">
+                                <i class="fa fa-info-circle me-2"></i>
+                                <strong>Informasi:</strong> Harap masukkan <b>email</b> dengan benar karena notifikasi akan
+                                dikirim ke email terkait.
+                            </div>
+                            <label class="form-label d-block"><strong>Data User</strong></label>
+                            <div class="table-responsive">
+                                <table class="table align-middle" style="width:100%;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 5%;">No</th>
+                                            <th style="width: 25%;">Nama</th>
+                                            <th style="width: 25%;">Jabatan</th>
+                                            <th style="width: 25%;">Departemen</th>
+                                            <th style="width: 20%;">Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <tr>
+                                                <td class="text-center align-middle">{{ $i }}</td>
+                                                <td>
+                                                    <select name="IdUser[]" id="IdUser_{{ $i }}"
+                                                        class="form-control select2" data-placeholder="Pilih Nama">
+                                                        <option value="">Pilih Nama</option>
+                                                        @foreach ($user as $u)
+                                                            <option value="{{ $u->id }}"
+                                                                data-email="{{ $u->email ?? '' }}"
+                                                                data-jabatan="{{ $u->jabatan ?? '' }}"
+                                                                data-jabatan_id="{{ $u->jabatan }}"
+                                                                data-departemen="{{ $u->departemen ?? '' }}"
+                                                                data-departemen_id="{{ $u->departemen }}"
+                                                                {{ old('IdUser.' . ($i - 1)) == $u->id ? 'selected' : '' }}>
+                                                                {{ $u->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('IdUser.' . ($i - 1))
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+                                                <td>
+                                                    <select name="Jabatan[]" id="Jabatan_{{ $i }}"
+                                                        class="form-control select2" data-placeholder="Pilih Jabatan">
+                                                        <option value="">Pilih Jabatan</option>
+                                                        @foreach ($jabatan as $j)
+                                                            <option value="{{ $j->id }}"
+                                                                {{ old('Jabatan.' . ($i - 1)) == $j->id ? 'selected' : '' }}>
+                                                                {{ $j->Nama }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('Jabatan.' . ($i - 1))
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+                                                <td>
+                                                    <select name="Departemen[]" id="Departemen_{{ $i }}"
+                                                        class="form-control select2" data-placeholder="Pilih Departemen">
+                                                        <option value="">Pilih Departemen</option>
+                                                        @foreach ($departemen as $d)
+                                                            <option value="{{ $d->id }}"
+                                                                {{ old('Departemen.' . ($i - 1)) == $d->id ? 'selected' : '' }}>
+                                                                {{ $d->Nama }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('Departemen.' . ($i - 1))
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+                                                <td>
+                                                    <input type="Email" name="Email[]" id="Email_{{ $i }}"
+                                                        class="form-control @error('Email.' . ($i - 1)) is-invalid @enderror"
+                                                        value="{{ old('Email.' . ($i - 1)) }}"
+                                                        placeholder="Masukkan Email">
+                                                    @error('Email.' . ($i - 1))
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+                                            </tr>
+                                        @endfor
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-save me-1"></i> Simpan
+                            </button>
+                            <a href="{{ route('lembar-disposisi.index') }}" class="btn btn-secondary ms-2">
+                                <i class="fa fa-arrow-left me-1"></i> Batal
+                            </a>
+                        </div>
+                </div>
+
+                </form>
+            </div>
+        @endsection
+
+        @push('js')
+            <script>
+                $(document).ready(function() {
+                    // Otomatis isi email, jabatan, dan departemen ketika user dipilih (multi-row)
+                    @for ($i = 1; $i <= 5; $i++)
+                        $('#IdUser_{{ $i }}').on('change', function() {
+                            let selected = $(this).find('option:selected');
+                            let email = selected.data('email') || '';
+                            let jabatan_id = selected.data('jabatan_id') || '';
+                            let departemen_id = selected.data('departemen_id') || '';
+
+                            // Isi email
+                            $('#Email_{{ $i }}').val(email);
+                            // Isi jabatan
+                            $('#Jabatan_{{ $i }}').val(jabatan_id).trigger('change');
+                            // Isi departemen
+                            $('#Departemen_{{ $i }}').val(departemen_id).trigger('change');
+                        });
+
+                        // Isi otomatis jika pada saat page load sudah ada yang terpilih
+                        if ($('#IdUser_{{ $i }}').val()) {
+                            $('#IdUser_{{ $i }}').trigger('change');
+                        }
+                    @endfor
+                });
+            </script>
+            <script>
+                // Format input harga as Rupiah on keyup
+                document.addEventListener("DOMContentLoaded", function() {
+                    const hargaInput = document.getElementById('Harga');
+                    if (hargaInput) {
+                        hargaInput.addEventListener('input', function(e) {
+                            let value = this.value.replace(/[^,\d]/g, "").toString();
+                            let split = value.split(",");
+                            let sisa = split[0].length % 3;
+                            let rupiah = split[0].substr(0, sisa);
+                            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                            if (ribuan) {
+                                let separator = sisa ? "." : "";
+                                rupiah += separator + ribuan.join(".");
+                            }
+
+                            rupiah = split[1] !== undefined ? rupiah + "," + split[1] : rupiah;
+                            this.value = rupiah;
+                        });
+
+                        // For value on page load
+                        if (hargaInput.value.length) {
+                            let e = new Event('input');
+                            hargaInput.dispatchEvent(e);
+                        }
+                    }
+                });
+            </script>
+        @endpush

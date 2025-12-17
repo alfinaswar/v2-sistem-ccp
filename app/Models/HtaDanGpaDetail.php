@@ -40,4 +40,8 @@ class HtaDanGpaDetail extends Model
         'Nilai5' => 'array',
         'SubTotal' => 'array',
     ];
+    public function getPenilai()
+    {
+        return $this->hasMany(PenilaiHtaGpa::class, 'IdHtaGpa', 'id');
+    }
 }

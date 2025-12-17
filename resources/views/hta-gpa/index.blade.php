@@ -289,19 +289,17 @@
                             @endforeach
                         </div>
                         <div class="mt-3 d-flex justify-content-end">
-                            <button type="submit" name="action" value="draft" class="btn btn-warning me-2">Simpan
-                                Sebagai Draft</button>
+                            <button type="submit" name="action" value="draft" class="btn btn-warning me-2">
+                                <i class="fa fa-save me-1"></i> Simpan Sebagai Draft
+                            </button>
                             <!-- Ajukan Button trigger modal -->
                             <button type="button" id="btnAjukan" class="btn btn-success me-2" data-bs-toggle="modal"
                                 data-bs-target="#modalPenilai">
-                                Ajukan
+                                <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
                             </button>
-
-                            <!-- Modal -->
-
-
-                            <a href="{{ route('ajukan.show', encrypt($data->id)) }}"
-                                class="btn btn-secondary">Kembali</a>
+                            <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">
+                                <i class="fa fa-arrow-left me-1"></i> Kembali
+                            </a>
                         </div>
                     </form>
                 </div>

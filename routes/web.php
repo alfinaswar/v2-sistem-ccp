@@ -3,6 +3,7 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HtaDanGpaController;
 use App\Http\Controllers\HtaGpaController;
+use App\Http\Controllers\LembarDisposisiController;
 use App\Http\Controllers\MasterBarangController;
 use App\Http\Controllers\MasterDepartemenController;
 use App\Http\Controllers\MasterFormController;
@@ -202,7 +203,10 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('/simpan', [HtaDanGpaController::class, 'store'])->name('htagpa.store');
         Route::post('/ajukan-hta', [HtaDanGpaController::class, 'ajukan'])->name('htagpa.ajukan');
         Route::get('/show/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'show'])->name('htagpa.show');
+        Route::get('/print/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'print'])->name('htagpa.print');
 
+        Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'approve'])->name('htagpa.approve');
+        Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
         // input penilai
         Route::POST('/simpan-penilai', [HtaDanGpaController::class, 'SimpanPenilai'])->name('htagpa.simpan-penilai');
         Route::post('/acc-penilai1/{id}', [HtaDanGpaController::class, 'accPenilai1'])->name('htagpa.acc-penilai1');
@@ -210,5 +214,14 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('/acc-penilai3/{id}', [HtaDanGpaController::class, 'accPenilai3'])->name('htagpa.acc-penilai3');
         Route::post('/acc-penilai4/{id}', [HtaDanGpaController::class, 'accPenilai4'])->name('htagpa.acc-penilai4');
         Route::post('/acc-penilai5/{id}', [HtaDanGpaController::class, 'accPenilai5'])->name('htagpa.acc-penilai5');
+    });
+    Route::prefix('pengajuan/lembar-disposisi')->group(function () {
+        Route::get('/', [LembarDisposisiController::class, 'index'])->name('lembar-disposisi.index');
+        Route::get('/create/{idPengajuan}/{idPengajuanItem}', [LembarDisposisiController::class, 'create'])->name('lembar-disposisi.create');
+        Route::post('/store', [LembarDisposisiController::class, 'store'])->name('lembar-disposisi.store');
+        Route::get('/edit/{id}', [LembarDisposisiController::class, 'edit'])->name('lembar-disposisi.edit');
+        Route::put('/update/{id}', [LembarDisposisiController::class, 'update'])->name('lembar-disposisi.update');
+        Route::get('/show/{idPengajuan}/{idPengajuanItem}', [LembarDisposisiController::class, 'show'])->name('lembar-disposisi.show');
+        Route::delete('/delete/{id}', [LembarDisposisiController::class, 'destroy'])->name('lembar-disposisi.destroy');
     });
 });

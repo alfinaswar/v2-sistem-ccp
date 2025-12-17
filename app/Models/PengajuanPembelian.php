@@ -62,4 +62,8 @@ class PengajuanPembelian extends Model
     {
         return $this->hasOne(MasterDepartemen::class, 'id', 'DepartemenId');
     }
+    public function getPermintaan()
+    {
+        return $this->hasOne(PermintaanPembelian::class, 'id', 'IdPermintaan');
+    }
 }

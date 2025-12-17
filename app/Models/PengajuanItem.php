@@ -42,9 +42,17 @@ class PengajuanItem extends Model
     {
         return $this->hasOne(UsulanInvestasi::class, 'PengajuanItemId', 'id');
     }
+    public function getDisposisi()
+    {
+        return $this->hasOne(LembarDisposisi::class, 'PengajuanItemId', 'id');
+    }
 
     public function getRekomendasi()
     {
         return $this->hasOne(Rekomendasi::class, 'PengajuanItemId', 'id');
+    }
+    public function getPengajuanPembelian()
+    {
+        return $this->hasOne(PengajuanPembelian::class, 'id', 'IdPengajuan');
     }
 }

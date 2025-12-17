@@ -198,16 +198,16 @@
                                             @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $penilai)
                                                 <td style="height: 70px;" class="text-center">
                                                     @php
-                                                        $tandatangan =
-                                                            !empty($penilai->IdUser) && !empty($penilai->tandatangan)
-                                                                ? asset(
-                                                                    'storage/upload/tandatangan/' .
-                                                                        $penilai->tandatangan,
-                                                                )
-                                                                : asset('assets/img/ccp/default_approve.png');
+                                                        $statusAccY = ($penilai->StatusAcc ?? null) === 'Y';
+                                                        // Barcode content bisa berupa apapun (misal ApprovalToken atau PenilaiKe)
+                                                        $barcodeValue =
+                                                            $penilai->ApprovalToken ?? ($penilai->PenilaiKe ?? '-');
                                                     @endphp
-                                                    <img src="{{ $tandatangan }}" alt="TTD"
-                                                        style="max-width:110px; max-height:60px;">
+                                                    @if ($statusAccY && $barcodeValue)
+                                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x50&data={{ urlencode($barcodeValue) }}"
+                                                            alt="Barcode Penilai {{ $penilai->PenilaiKe ?? '' }}"
+                                                            style="max-width:120px; max-height:60px;" />
+                                                    @endif
                                                 </td>
                                             @endforeach
                                         </tr>
@@ -239,7 +239,6 @@
                         <div class="col-12 text-end mt-3">
                             @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $idx => $penilai)
                                 @php
-                                    // PenilaiKe is always 1 to 5 as per your structure
                                     $penilaiKe = $penilai->PenilaiKe ?? $idx + 1;
                                     $canName = 'hta-gpa-approve-penilai' . $penilaiKe;
                                     // Check if Nama kosong/empty (means belum acc)
