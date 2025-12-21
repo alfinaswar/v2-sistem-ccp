@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('lembar_disposisis', function (Blueprint $table) {
             $table->id();
+            $table->string('JenisForm')->nullable();
             $table->string('IdPengajuan')->nullable();
             $table->string('PengajuanItemId')->nullable();
             $table->string('NamaBarang')->nullable();

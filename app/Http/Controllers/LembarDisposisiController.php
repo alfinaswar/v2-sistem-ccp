@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotifikasiDisposisiMail;
+use App\Models\DokumenApproval;
 use App\Models\LembarDisposisi;
 use App\Models\LembarDisposisiApproval;
 use App\Models\MasterBarang;
 use App\Models\MasterDepartemen;
+use App\Models\MasterForm;
 use App\Models\MasterJabatan;
+use App\Models\MasterVendor;
 use App\Models\PengajuanItem;
 use App\Models\PengajuanPembelian;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
-use App\Mail\NotifikasiDisposisiMail;
-use App\Models\MasterVendor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+
 class LembarDisposisiController extends Controller
 {
     /**
@@ -45,11 +48,20 @@ class LembarDisposisiController extends Controller
             },
             'getPengajuanPembelian.getPermintaan.getDiajukanOleh'
         ])->where('id', $idPengajuanItem)->first();
-        $user = User::where('kodeperusahaan', auth()->user()->kodeperusahaan)->get();
+        // dd($data);
+        $ttd = MasterForm::with([
+            'getApproval' => function ($q) use ($data) {
+                $q->where('KodePerusahaan', $data->KodePerusahaan);
+            },
+            'getApproval.getUser'
+        ])
+            ->where('id', 9)
+            ->first();
+        $user = User::get();
         $jabatan = MasterJabatan::get();
         $departemen = MasterDepartemen::get();
         // dd($data);
-        return view('lembar-disposisi.create', compact('data', 'user', 'jabatan', 'departemen', 'idPengajuan', 'idPengajuanItem'));
+        return view('lembar-disposisi.create', compact('data', 'user', 'jabatan', 'departemen', 'idPengajuan', 'idPengajuanItem', 'ttd'));
     }
 
     /**
@@ -57,6 +69,7 @@ class LembarDisposisiController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $idPengajuan = encrypt($request->IdPengajuan);
         // dd($idPengajuan);
         $idPengajuanItem = encrypt($request->PengajuanItemId);
@@ -76,6 +89,7 @@ class LembarDisposisiController extends Controller
             [
                 'IdPengajuan' => $validatedHeader['IdPengajuan'],
                 'PengajuanItemId' => $validatedHeader['PengajuanItemId'],
+                'JenisForm' => 9,
             ],
             [
                 'NamaBarang' => $validatedHeader['NamaBarang'],
@@ -94,36 +108,37 @@ class LembarDisposisiController extends Controller
         $MasterVendor = MasterVendor::find($lembarDisposisi->RencanaVendor);
         $MasterBarang = MasterBarang::find($lembarDisposisi->NamaBarang);
 
-
-
         if ($request->has('IdUser') && is_array($request->IdUser)) {
             foreach ($request->IdUser as $i => $idUser) {
-                // Jika $idUser adalah string dengan koma, pecah menjadi array
-                if (is_string($idUser)) {
-                    $idUser = explode(',', $idUser);
-                }
-                if (!$idUser) {
-                    continue;
-                }
-                // Tambahkan ApprovalToken (misal: uuid atau string random unik)
+                // Mendapatkan nama user berdasarkan IdUser
+                $user = User::find($idUser);
+                $namaUser = $user ? $user->name : null;
                 $approvalToken = Str::uuid()->toString();
-                $approval = LembarDisposisiApproval::create([
-                    'IdLembarDisposisi' => $lembarDisposisi->id,
-                    'IdUser' => $idUser[0],
-                    'Nama' => $idUser[1] ?? null,
-                    'Email' => $request->input('Email')[$i] ?? null,
-                    'Jabatan' => $request->input('Jabatan')[$i] ?? null,
-                    'Departemen' => $request->input('Departemen')[$i] ?? null,
-                    'Justifikasi' => $request->input('Justifikasi')[$i] ?? null,
-                    'Status' => 'N',
-                    'UserCreate' => auth()->user()->id ?? null,
-                    'ApprovalToken' => $approvalToken,
-                ]);
 
-                if (!empty($approval->Email)) {
-                    Mail::to($approval->Email)
-                        ->send(new NotifikasiDisposisiMail($lembarDisposisi, $approval, $MasterVendor, $MasterBarang));
-                }
+                $approval = DokumenApproval::updateOrCreate(
+                    [
+                        'JenisFormId' => $lembarDisposisi->JenisForm,
+                        'DokumenId' => $lembarDisposisi->id,
+                        'Urutan' => $i + 1 ?? null,
+                    ],
+                    [
+                        'JenisUser' => 'Master',
+                        'PerusahaanId' => auth()->user()->kodeperusahaan,
+                        'DepartemenId' => $request->Departemen[$i] ?? null,
+                        'JabatanId' => $request->Jabatan[$i] ?? null,
+                        'UserId' => $approvalSetting->UserId ?? null,
+                        'Nama' => $namaUser ?? null,
+                        'Status' => 'Pending',
+                        'TanggalApprove' => null,
+                        'ApprovalToken' => $approvalToken,
+                        'Catatan' => null,
+                        'Ttd' => null,
+                        'UserCreate' => auth()->user()->name,
+                    ]
+                );
+
+                Mail::to($request->Email[$i])
+                    ->send(new NotifikasiDisposisiMail($lembarDisposisi, $approval, $MasterVendor, $MasterBarang));
             }
         }
 
@@ -136,9 +151,14 @@ class LembarDisposisiController extends Controller
     public function show($idPengajuan, $idPengajuanItem)
     {
         $data = LembarDisposisi::with('getDetail', 'getBarang')->where('IdPengajuan', $idPengajuan)->where('PengajuanItemId', $idPengajuanItem)->first();
-        // dd($data);
-        return view('lembar-disposisi.show', compact('data'));
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $data->JenisForm)
+            ->where('DokumenId', $data->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+        return view('lembar-disposisi.show', compact('data', 'approval'));
     }
+
     public function print($idPengajuan, $idPengajuanItem)
     {
         // Ambil data lembar disposisi dengan relasi
@@ -151,19 +171,11 @@ class LembarDisposisiController extends Controller
             return redirect()->back()->with('error', 'Data tidak ditemukan');
         }
 
-        // Ambil data penilaian/approval berdasarkan IdLembarDisposisi
-        $penilaian = DB::table('lembar_disposisi_approvals') // sesuaikan nama tabel
-            ->where('IdLembarDisposisi', $lembarDisposisi->id)
-            ->orderBy('created_at', 'asc')
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $lembarDisposisi->JenisForm)
+            ->where('DokumenId', $lembarDisposisi->id)
+            ->orderBy('Urutan', 'asc')
             ->get();
-
-        // Grouping penilaian berdasarkan role/posisi
-        $kadivYanmed = $penilaian->where('Jabatan', 'like', '%Kadiv%')->first();
-        $kadivJangmed = $penilaian->where('Jabatan', 'like', '%Kepala Divisi%')->first();
-        $direktur = $penilaian->where('Jabatan', 'like', '%Direktur%')->first();
-        $ghProcurement = $penilaian->where('Jabatan', 'like', '%Group Head%')->first();
-        $direkturRsabGroup = $penilaian->where('Jabatan', 'like', '%Direktur RSAB%')->first();
-        $ceoRsabGroup = $penilaian->where('Jabatan', 'like', '%CEO%')->first();
 
         // Siapkan data untuk PDF
         $data = [
@@ -173,14 +185,7 @@ class LembarDisposisiController extends Controller
             'rencanaVendor' => $lembarDisposisi->getVendor->Nama,
             'tujuanPenempatan' => $lembarDisposisi->TujuanPenempatan,
             'formPermintaan' => $lembarDisposisi->FormPermintaanUser,
-
-            // Data approval/penilaian
-            'kadivYanmed' => $kadivYanmed,
-            'kadivJangmed' => $kadivJangmed,
-            'direktur' => $direktur,
-            'ghProcurement' => $ghProcurement,
-            'direkturRsabGroup' => $direkturRsabGroup,
-            'ceoRsabGroup' => $ceoRsabGroup,
+            'approval' => $approval,
         ];
 
         $pdf = \PDF::loadView('lembar-disposisi.cetak-pdf', compact('data'));
@@ -188,6 +193,7 @@ class LembarDisposisiController extends Controller
 
         return $pdf->stream('lembar-disposisi-' . $idPengajuan . '.pdf');
     }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -198,14 +204,7 @@ class LembarDisposisiController extends Controller
 
     public function approve($token)
     {
-        // dd($token);
         $penilai = LembarDisposisiApproval::where('ApprovalToken', $token)->firstOrFail();
-
-        // if (!is_null($penilai->StatusAcc)) {
-        //     return view('emails.setelah-approval', [
-        //         'message' => 'Persetujuan sudah diproses sebelumnya.'
-        //     ]);
-        // }
 
         $penilai->update([
             'Status' => 'Y',

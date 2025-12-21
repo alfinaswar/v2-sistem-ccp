@@ -67,23 +67,31 @@
         <table style="border: none;">
             <tr style="border: none;">
                 <td style="border: none; width: 40%;">NAMA BARANG / JASA YANG AKAN DIBELI</td>
-                <td style="border: none;">: {{ $data['namaBarang'] }}</td>
+                <td style="border: none;">: {{ $data['namaBarang'] ?? '-' }}</td>
             </tr>
             <tr style="border: none;">
                 <td style="border: none;">HARGA</td>
-                <td style="border: none;">: {{ number_format($data['harga'], 0, ',', '.') }}</td>
+                <td style="border: none;">:
+                    {{ isset($data['harga']) ? number_format($data['harga'], 0, ',', '.') : '-' }}</td>
             </tr>
             <tr style="border: none;">
                 <td style="border: none;">RENCANA VENDOR</td>
-                <td style="border: none;">: {{ $data['rencanaVendor'] }}</td>
+                <td style="border: none;">: {{ $data['rencanaVendor'] ?? '-' }}</td>
             </tr>
             <tr style="border: none;">
                 <td style="border: none;">TUJUAN PENGGUNA/RUANGAN</td>
-                <td style="border: none;">: {{ $data['tujuanPenempatan'] }}</td>
+                <td style="border: none;">: {{ $data['tujuanPenempatan'] ?? '-' }}</td>
             </tr>
             <tr style="border: none;">
                 <td style="border: none;">FORM PERMINTAAN DARI USER</td>
-                <td style="border: none;">: {{ $data['formPermintaan'] == 'Y' ? 'ada' : 'Tidak' }}</td>
+                <td style="border: none;">
+                    :
+                    @if (isset($data['formPermintaan']))
+                        {{ $data['formPermintaan'] == 'Y' ? 'ada' : 'Tidak' }}
+                    @else
+                        -
+                    @endif
+                </td>
             </tr>
         </table>
     </div>
@@ -95,15 +103,14 @@
         </tr>
         <tr>
             <td class="approval-box">
-                @if ($data['kadivYanmed'])
-                    {{ $data['kadivYanmed']->Justifikasi }}
+                @if (!empty($data['approval'][0]) && isset($data['approval'][0]->Catatan))
+                    {{ $data['approval'][0]->Catatan }}
                 @endif
             </td>
             <td class="approval-box">
                 <div class="sign-area">
-                    @if ($data['kadivYanmed'] && $data['kadivYanmed']->StatusApprove == 'Y')
-                        <p>{{ $data['kadivYanmed']->Nama }}</p>
-                        <p>{{ date('d/m/Y H:i', strtotime($data['kadivYanmed']->ApprovePada)) }}</p>
+                    @if (!empty($data['approval'][0]) && isset($data['approval'][0]->Nama))
+                        <p>{{ $data['approval'][0]->Nama }}</p>
                     @endif
                 </div>
             </td>
@@ -117,15 +124,19 @@
         </tr>
         <tr>
             <td class="approval-box">
-                @if ($data['kadivJangmed'])
-                    {{ $data['kadivJangmed']->Justifikasi }}
+                @if (!empty($data['approval'][1]) && isset($data['approval'][1]->Catatan))
+                    {{ $data['approval'][1]->Catatan }}
                 @endif
             </td>
             <td class="approval-box">
                 <div class="sign-area">
-                    @if ($data['kadivJangmed'] && $data['kadivJangmed']->StatusApprove == 'Y')
-                        <p>{{ $data['kadivJangmed']->Nama }}</p>
-                        <p>{{ date('d/m/Y H:i', strtotime($data['kadivJangmed']->ApprovePada)) }}</p>
+                    @if (
+                        !empty($data['approval'][1]) &&
+                            isset($data['approval'][1]->StatusApprove) &&
+                            $data['approval'][1]->StatusApprove == 'Y')
+                        <p>{{ $data['approval'][1]->Nama ?? '' }}</p>
+                        <p>{{ isset($data['approval'][1]->ApprovePada) ? date('d/m/Y H:i', strtotime($data['approval'][1]->ApprovePada)) : '' }}
+                        </p>
                     @endif
                 </div>
             </td>
@@ -141,9 +152,13 @@
             <td class="approval-box"></td>
             <td class="approval-box">
                 <div class="sign-area">
-                    @if ($data['direktur'] && $data['direktur']->StatusApprove == 'Y')
-                        <p>{{ $data['direktur']->Nama }}</p>
-                        <p>{{ date('d/m/Y H:i', strtotime($data['direktur']->ApprovePada)) }}</p>
+                    @if (
+                        !empty($data['approval'][2]) &&
+                            isset($data['approval'][2]->StatusApprove) &&
+                            $data['approval'][2]->StatusApprove == 'Y')
+                        <p>{{ $data['approval'][2]->Nama ?? '' }}</p>
+                        <p>{{ isset($data['approval'][2]->ApprovePada) ? date('d/m/Y H:i', strtotime($data['approval'][2]->ApprovePada)) : '' }}
+                        </p>
                     @endif
                 </div>
             </td>
@@ -159,9 +174,18 @@
             <td class="approval-box"></td>
             <td class="approval-box">
                 <div class="sign-area">
-                    @if ($data['ghProcurement'] && $data['ghProcurement']->StatusApprove == 'Y')
-                        <p>{{ $data['ghProcurement']->Nama }}, {{ $data['ghProcurement']->Jabatan }}</p>
-                        <p>{{ date('d/m/Y H:i', strtotime($data['ghProcurement']->ApprovePada)) }}</p>
+                    @if (
+                        !empty($data['approval'][3]) &&
+                            isset($data['approval'][3]->StatusApprove) &&
+                            $data['approval'][3]->StatusApprove == 'Y')
+                        <p>
+                            {{ $data['approval'][3]->Nama ?? '' }}
+                            @if (isset($data['approval'][3]->Jabatan))
+                                , {{ $data['approval'][3]->Jabatan }}
+                            @endif
+                        </p>
+                        <p>{{ isset($data['approval'][3]->ApprovePada) ? date('d/m/Y H:i', strtotime($data['approval'][3]->ApprovePada)) : '' }}
+                        </p>
                     @endif
                 </div>
             </td>
@@ -177,9 +201,13 @@
             <td class="approval-box"></td>
             <td class="approval-box">
                 <div class="sign-area">
-                    @if ($data['direkturRsabGroup'] && $data['direkturRsabGroup']->StatusApprove == 'Y')
-                        <p>{{ $data['direkturRsabGroup']->Nama }}</p>
-                        <p>{{ date('d/m/Y H:i', strtotime($data['direkturRsabGroup']->ApprovePada)) }}</p>
+                    @if (
+                        !empty($data['approval'][4]) &&
+                            isset($data['approval'][4]->StatusApprove) &&
+                            $data['approval'][4]->StatusApprove == 'Y')
+                        <p>{{ $data['approval'][4]->Nama ?? '' }}</p>
+                        <p>{{ isset($data['approval'][4]->ApprovePada) ? date('d/m/Y H:i', strtotime($data['approval'][4]->ApprovePada)) : '' }}
+                        </p>
                     @endif
                 </div>
             </td>
@@ -195,9 +223,13 @@
             <td class="approval-box"></td>
             <td class="approval-box">
                 <div class="sign-area">
-                    @if ($data['ceoRsabGroup'] && $data['ceoRsabGroup']->StatusApprove == 'Y')
-                        <p>{{ $data['ceoRsabGroup']->Nama }}</p>
-                        <p>{{ date('d/m/Y H:i', strtotime($data['ceoRsabGroup']->ApprovePada)) }}</p>
+                    @if (
+                        !empty($data['approval'][5]) &&
+                            isset($data['approval'][5]->StatusApprove) &&
+                            $data['approval'][5]->StatusApprove == 'Y')
+                        <p>{{ $data['approval'][5]->Nama ?? '' }}</p>
+                        <p>{{ isset($data['approval'][5]->ApprovePada) ? date('d/m/Y H:i', strtotime($data['approval'][5]->ApprovePada)) : '' }}
+                        </p>
                     @endif
                 </div>
             </td>
