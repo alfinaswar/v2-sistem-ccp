@@ -126,7 +126,7 @@
                                                     <option value="">Pilih Barang</option>
                                                     @foreach ($barang ?? [] as $b)
                                                         <option value="{{ $b->id }}"
-                                                            data-jenis="{{ $b->Jenis }}"
+                                                            data-idjenis="{{ $b->Jenis }}"
                                                             {{ isset($oldBarang[$i]) && $oldBarang[$i] == $b->id ? 'selected' : '' }}>
                                                             {{ $b->Nama }} - {{ $b->getMerk->Nama }}
                                                         </option>
@@ -194,7 +194,7 @@
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-save"></i> Simpan
+                                <i class="fa fa-save"></i> Simpan Sebagai Draft
                             </button>
                         </div>
                     </div>
@@ -207,8 +207,6 @@
 
 @push('js')
     <script>
-        // Fungsi duplikasi baris dan hapus baris
-
         function updateTotalJumlah() {
             let total = 0;
             $('#table-detail-pembelian tbody .jumlah-input').each(function() {
@@ -218,22 +216,22 @@
             $('#total-jumlah-view').text(total);
         }
 
-        function getBarangOptions(filterJenis) {
+        // Ambil barang berdasarkan VALUE ID yang dipilih dari Jenis
+        function getBarangOptionsByJenisId(jenisId) {
             let barang = @json($barang ?? []);
             let html = `<option value="">Pilih Barang</option>`;
             barang.forEach(function(b) {
-                // Field b.Jenis is now expected "MEDIS" or "UMUM"
-                if (!filterJenis || b.Jenis === filterJenis) {
+                // b.Jenis should point to jenis id on each barang
+                if (!jenisId || String(b.Jenis) === String(jenisId)) {
                     let merkNama = (b.get_merk && b.get_merk.Nama) ? b.get_merk.Nama : '';
                     html +=
-                        `<option value="${b.id}" data-jenis="${b.Jenis}">${b.Nama} - ${merkNama}</option>`;
+                        `<option value="${b.id}" data-idjenis="${b.Jenis}">${b.Nama} - ${merkNama}</option>`;
                 }
             });
             return html;
         }
 
         $(document).ready(function() {
-            // Fungsi untuk mengaktifkan/destroy select2 jika diperlukan
             function initSelect2(row) {
                 if ($.fn.select2) {
                     $(row).find('select.select2').select2({
@@ -242,27 +240,16 @@
                 }
             }
 
-            // Dapatkan id jenisPengajuan untuk MEDIS & UMUM
             let jenisPengajuanArr = @json($jenisPengajuan ?? []);
-            let jenisMedisPengajuan = null;
-            let jenisUmumPengajuan = null;
-            jenisPengajuanArr.forEach(j => {
-                const namaLower = (j.Nama || '').toLowerCase();
-                if (namaLower.indexOf('medis') !== -1) jenisMedisPengajuan = j.id;
-                if (namaLower.indexOf('umum') !== -1) jenisUmumPengajuan = j.id;
-            });
 
-            // Konstanta Jenis Barang
-            const JENIS_MEDIS = "MEDIS";
-            const JENIS_UMUM = "UMUM";
-
-            // Fungsi untuk filter barang berdasarkan Jenis medis atau umum
-            function filterBarangSelects(filterJenis) {
+            // Fungsi untuk filter barang berdasarkan id Jenis yg dipilih
+            function filterBarangSelectsByJenisId(jenisId) {
                 $('#table-detail-pembelian tbody tr').each(function() {
                     let $select = $(this).find('select[name="NamaBarang[]"]');
                     let currentVal = $select.val();
-                    let html = getBarangOptions(filterJenis);
+                    let html = getBarangOptionsByJenisId(jenisId);
                     $select.html(html);
+
                     if (currentVal && $select.find(`option[value="${currentVal}"]`).length) {
                         $select.val(currentVal).trigger('change');
                     } else {
@@ -271,9 +258,8 @@
                 });
             }
 
-            // Siapkan template baris, delegasikan old[] agar default saat tambah baris
-            function generateRowTemplate(filterJenis = null) {
-                let options = getBarangOptions(filterJenis);
+            function generateRowTemplateByJenisId(jenisId = null) {
+                let options = getBarangOptionsByJenisId(jenisId);
                 let satuanOptions = `@foreach ($satuan ?? [] as $s)
                     <option value="{{ $s->id }}">{{ $s->NamaSatuan }}</option>
                 @endforeach`;
@@ -309,60 +295,25 @@
             }
 
             // Inisialisasi filter awal
-            let currentFilterJenis = null;
+            let currentJenisId = $('#jenis').val() || null;
 
-            // Saat Jenis diubah, filter dropdown barang
+            // Filter pada saat Jenis diubah
             $('#jenis').on('change', function() {
-                let selectedJenis = $(this).val();
-                if (
-                    selectedJenis &&
-                    typeof jenisMedisPengajuan !== 'undefined' && jenisMedisPengajuan &&
-                    String(selectedJenis) === String(jenisMedisPengajuan)
-                ) {
-                    currentFilterJenis = JENIS_MEDIS;
-                } else if (
-                    selectedJenis &&
-                    typeof jenisUmumPengajuan !== 'undefined' && jenisUmumPengajuan &&
-                    String(selectedJenis) === String(jenisUmumPengajuan)
-                ) {
-                    currentFilterJenis = JENIS_UMUM;
-                } else {
-                    currentFilterJenis = null; // null = tampilkan semua
-                }
-                filterBarangSelects(currentFilterJenis);
+                currentJenisId = $(this).val() || null;
+                filterBarangSelectsByJenisId(currentJenisId);
             });
 
-            // Initial load (jika old selected Jenis)
-            if ($('#jenis').val()) {
-                if (
-                    typeof jenisMedisPengajuan !== 'undefined' && jenisMedisPengajuan &&
-                    String($('#jenis').val()) === String(jenisMedisPengajuan)
-                ) {
-                    currentFilterJenis = JENIS_MEDIS;
-                } else if (
-                    typeof jenisUmumPengajuan !== 'undefined' && jenisUmumPengajuan &&
-                    String($('#jenis').val()) === String(jenisUmumPengajuan)
-                ) {
-                    currentFilterJenis = JENIS_UMUM;
-                } else {
-                    currentFilterJenis = null;
-                }
-                filterBarangSelects(currentFilterJenis);
+            // Saat reload (old value)
+            if (currentJenisId) {
+                filterBarangSelectsByJenisId(currentJenisId);
             }
-
-            // Default template baris (nullable filter)
-            let rowTemplate = generateRowTemplate(currentFilterJenis);
 
             // Tambah baris baru
             $('#btn-tambah-baris').on('click', function() {
                 let $tbody = $('#table-detail-pembelian tbody');
-                // Generate ulang row sesuai filter
-                let row = $(generateRowTemplate(currentFilterJenis));
+                let row = $(generateRowTemplateByJenisId(currentJenisId));
                 $tbody.append(row);
-                // Inisialisasi select2 jika digunakan
                 initSelect2(row);
-
-                // Pastikan tombol hapus di-enable jika lebih dari satu baris
                 updateRemoveButtons();
                 updateTotalJumlah();
             });
@@ -377,7 +328,6 @@
                 }
             });
 
-            // Disable tombol hapus jika hanya ada satu baris
             function updateRemoveButtons() {
                 let $rows = $('#table-detail-pembelian tbody tr');
                 if ($rows.length === 1) {
@@ -393,8 +343,8 @@
             // Inisialisasi awal select2 jika ada
             initSelect2($('#table-detail-pembelian tbody tr'));
 
-            // Filter barang kalau 'Jenis' sudah terisi saat reload
-            filterBarangSelects(currentFilterJenis);
+            // Filter barang sesuai old value jika ada
+            filterBarangSelectsByJenisId(currentJenisId);
 
             // Recalculate total-jumlah jika ada perubahan pada input jumlah
             $('#table-detail-pembelian').on('input change', '.jumlah-input', function() {

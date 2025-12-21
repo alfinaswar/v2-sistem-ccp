@@ -38,7 +38,6 @@
                                         <th style="width:18%">Jabatan</th>
                                         <th style="width:18%">Departemen</th>
                                         <th style="width:8%">Urutan</th>
-                                        <th style="width:8%">Wajib</th>
                                         <th style="width:6%"></th>
                                     </tr>
                                 </thead>
@@ -47,21 +46,21 @@
                                         <tr>
                                             <td class="text-center align-middle row-number">{{ $index + 1 }}</td>
                                             <td>
-                                                <select class="form-select select2 user-nama" name="UserId[]" required>
+                                                <select class="form-select select2 user-nama" name="UserId[]">
                                                     <option value="">Pilih Nama</option>
                                                     @foreach ($user as $u)
                                                         <option value="{{ $u->id }}"
                                                             data-jabatan="{{ $u->jabatan ?? '' }}"
                                                             data-departemen="{{ $u->departemen ?? '' }}"
                                                             @if ($approval->UserId == $u->id) selected @endif>
-                                                            {{ $u->name }}
+                                                            {{ $u->name }} - {{ $u->getJabatan->Nama ?? '-' }}
+                                                            {{ $u->getDepartemen->Nama ?? '-' }}
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </td>
                                             <td>
-                                                <select class="form-select select2 jabatan-select" name="JabatanId[]"
-                                                    required>
+                                                <select class="form-select select2 jabatan-select" name="JabatanId[]">
                                                     <option value="">Pilih Jabatan</option>
                                                     @foreach ($jabatan as $j)
                                                         <option value="{{ $j->id }}"
@@ -73,7 +72,7 @@
                                             </td>
                                             <td>
                                                 <select class="form-select select2 departemenid-select"
-                                                    name="DepartemenId[]" required>
+                                                    name="DepartemenId[]">
                                                     <option value="">Pilih Departemen</option>
                                                     @foreach ($departemen as $d)
                                                         <option value="{{ $d->id }}"
@@ -85,16 +84,8 @@
                                             </td>
                                             <td>
                                                 <input type="number" min="1" class="form-control urutan-input"
-                                                    name="Urutan[]" placeholder="Urutan" required
-                                                    value="{{ $approval->Urutan }}" readonly>
-                                            </td>
-                                            <td>
-                                                <select class="form-select" name="Wajib[]" required>
-                                                    <option value="Y"
-                                                        @if ($approval->Wajib == 'Y') selected @endif>Y</option>
-                                                    <option value="N"
-                                                        @if ($approval->Wajib != 'Y') selected @endif>N</option>
-                                                </select>
+                                                    name="Urutan[]" placeholder="Urutan" value="{{ $approval->Urutan }}"
+                                                    readonly>
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-danger btn-sm btn-remove-row"
@@ -107,7 +98,7 @@
                                         <tr>
                                             <td class="text-center align-middle row-number">1</td>
                                             <td>
-                                                <select class="form-select select2 user-nama" name="UserId[]" required>
+                                                <select class="form-select select2 user-nama" name="UserId[]">
                                                     <option value="" data-jabatan="" data-departemen=""
                                                         data-departemenid="">
                                                         Pilih Nama
@@ -116,14 +107,14 @@
                                                         <option value="{{ $u->id }}"
                                                             data-jabatan="{{ $u->jabatan ?? '' }}"
                                                             data-departemen="{{ $u->departemen ?? '' }}">
-                                                            {{ $u->name }}
+                                                            {{ $u->name }} - {{ $u->getJabatan->Nama ?? '-' }}
+                                                            {{ $u->getDepartemen->Nama ?? '-' }}
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </td>
                                             <td>
-                                                <select class="form-select select2 jabatan-select" name="JabatanId[]"
-                                                    required>
+                                                <select class="form-select select2 jabatan-select" name="JabatanId[]">
                                                     <option value="">Pilih Jabatan</option>
                                                     @foreach ($jabatan as $j)
                                                         <option value="{{ $j->id }}">{{ $j->Nama }}</option>
@@ -132,7 +123,7 @@
                                             </td>
                                             <td>
                                                 <select class="form-select select2 departemenid-select"
-                                                    name="DepartemenId[]" required>
+                                                    name="DepartemenId[]">
                                                     <option value="">Pilih Departemen</option>
                                                     @foreach ($departemen as $d)
                                                         <option value="{{ $d->id }}">{{ $d->Nama }}</option>
@@ -141,13 +132,7 @@
                                             </td>
                                             <td>
                                                 <input type="number" min="1" class="form-control urutan-input"
-                                                    name="Urutan[]" placeholder="Urutan" required value="1" readonly>
-                                            </td>
-                                            <td>
-                                                <select class="form-select" name="Wajib[]" required>
-                                                    <option value="Y">Y</option>
-                                                    <option value="N" selected>N</option>
-                                                </select>
+                                                    name="Urutan[]" placeholder="Urutan" value="1" readonly>
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-danger btn-sm btn-remove-row"
@@ -236,14 +221,14 @@
                     <tr>
                         <td class="text-center align-middle row-number">` + rowCount + `</td>
                         <td>
-                            <select class="form-select select2 user-nama" name="UserId[]" required>
+                            <select class="form-select select2 user-nama" name="UserId[]">
                                 <option value="" data-jabatan="" data-departemen="">Pilih Nama</option>
                                 ` + namaOptions +
                     `
                             </select>
                         </td>
                         <td>
-                            <select class="form-select select2 jabatan-select" name="JabatanId[]" required>
+                            <select class="form-select select2 jabatan-select" name="JabatanId[]">
                                 <option value="">Pilih Jabatan</option>
                                 ` + jabatanOptions +
                     `
@@ -251,23 +236,16 @@
                         </td>
 
                         <td>
-                            <select class="form-select select2 departemenid-select" name="DepartemenId[]" required>
+                            <select class="form-select select2 departemenid-select" name="DepartemenId[]">
                                 <option value="">Pilih Departemen</option>
                                 ` + departemenOptions +
                     `
                             </select>
                         </td>
                         <td>
-                            <input type="number" min="1" class="form-control urutan-input" name="Urutan[]" placeholder="Urutan" required value="` +
+                            <input type="number" min="1" class="form-control urutan-input" name="Urutan[]" placeholder="Urutan" value="` +
                     rowCount + `" readonly>
                         </td>
-                        <td>
-                            <select class="form-select" name="Wajib[]" required>
-                                <option value="Y">Y</option>
-                                <option value="N" selected>N</option>
-                            </select>
-                        </td>
-
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm btn-remove-row">&times;</button>
                         </td>

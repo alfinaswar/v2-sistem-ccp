@@ -72,7 +72,7 @@ class PengajuanPembelianController extends Controller
                 ->make(true);
         }
         $permintaan = PermintaanPembelian::with('getPerusahaan', 'getDepartemen', 'getDiajukanOleh', 'getJenisPermintaan')
-            ->where('Direktur_Status', 'Y')
+            ->where('Status', 'Telah Disetujui')
             ->whereDoesntHave('getPengajuanPembelian')
             ->latest()
             ->get();
@@ -295,7 +295,7 @@ class PengajuanPembelianController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // dd($id);
+        // dd($request->all());
         $request->validate([
             'pengajuan.tanggal' => 'required|date',
             'pengajuan.id_permintaan' => 'required',
@@ -321,10 +321,8 @@ class PengajuanPembelianController extends Controller
         $pengajuan->UserUpdate = auth()->user()->name;
         $pengajuan->save();
 
-        // Hapus ListVendor dan ListVendorDetail lama untuk pengajuan ini
         ListVendor::where('IdPengajuan', $pengajuan->id)->delete();
         ListVendorDetail::where('IdPengajuan', $pengajuan->id)->delete();
-        // PengajuanItem::where('IdPengajuan', $pengajuan->id)->delete();
 
         foreach ($request->vendors as $key => $vendorData) {
             if (!isset($vendorData['vendor_id']) || $vendorData['vendor_id'] === null) {
@@ -332,19 +330,33 @@ class PengajuanPembelianController extends Controller
             }
 
             $filename = null;
-            if (isset($vendorData['penawaran_file']) && is_array($vendorData['penawaran_file'])) {
+            $ListVendorOld = ListVendor::where('IdPengajuan', $pengajuan->id)
+                ->where('VendorKe', $key + 1)
+                ->first();
+
+            if (isset($vendorData['penawaran_file']) && $vendorData['penawaran_file'] instanceof \Illuminate\Http\UploadedFile) {
+                $file = $vendorData['penawaran_file'];
+                $filename = 'penawaran_' . time() . '_' . ($key + 1) . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('penawaran_vendor', $filename, 'public');
+            } elseif (isset($vendorData['penawaran_file']) && is_array($vendorData['penawaran_file'])) {
                 $fileArr = $vendorData['penawaran_file'];
                 if (isset($fileArr[0]) && $fileArr[0] instanceof \Illuminate\Http\UploadedFile) {
                     $file = $fileArr[0];
                     $filename = 'penawaran_' . time() . '_' . ($key + 1) . '.' . $file->getClientOriginalExtension();
                     $file->storeAs('penawaran_vendor', $filename, 'public');
+                } elseif (isset($fileArr[0]) && is_string($fileArr[0]) && $fileArr[0]) {
+                    $filename = $fileArr[0];
                 }
-            } elseif (isset($vendorData['penawaran_file']) && is_string($vendorData['penawaran_file'])) {
+            } elseif (isset($vendorData['penawaran_file']) && is_string($vendorData['penawaran_file']) && $vendorData['penawaran_file'] !== null && $vendorData['penawaran_file'] !== '') {
                 $filename = $vendorData['penawaran_file'];
             } elseif ($request->hasFile('penawaran_file_' . ($key + 1))) {
                 $file = $request->file('penawaran_file_' . ($key + 1));
-                $filename = 'penawaran_' . time() . '_' . ($key + 1) . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('penawaran_vendor', $filename, 'public');
+                if ($file) {
+                    $filename = 'penawaran_' . time() . '_' . ($key + 1) . '.' . $file->getClientOriginalExtension();
+                    $file->storeAs('penawaran_vendor', $filename, 'public');
+                }
+            } elseif ($ListVendorOld && $ListVendorOld->SuratPenawaranVendor) {
+                $filename = $ListVendorOld->SuratPenawaranVendor;
             }
 
             $ListVendor = ListVendor::create([
@@ -410,6 +422,15 @@ class PengajuanPembelianController extends Controller
 
     public function UpdatePengajuan(Request $request, $id)
     {
+        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang', 'getPengajuanItem.getHtaGpa', 'getPengajuanItem.getRekomendasi', 'getPengajuanItem.getFui', 'getPengajuanItem.getDisposisi', 'getDepartemen', 'getPengajuanItem.getFs')->find($id);
+        $countVendor = $data->getVendor;
+        $namaUser = auth()->user()->name ?? 'User';
+        if (count($countVendor) < 2) {
+            return redirect()->back()->with('error', "Hai $namaUser, pengajuan tidak bisa diajukan ke CCP. Minimal harus ada 2 vendor dan maksimal 3 vendor ya.");
+        }
+        if (count($countVendor) > 3) {
+            return redirect()->back()->with('error', "Hai $namaUser, pengajuan tidak bisa diajukan ke CCP. Maksimal hanya boleh 3 vendor ya.");
+        }
         $pengajuan = PengajuanPembelian::findOrFail($id);
         $pengajuan->Status = $request->Status;
         $pengajuan->DiajukanOleh = auth()->user()->id;

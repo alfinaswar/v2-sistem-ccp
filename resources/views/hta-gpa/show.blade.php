@@ -15,7 +15,6 @@
     </div>
     <div class="row">
         <div class="col-xxl-12 col-xl-12">
-
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
@@ -35,184 +34,219 @@
                                     <th>Merek</th>
                                     <td>{{ $data->getPengajuanItem[0]->getBarang->getMerk->Nama ?? '-' }}</td>
                                 </tr>
+                                <tr>
+                                    <th>Tipe</th>
+                                    <td>{{ $data->getPengajuanItem[0]->getBarang->Tipe ?? '-' }}</td>
+                                </tr>
                             </thead>
                         </table>
                     </div>
 
-                    <div class="alert alert-warning d-flex align-items-center" role="alert" style="min-height: 70px;">
-                        <i class="fa fa-exclamation-circle me-2" style="align-self: center; font-size: 1.6rem;"></i>
-                        <div class="d-flex align-items-center" style="min-height: 50px;">
-                            <ol class="mb-0 ps-2">
-                                <li>HTA untuk setiap Vendor sudah diisi dan dapat dilihat pada halaman ini.</li>
-                                <li>Semua kolom hanya bisa dibaca (readonly).</li>
-                                <li>Jika butuh perubahan, silakan hubungi admin atau kembali ke halaman sebelumnya.</li>
-                            </ol>
-                        </div>
-                    </div>
-
-                    <ul class="nav nav-tabs tab-style-1 d-sm-flex d-block" role="tablist" id="vendorTabs">
-                        @foreach ($data->getVendor as $vIdx => $Vendor)
-                            <li class="nav-item">
-                                <a class="nav-link {{ $vIdx === 0 ? 'active' : '' }}" id="vendor-tab-{{ $vIdx }}"
-                                    data-bs-toggle="tab" href="#vendor-pane-{{ $vIdx }}" role="tab"
-                                    aria-controls="vendor-pane-{{ $vIdx }}"
-                                    aria-selected="{{ $vIdx === 0 ? 'true' : 'false' }}">
-                                    {{ $Vendor->getNamaVendor->Nama ?? 'Vendor' }}
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                    <div class="tab-content" id="vendorTabPanes">
-                        @foreach ($data->getVendor as $vIdx => $Vendor)
-                            <div class="tab-pane fade {{ $vIdx === 0 ? 'show active' : '' }}"
-                                id="vendor-pane-{{ $vIdx }}" role="tabpanel"
-                                aria-labelledby="vendor-tab-{{ $vIdx }}">
-                                <table class="table align-middle nilai-table" style="width:100%;"
-                                    data-vidx="{{ $vIdx }}">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="text-center" style="width:10px;">No</th>
-                                            <th class="text-center" style="width:17%">Parameter Penilaian</th>
-                                            <th class="text-center" style="width:50%">Deskripsi</th>
-                                            <th class="text-center" style="width:25%">Penilaian</th>
-                                            <th class="text-center">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($data->getJenisPermintaan->getForm->Parameter as $key => $pm)
-                                            <tr>
-                                                <td>{{ $key + 1 }}</td>
-                                                <td>
-                                                    {{ $parameter[$pm - 1]->Nama ?? '-' }}
-                                                </td>
-                                                <td>
-                                                    {!! $Vendor->getHtaGpa->Deskripsi[$key] ?? '-' !!}
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex gap-1">
-                                                        <div class="mb-1 me-1 d-flex align-items-center">
-
-                                                            <input type="number" readonly min="0" max="5"
-                                                                value="{{ $Vendor->getHtaGpa->Nilai1[$key] ?? '' }}"
-                                                                class="form-control bg-light" style="width:65px;">
-                                                        </div>
-                                                        <div class="mb-1 me-1 d-flex align-items-center">
-
-                                                            <input type="number" readonly min="0" max="5"
-                                                                value="{{ $Vendor->getHtaGpa->Nilai2[$key] ?? '' }}"
-                                                                class="form-control bg-light" style="width:65px;">
-                                                        </div>
-                                                        <div class="mb-1 me-1 d-flex align-items-center">
-
-                                                            <input type="number" readonly min="0" max="5"
-                                                                value="{{ $Vendor->getHtaGpa->Nilai3[$key] ?? '' }}"
-                                                                class="form-control bg-light" style="width:65px;">
-                                                        </div>
-                                                        <div class="mb-1 me-1 d-flex align-items-center">
-
-                                                            <input type="number" readonly min="0" max="5"
-                                                                value="{{ $Vendor->getHtaGpa->Nilai4[$key] ?? '' }}"
-                                                                class="form-control bg-light" style="width:65px;">
-                                                        </div>
-                                                        <div class="mb-1 d-flex align-items-center">
-
-                                                            <input type="number" readonly min="0" max="5"
-                                                                value="{{ $Vendor->getHtaGpa->Nilai5[$key] ?? '' }}"
-                                                                class="form-control bg-light" style="width:65px;">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <input type="text"
-                                                        value="{{ $Vendor->getHtaGpa->SubTotal[$key] ?? '' }}"
-                                                        class="form-control bg-light" readonly style="font-weight:bold;">
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th colspan="4" class="text-end">Grand Total</th>
-                                            <th>
-                                                <input type="text" value="{{ $Vendor->getHtaGpa->GrandTotal ?? '' }}"
+                    <div class="table-responsive">
+                        <table class="table align-middle" style="width:100%;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" rowspan="2" style="vertical-align: middle; width:40px;">No
+                                    </th>
+                                    <th class="text-center" rowspan="2" style="vertical-align: middle; width:180px;">
+                                        Parameter Penilaian</th>
+                                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                                        <th class="text-center" colspan="7" style="min-width:250px;">
+                                            {{ $Vendor->getNamaVendor->Nama ?? 'Vendor' }}
+                                        </th>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                                        <th class="text-center" style="width:120px;">Deskripsi</th>
+                                        <th class="text-center" style="width:70px;">Nilai 1</th>
+                                        <th class="text-center" style="width:70px;">Nilai 2</th>
+                                        <th class="text-center" style="width:70px;">Nilai 3</th>
+                                        <th class="text-center" style="width:70px;">Nilai 4</th>
+                                        <th class="text-center" style="width:70px;">Nilai 5</th>
+                                        <th class="text-center" style="width:90px;">Subtotal</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($data->getJenisPermintaan->getForm->Parameter as $key => $pm)
+                                    <tr>
+                                        <td class="text-center">{{ $key + 1 }}</td>
+                                        <td>
+                                            {{ $parameter[$pm - 1]->Nama ?? '-' }}
+                                        </td>
+                                        @foreach ($data->getVendor as $vIdx => $Vendor)
+                                            <td>
+                                                {!! $Vendor->getHtaGpa->Deskripsi[$key] ?? '-' !!}
+                                            </td>
+                                            <td>
+                                                <input type="number" readonly min="0" max="5"
+                                                    value="{{ $Vendor->getHtaGpa->Nilai1[$key] ?? '' }}"
+                                                    class="form-control bg-light" style="width:65px;">
+                                            </td>
+                                            <td>
+                                                <input type="number" readonly min="0" max="5"
+                                                    value="{{ $Vendor->getHtaGpa->Nilai2[$key] ?? '' }}"
+                                                    class="form-control bg-light" style="width:65px;">
+                                            </td>
+                                            <td>
+                                                <input type="number" readonly min="0" max="5"
+                                                    value="{{ $Vendor->getHtaGpa->Nilai3[$key] ?? '' }}"
+                                                    class="form-control bg-light" style="width:65px;">
+                                            </td>
+                                            <td>
+                                                <input type="number" readonly min="0" max="5"
+                                                    value="{{ $Vendor->getHtaGpa->Nilai4[$key] ?? '' }}"
+                                                    class="form-control bg-light" style="width:65px;">
+                                            </td>
+                                            <td>
+                                                <input type="number" readonly min="0" max="5"
+                                                    value="{{ $Vendor->getHtaGpa->Nilai5[$key] ?? '' }}"
+                                                    class="form-control bg-light" style="width:65px;">
+                                            </td>
+                                            <td>
+                                                <input type="text"
+                                                    value="{{ $Vendor->getHtaGpa->SubTotal[$key] ?? '' }}"
                                                     class="form-control bg-light" readonly style="font-weight:bold;">
-                                            </th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                                <div class="row mt-3">
-                                    <div class="col-md-6 mb-2">
-                                        <div class="mb-2">
-                                            <label class="col-form-label fw-bold">Umur Ekonomis</label>
-                                            <input type="text" class="form-control bg-light" readonly
-                                                value="{{ $Vendor->getHtaGpa->UmurEkonomis ?? '-' }}">
-                                        </div>
-                                        <div>
-                                            <label class="col-form-label fw-bold">Tarif Diusulkan</label>
-                                            <input type="text" class="form-control bg-light" readonly
-                                                value="{{ $Vendor->getHtaGpa->TarifDiusulkan ?? '-' }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <div class="mb-2">
-                                            <label class="col-form-label fw-bold">Buyback Period</label>
-                                            <input type="text" class="form-control bg-light" readonly
-                                                value="{{ $Vendor->getHtaGpa->BuybackPeriod ?? '-' }}">
-                                        </div>
-                                        <div>
-                                            <label class="col-form-label fw-bold">Target Pemakaian Bulanan</label>
-                                            <input type="text" class="form-control bg-light" readonly
-                                                value="{{ $Vendor->getHtaGpa->TargetPemakaianBulanan ?? '-' }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12 mt-2">
-                                        <label class="col-form-label fw-bold">Keterangan</label>
-                                        <textarea class="form-control bg-light" rows="3" readonly style="resize: vertical;">{!! $Vendor->getHtaGpa->Keterangan ?? '-' !!}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th class="text-end" colspan="2" style="vertical-align: middle;">Grand Total</th>
+                                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                                        <th colspan="6"></th>
+                                        <th>
+                                            @php
+                                                // Hitung GrandTotal dari subtotal
+                                                $grandTotal = 0;
+                                                if (
+                                                    isset($Vendor->getHtaGpa->SubTotal) &&
+                                                    is_array($Vendor->getHtaGpa->SubTotal)
+                                                ) {
+                                                    foreach ($Vendor->getHtaGpa->SubTotal as $subtotal) {
+                                                        $grandTotal += is_numeric($subtotal) ? floatval($subtotal) : 0;
+                                                    }
+                                                }
+                                                // Fallback ke GrandTotal lama jika kolom tetap mau muncul
+                                                $grandTotalShow =
+                                                    $grandTotal > 0
+                                                        ? $grandTotal
+                                                        : $Vendor->getHtaGpa->GrandTotal ?? '';
+                                            @endphp
+                                            <input type="text" value="{{ number_format($grandTotalShow, 2, ',', '.') }}"
+                                                class="form-control bg-light" readonly style="font-weight:bold;">
+                                        </th>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <th class="text-end" colspan="2" style="vertical-align: middle;">Umur Ekonomis
+                                    </th>
+                                    @foreach ($data->getVendor as $Vendor)
+                                        <th colspan="6"> <input type="text" class="form-control bg-light" readonly
+                                                value="{{ $Vendor->getHtaGpa->UmurEkonomis ?? '-' }}"></th>
+                                        <th>
+
+                                        </th>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <th class="text-end" colspan="2" style="vertical-align: middle;">Tarif Diusulkan
+                                    </th>
+                                    @foreach ($data->getVendor as $Vendor)
+                                        <th colspan="6"> <input type="text" class="form-control bg-light" readonly
+                                                value="{{ $Vendor->getHtaGpa->TarifDiusulkan ?? '-' }}"></th>
+                                        <th>
+
+                                        </th>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <th class="text-end" colspan="2" style="vertical-align: middle;">Buyback Period
+                                    </th>
+                                    @foreach ($data->getVendor as $Vendor)
+                                        <th colspan="6"><input type="text" class="form-control bg-light" readonly
+                                                value="{{ $Vendor->getHtaGpa->BuybackPeriod ?? '-' }}"></th>
+                                        <th>
+
+                                        </th>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <th class="text-end" colspan="2" style="vertical-align: middle;">Target Pemakaian
+                                        Bulanan</th>
+                                    @foreach ($data->getVendor as $Vendor)
+                                        <th colspan="6"> <input type="text" class="form-control bg-light" readonly
+                                                value="{{ $Vendor->getHtaGpa->TargetPemakaianBulanan ?? '-' }}"></th>
+                                        <th>
+
+                                        </th>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    <th class="text-end align-top" colspan="2" style="vertical-align: top;">Keterangan
+                                    </th>
+                                    @foreach ($data->getVendor as $Vendor)
+                                        <th colspan="6">
+                                            <textarea class="form-control bg-light" rows="2" readonly style="resize: vertical;">{!! $Vendor->getHtaGpa->Keterangan ?? '-' !!}</textarea>
+                                        </th>
+                                        <th>
+
+                                        </th>
+                                    @endforeach
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
 
                     <div class="row mt-4 justify-content-center">
                         <div class="col-12">
-                            <h5 class="text-center mb-4"><strong>Persetujuan HTA / GPA</strong></h5>
+                            <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
+                            <!-- Tambah baris untuk nama jabatan di atas tabel approval -->
+                            <div class="mb-2 text-center">
+                                @if (!empty($approval))
+                                    <div class="row justify-content-center">
+                                        @foreach ($approval as $item)
+                                            <div class="col text-center" style="font-weight:600;">
+                                                {{ $item->getJabatan->Nama ?? '-' }}
+                                                {{ $item->getDepartemen->Nama ?? '-' }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-borderless" style="max-width:100%; margin: 0 auto;">
                                     <colgroup>
-                                        <col style="width: 20%;">
-                                        <col style="width: 20%;">
-                                        <col style="width: 20%;">
-                                        <col style="width: 20%;">
-                                        <col style="width: 20%;">
+                                        @if (!empty($approval))
+                                            @foreach ($approval as $item)
+                                                <col style="width: {{ 100 / count($approval) }}%;">
+                                            @endforeach
+                                        @endif
                                     </colgroup>
                                     <tbody>
                                         <tr>
-                                            @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $idx => $penilai)
+                                            @foreach ($approval as $item)
                                                 <td class="text-center align-bottom">
-                                                    <strong>Disetujui {{ $penilai->PenilaiKe ?? $idx + 1 }}</strong>
+                                                    {{-- Nama jabatan sudah ditampilkan di atas, bisa dikosongi atau diisi strip --}}
+                                                    -
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr>
-                                            @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $penilai)
+                                            @foreach ($approval as $item)
                                                 <td style="height: 70px;" class="text-center">
-                                                    @php
-                                                        $statusAccY = ($penilai->StatusAcc ?? null) === 'Y';
-                                                        // Barcode content bisa berupa apapun (misal ApprovalToken atau PenilaiKe)
-                                                        $barcodeValue =
-                                                            $penilai->ApprovalToken ?? ($penilai->PenilaiKe ?? '-');
-                                                    @endphp
-                                                    @if ($statusAccY && $barcodeValue)
-                                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x50&data={{ urlencode($barcodeValue) }}"
-                                                            alt="Barcode Penilai {{ $penilai->PenilaiKe ?? '' }}"
-                                                            style="max-width:120px; max-height:60px;" />
+                                                    @if (!empty($item->Ttd))
+                                                        <img src="{{ asset('storage/upload/tandatangan/' . $item->Ttd) }}"
+                                                            alt="TTD" style="max-width:110px; max-height:60px;">
                                                     @endif
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr>
-                                            @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $penilai)
+                                            @foreach ($approval as $item)
                                                 <td class="text-center" style="padding-bottom:0;">
                                                     <hr
                                                         style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
@@ -220,15 +254,14 @@
                                             @endforeach
                                         </tr>
                                         <tr>
-                                            @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $penilai)
+                                            @foreach ($approval as $item)
                                                 <td class="text-center align-top">
+                                                    <small>Nama Lengkap</small><br>
                                                     <span style="font-weight:600;">
-                                                        {{ $penilai->Nama ?? '-' }}
+                                                        {{ $item->Nama ?? '-' }}
                                                     </span>
                                                     <br>
-                                                    <small class="text-muted">
-                                                        {{ $penilai->AccPada ?? '-' }}
-                                                    </small>
+                                                    <small>{{ $item->Status ?? '-' }}</small>
                                                 </td>
                                             @endforeach
                                         </tr>
@@ -236,41 +269,40 @@
                                 </table>
                             </div>
                         </div>
+
                         <div class="col-12 text-end mt-3">
-                            @foreach (($data->getHtaGpa->getPenilai ?? collect())->take(5) as $idx => $penilai)
-                                <a href="#" class="btn btn-success btn-approve-penilai"
-                                    data-url="{{ route('htagpa.approve', $penilai->ApprovalToken) }}"
-                                    data-penilaike="{{ $penilai->PenilaiKe ?? $idx + 1 }}"
-                                    onclick="event.preventDefault();
-                                    Swal.fire({
-                                        title: 'Konfirmasi Persetujuan',
-                                        text: 'Apakah Anda yakin ingin menyetujui HTA/GPA ini sebagai Penilai {{ $penilai->PenilaiKe ?? $idx + 1 }}?',
-                                        icon: 'question',
-                                        showCancelButton: true,
-                                        confirmButtonText: 'Ya, Setujui!',
-                                        cancelButtonText: 'Batal',
-                                        confirmButtonColor: '#28a745',
-                                        cancelButtonColor: '#d33'
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            window.location.href = '{{ route('htagpa.approve', $penilai->ApprovalToken) }}';
-                                        }
-                                    });">
-                                    <i class="fa fa-check"></i> Setujui HTA/GPA (Penilai
-                                    {{ $penilai->PenilaiKe ?? $idx + 1 }})
-                                </a>
+                            <a href="javascript:history.back()" class="btn btn-secondary me-2">
+                                <i class="fa fa-arrow-left"></i> Kembali
+                            </a>
+
+                            @foreach ($approval as $item)
+                                <form id="formApprove{{ $item->id }}"
+                                    action="{{ route('htagpa.approve', $item->ApprovalToken) }}" method="POST"
+                                    class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="UserId" value="{{ $item->UserId }}">
+                                    <input type="hidden" name="DokumenId" value="{{ $item->DokumenId }}">
+                                    <input type="hidden" name="JenisForm" value="{{ $item->JenisFormId }}">
+                                    @if (auth()->id() == ($item->UserId ?? null))
+                                        <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
+                                            data-title="Konfirmasi"
+                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama ?? $item->JenisUser }}?"
+                                            data-form="formApprove{{ $item->id }}">
+                                            <i class="fa {{ $item->icon ?? 'fa-user' }}"></i>
+                                            {{ $item->JabatanNama ?? $item->JenisUser }}
+                                        </button>
+                                    @endif
+                                </form>
                             @endforeach
                         </div>
-
                     </div>
+
                 </div>
-
             </div>
-
         </div>
-
     </div>
 @endsection
+
 @push('js')
     @if (Session::get('error'))
         <script>

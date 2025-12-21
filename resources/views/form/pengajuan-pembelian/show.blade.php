@@ -442,11 +442,11 @@
                                         <tr>
                                             <th class="text-center" style="width:40px;">No</th>
                                             <th>Nama Barang</th>
+                                            <th class="text-center">Rekomendasi</th>
                                             <th class="text-center">HTA / GPA</th>
                                             <th class="text-center">Usulan Investasi</th>
                                             <th class="text-center">Lembar Disposisi</th>
                                             <th class="text-center">Feasibility Study</th>
-                                            <th class="text-center">Rekomendasi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -456,6 +456,29 @@
                                                     <td class="text-center">{{ $i + 1 }}</td>
                                                     <td>
                                                         {{ $item->getBarang->Nama ?? '-' }}
+                                                    </td>
+                                                    <td class="text-center">
+
+                                                        @php
+                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
+                                                        @endphp
+                                                        @if ($adaRekomendasi)
+                                                            <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                class="btn btn-info ms-2" target="_blank">
+                                                                <i class="fa fa-print"></i> Cetak
+                                                            </a>
+                                                            @can('rekomendasi-show')
+                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                    class="btn btn-secondary ms-2" target="_blank">
+                                                                    <i class="fa fa-eye"></i> Lihat
+                                                                </a>
+                                                            @endcan
+                                                        @else
+                                                            <span
+                                                                style="color: #856404; background: #fff3cd; padding: 6px 12px; border-radius: 5px; display: inline-block;">
+                                                                Rekomendasi sedang diproses oleh CCP.
+                                                            </span>
+                                                        @endif
                                                     </td>
                                                     <td class="text-center">
                                                         @php
@@ -480,36 +503,41 @@
                                                                 <i class="fa fa-check-circle"></i>
                                                                 Lihat
                                                             </a>
-                                                            {{-- <a href="{{ route('htagpa.print', [$data->id, $item->id]) }}"
+                                                            <a href="{{ route('htagpa.print', [$data->id, $item->id]) }}"
                                                                 class="btn btn-info" target="_blank">
                                                                 <i class="fa fa-print"></i>
                                                                 Cetak HTA
-                                                            </a> --}}
+                                                            </a>
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
                                                         @php
                                                             $adaFui = $item->getFui ? true : false;
+                                                            // dd($item->getFui);
                                                             $adaRekomendasi = $item->getRekomendasi ? true : false;
                                                         @endphp
                                                         @if ($adaRekomendasi)
                                                             @if (!$adaFui)
                                                                 <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                     class="btn btn-warning">
-                                                                    <i class="fa fa-lightbulb"></i> Lengkapi Formulir
-                                                                    Usulan
-                                                                    Investasi (FUI)
+                                                                    <i class="fa fa-lightbulb"></i> Lengkapi (FUI)
                                                                 </a>
                                                             @else
+                                                                @if ($item->getFui && $item->getFui->SudahRkap2)
+                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                        class="btn btn-warning">
+                                                                        <i class="fa fa-edit"></i> Lengkapi (FUI)
+                                                                    </a>
+                                                                @endif
                                                                 <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
                                                                     class="btn btn-info">
                                                                     <i class="fa fa-print"></i>
-                                                                    Cetak Formulir Usulan Investasi (FUI)
+                                                                    Cetak (FUI)
                                                                 </a>
                                                                 <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
                                                                     class="btn btn-success">
                                                                     <i class="fa fa-eye"></i>
-                                                                    Lihat Formulir Usulan Investasi (FUI)
+                                                                    Lihat (FUI)
                                                                 </a>
                                                             @endif
                                                         @else
@@ -579,29 +607,7 @@
                                                         @endif
                                                     </td>
 
-                                                    <td class="text-center">
 
-                                                        @php
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                        @endphp
-                                                        @if ($adaRekomendasi)
-                                                            <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                class="btn btn-info ms-2" target="_blank">
-                                                                <i class="fa fa-print"></i> Cetak
-                                                            </a>
-                                                            @can('rekomendasi-show')
-                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                    class="btn btn-secondary ms-2" target="_blank">
-                                                                    <i class="fa fa-eye"></i> Lihat
-                                                                </a>
-                                                            @endcan
-                                                        @else
-                                                            <span
-                                                                style="color: #856404; background: #fff3cd; padding: 6px 12px; border-radius: 5px; display: inline-block;">
-                                                                Rekomendasi sedang diproses oleh CCP.
-                                                            </span>
-                                                        @endif
-                                                    </td>
                                                 </tr>
                                             @endforeach
                                         @else
@@ -717,6 +723,20 @@
                     iconColor: '#4BCC1F',
                     confirmButtonText: 'Oke',
                     confirmButtonColor: '#4BCC1F',
+                });
+            }, 500);
+        </script>
+    @endif
+    @if (Session::get('error'))
+        <script>
+            setTimeout(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: '{{ Session::get('error') }}',
+                    iconColor: '#d33',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#d33',
                 });
             }, 500);
         </script>

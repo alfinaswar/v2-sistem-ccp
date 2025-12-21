@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('master_vendors', function (Blueprint $table) {
             $table->id();
+            $table->string('Jenis', 255)->nullable();
             $table->string('Nama', 255)->nullable();
             $table->string('Alamat', 255)->nullable();
             $table->string('NoHp', 100)->nullable();

@@ -86,7 +86,7 @@
               </style>
           @endpush
           <div class="modal fade" id="modalPenilai" tabindex="-1" aria-labelledby="modalPenilaiLabel" aria-hidden="true">
-              <div class="modal-dialog modal-lg modal-dialog-centered">
+              <div class="modal-dialog modal-xl modal-dialog-centered">
                   <div class="modal-content">
                       <div class="modal-header">
                           <h5 class="modal-title" id="modalPenilaiLabel">Isi Data Penilai</h5>
@@ -106,6 +106,7 @@
                                       <li>Mohon isi nama penilai beserta gelarnya dengan benar.</li>
                                       <li>Mohon masukkan alamat email penilai dengan benar karena HTA akan diajukan
                                           melalui email tersebut.</li>
+                                      <li>Mohon pastikan jabatan dan departemen penilai terisi dengan benar.</li>
                                   </ol>
                               </div>
                               <div class="table-responsive">
@@ -116,130 +117,107 @@
                                               <th>Input Tipe</th>
                                               <th>Nama</th>
                                               <th>Email</th>
+                                              <th>Jabatan</th>
+                                              <th>Departemen</th>
                                           </tr>
                                       </thead>
                                       <tbody>
+                                          @php
+                                              $jabatans = $jabatans ?? [];
+                                              $departemens = $departemens ?? [];
+                                              $approvalList =
+                                                  is_array($approval) || is_object($approval) ? $approval : [];
+                                          @endphp
 
-                                          @forelse(optional($data->getHtaGpa)->getPenilai ?? [] as $key => $val)
+                                          @foreach ($approvalList as $i => $app)
                                               @php
-                                                  $i = $key + 1;
-                                                  $defaultType = $val->TipeInputPenilai ?? 'master';
-                                                  $namaText = $val->Nama ?? '';
-                                                  $emailValue = $val->Email ?? '';
+                                                  $defaultType = isset($app->JenisUser) ? $app->JenisUser : '';
+                                                  $namaText = isset($app->Nama) ? $app->Nama : '';
+                                                  $jabatanId = isset($app->JabatanId) ? $app->JabatanId : '';
+                                                  $departemenId = isset($app->DepartemenId) ? $app->DepartemenId : '';
                                               @endphp
                                               <tr>
-                                                  <td>Penilai {{ $i }}</td>
+                                                  <td>Penilai {{ $i + 1 }}</td>
                                                   <td>
                                                       <select name="TipeInputPenilai[]"
                                                           class="form-select tipe-input-penilai"
-                                                          data-penilai-index="{{ $i }}">
-                                                          <option value="master"
-                                                              @if ($defaultType == 'master') selected @endif>Dari
-                                                              Data
-                                                              Master</option>
-                                                          <option value="manual"
-                                                              @if ($defaultType == 'manual') selected @endif>
-                                                              Input
-                                                              Manual
+                                                          data-penilai-index="{{ $i + 1 }}">
+                                                          <option value="Master"
+                                                              @if ($defaultType == 'Master') selected @endif>
+                                                              Dari Data Master
+                                                          </option>
+                                                          <option value="Manual"
+                                                              @if ($defaultType == 'Manual') selected @endif>
+                                                              Input Manual
                                                           </option>
                                                       </select>
                                                   </td>
                                                   <td>
                                                       <div class="form-master-penilai"
-                                                          data-penilai-index="{{ $i }}"
-                                                          @if ($defaultType != 'master') style="display:none;" @endif>
+                                                          data-penilai-index="{{ $i + 1 }}"
+                                                          @if ($defaultType != 'Master') style="display:none;" @endif>
                                                           <select name="NamaPenilai[]"
                                                               class="form-select select2 penilai-select"
-                                                              data-penilai-index="{{ $i }}">
-                                                              <option value="" data-email="">Pilih Nama
-                                                                  Penilai
-                                                                  {{ $i }}</option>
+                                                              data-penilai-index="{{ $i + 1 }}">
+                                                              <option value="" data-email="" data-jabatanid=""
+                                                                  data-departemenid="">
+                                                                  Pilih Nama Penilai {{ $i + 1 }}
+                                                              </option>
                                                               @foreach ($user as $u)
-                                                                  <option value="{{ $u->id }}"
+                                                                  <option
+                                                                      value="{{ $u->id }},{{ $u->name }}"
                                                                       data-email="{{ $u->email }}"
-                                                                      @if ($val->IdUser == $u->id) selected @endif>
+                                                                      data-jabatanid="{{ $u->jabatan ?? '' }}"
+                                                                      data-departemenid="{{ $u->departemen ?? '' }}"
+                                                                      @if (isset($app->UserId) && $u->id == $app->UserId) selected @endif>
                                                                       {{ $u->name }}
                                                                   </option>
                                                               @endforeach
                                                           </select>
                                                       </div>
                                                       <div class="form-manual-penilai"
-                                                          data-penilai-index="{{ $i }}"
-                                                          @if ($defaultType != 'manual') style="display:none;" @endif>
+                                                          data-penilai-index="{{ $i + 1 }}"
+                                                          @if ($defaultType != 'Manual') style="display:none;" @endif>
                                                           <input type="text" name="NamaPenilaiManual[]"
                                                               class="form-control" value="{{ $namaText }}"
-                                                              placeholder="Nama Penilai {{ $i }}">
+                                                              placeholder="Nama Penilai {{ $i + 1 }}">
                                                       </div>
                                                   </td>
                                                   <td>
                                                       <input type="email" name="EmailPenilai[]"
                                                           class="form-control email-penilai-input"
-                                                          data-penilai-index="{{ $i }}"
-                                                          value="{{ $emailValue }}"
-                                                          placeholder="Email Penilai {{ $i }}">
+                                                          data-penilai-index="{{ $i + 1 }}"
+                                                          value="{{ isset($app->Email) ? $app->Email : '' }}"
+                                                          placeholder="Email Penilai {{ $i + 1 }}">
+                                                  </td>
+                                                  <td>
+                                                      <select name="JabatanId[]"
+                                                          class="form-select select2 jabatan-penilai"
+                                                          data-penilai-index="{{ $i + 1 }}">
+                                                          <option value="">Pilih Jabatan</option>
+                                                          @foreach ($jabatan as $jab)
+                                                              <option value="{{ $jab->id }}"
+                                                                  @if (old('JabatanId.' . $i, $jabatanId) == $jab->id) selected @endif>
+                                                                  {{ isset($jab->Nama) ? $jab->Nama : (isset($jab->Nama) ? $jab->Nama : '') }}
+                                                              </option>
+                                                          @endforeach
+                                                      </select>
+                                                  </td>
+                                                  <td>
+                                                      <select name="DepartemenId[]"
+                                                          class="form-select select2 departemen-penilai"
+                                                          data-penilai-index="{{ $i + 1 }}">
+                                                          <option value="">Pilih Departemen</option>
+                                                          @foreach ($departemen as $dep)
+                                                              <option value="{{ $dep->id }}"
+                                                                  @if (old('DepartemenId.' . $i, $departemenId) == $dep->id) selected @endif>
+                                                                  {{ isset($dep->Nama) ? $dep->Nama : (isset($dep->nama) ? $dep->nama : '') }}
+                                                              </option>
+                                                          @endforeach
+                                                      </select>
                                                   </td>
                                               </tr>
-                                          @empty
-                                              @for ($i = 1; $i <= 5; $i++)
-                                                  @php
-                                                      $defaultType = 'master';
-                                                      $namaText = '';
-                                                      $emailValue = isset($user[$i - 1]) ? $user[$i - 1]->email : '';
-                                                  @endphp
-                                                  <tr>
-                                                      <td>Penilai {{ $i }}</td>
-                                                      <td>
-                                                          <select name="TipeInputPenilai[]"
-                                                              class="form-select tipe-input-penilai"
-                                                              data-penilai-index="{{ $i }}">
-                                                              <option value="master"
-                                                                  @if ($defaultType == 'master') selected @endif>Dari
-                                                                  Data
-                                                                  Master</option>
-                                                              <option value="manual"
-                                                                  @if ($defaultType == 'manual') selected @endif>
-                                                                  Input
-                                                                  Manual
-                                                              </option>
-                                                          </select>
-                                                      </td>
-                                                      <td>
-                                                          <div class="form-master-penilai"
-                                                              data-penilai-index="{{ $i }}"
-                                                              @if ($defaultType != 'master') style="display:none;" @endif>
-                                                              <select name="NamaPenilai[]"
-                                                                  class="form-select select2 penilai-select"
-                                                                  data-penilai-index="{{ $i }}">
-                                                                  <option value="" data-email="">Pilih Nama
-                                                                      Penilai
-                                                                      {{ $i }}</option>
-                                                                  @foreach ($user as $u)
-                                                                      <option value="{{ $u->id }}"
-                                                                          data-email="{{ $u->email }}">
-                                                                          {{ $u->name }}
-                                                                      </option>
-                                                                  @endforeach
-                                                              </select>
-                                                          </div>
-                                                          <div class="form-manual-penilai"
-                                                              data-penilai-index="{{ $i }}"
-                                                              @if ($defaultType != 'manual') style="display:none;" @endif>
-                                                              <input type="text" name="NamaPenilaiManual[]"
-                                                                  class="form-control" value="{{ $namaText }}"
-                                                                  placeholder="Nama Penilai {{ $i }}">
-                                                          </div>
-                                                      </td>
-                                                      <td>
-                                                          <input type="email" name="EmailPenilai[]"
-                                                              class="form-control email-penilai-input"
-                                                              data-penilai-index="{{ $i }}"
-                                                              value="{{ $emailValue }}"
-                                                              placeholder="Email Penilai {{ $i }}">
-                                                      </td>
-                                                  </tr>
-                                              @endfor
-                                          @endforelse
-
+                                          @endforeach
                                       </tbody>
                                   </table>
                               </div>
@@ -259,6 +237,34 @@
           @push('js')
               <script>
                   $(document).ready(function() {
+                      // ======== FIX SELECT2 SEARCH ==========
+                      // Pastikan select2 di-reinit setiap modal show
+                      function initHtaGpaSelect2() {
+                          // destroy dulu jaga-jaga supaya duplikat gak error
+                          $('.select2').each(function() {
+                              if ($(this).hasClass("select2-hidden-accessible")) {
+                                  $(this).select2('destroy');
+                              }
+                          });
+                          // inisialisasi select2 di dalam modal, biar search bisa jalan
+                          $('.select2').select2({
+                              dropdownParent: $('#modalPenilai'),
+                              width: '100%',
+                              placeholder: function() {
+                                  return $(this).attr('placeholder') || 'Pilih...';
+                              },
+                              allowClear: true
+                          });
+                      }
+
+                      // Panggil sekali saat document ready
+                      initHtaGpaSelect2();
+
+                      // Kalau modal dibuka lagi, inisialisasi ulang
+                      $('#modalPenilai').on('shown.bs.modal', function() {
+                          initHtaGpaSelect2();
+                      });
+
                       // Variable untuk tracking loading state
                       let isSubmitting = false;
 
@@ -349,33 +355,60 @@
                           var index = $(this).data('penilai-index');
                           var tipe = $(this).val();
                           let $row = $(this).closest('tr');
-                          if (tipe === 'master') {
+                          if (tipe === 'Master') {
                               $row.find('.form-master-penilai[data-penilai-index="' + index + '"]').show();
                               $row.find('.form-manual-penilai[data-penilai-index="' + index + '"]').hide();
-                              var email = $row.find('.penilai-select').find('option:selected').data('email') || '';
+
+                              var option = $row.find('.penilai-select').find('option:selected');
+                              var email = option.data('email') || '';
+                              var jabatan = option.data('jabatanid') || '';
+                              var departemen = option.data('departemenid') || '';
+
                               $row.find('input.email-penilai-input').val(email);
+
+                              // Set JabatanId dan DepartemenId jika ada
+                              $row.find('.jabatan-penilai').val(jabatan).trigger('change');
+                              $row.find('.departemen-penilai').val(departemen).trigger('change');
                           } else {
                               $row.find('.form-master-penilai[data-penilai-index="' + index + '"]').hide();
                               $row.find('.form-manual-penilai[data-penilai-index="' + index + '"]').show();
                               $row.find('input.email-penilai-input').val('');
+                              $row.find('.jabatan-penilai').val('').trigger('change');
+                              $row.find('.departemen-penilai').val('').trigger('change');
                           }
                       });
 
-                      // Sync email saat pilih dari master
+                      // Sync email, jabatan, departemen saat pilih dari master
                       $('.penilai-select').on('change', function() {
                           var index = $(this).attr('data-penilai-index');
-                          var email = $(this).find('option:selected').data('email') || '';
+                          var option = $(this).find('option:selected');
+                          var email = option.data('email') || '';
+                          var jabatan = option.data('jabatanid') || '';
+                          var departemen = option.data('departemenid') || '';
+
                           $('input.email-penilai-input[data-penilai-index="' + index + '"]').val(email);
+
+                          // Set JabatanId dan DepartemenId jika ada
+                          $('select.jabatan-penilai[data-penilai-index="' + index + '"]').val(jabatan).trigger(
+                              'change');
+                          $('select.departemen-penilai[data-penilai-index="' + index + '"]').val(departemen).trigger(
+                              'change');
                       });
 
-                      // Default: Jika master, set email otomatis sesuai pilihan nama penilai
+                      // Default: Jika master, set email/jabatan/departemen otomatis sesuai pilihan nama penilai
                       $('.tipe-input-penilai').each(function() {
                           var $select = $(this);
-                          if ($select.val() === 'master') {
+                          if ($select.val() === 'Master') {
                               var index = $select.data('penilai-index');
                               var $row = $select.closest('tr');
-                              var email = $row.find('.penilai-select').find('option:selected').data('email') || '';
+                              var option = $row.find('.penilai-select').find('option:selected');
+                              var email = option.data('email') || '';
+                              var jabatan = option.data('jabatanid') || '';
+                              var departemen = option.data('departemenid') || '';
+
                               $row.find('input.email-penilai-input').val(email);
+                              $row.find('.jabatan-penilai').val(jabatan).trigger('change');
+                              $row.find('.departemen-penilai').val(departemen).trigger('change');
                           }
                       });
 

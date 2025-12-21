@@ -46,7 +46,10 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
-
+Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'approve'])->name('htagpa.approve');
+Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
+Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
+Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
 Route::group(['middleware' => ['auth']], function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permission', PermissionController::class);
@@ -109,6 +112,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/show/{id}', [PermintaanPembelianController::class, 'show'])->name('pp.show');
         Route::get('/print/{id}', [PermintaanPembelianController::class, 'print'])->name('pp.print');
         Route::delete('/delete/{id}', [PermintaanPembelianController::class, 'destroy'])->name('pp.destroy');
+        Route::post('/approve', [PermintaanPembelianController::class, 'approve'])->name('pp.approve');
 
         // Tambahan route untuk ACC
         Route::post('/acc-kepala-divisi/{id}', [PermintaanPembelianController::class, 'accKepalaDivisi'])->name('pp.acc-kepala-divisi');
@@ -217,8 +221,6 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/show/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'show'])->name('htagpa.show');
         Route::get('/print/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'print'])->name('htagpa.print');
 
-        Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'approve'])->name('htagpa.approve');
-        Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
         // input penilai
         Route::POST('/simpan-penilai', [HtaDanGpaController::class, 'SimpanPenilai'])->name('htagpa.simpan-penilai');
         Route::post('/acc-penilai1/{id}', [HtaDanGpaController::class, 'accPenilai1'])->name('htagpa.acc-penilai1');

@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             JenisPengajuanSeeder::class,
             MasterFormSeeder::class,
             UserSeeder::class,
+            MasterVendorSeeder::class,
         ]);
     }
 }

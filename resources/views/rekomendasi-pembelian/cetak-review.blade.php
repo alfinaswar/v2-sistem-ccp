@@ -16,6 +16,7 @@
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 30px;
+            text-decoration: underline;
         }
 
         .main-table {
@@ -66,7 +67,7 @@
 
 <body>
     <div class="title">
-        FORMULIR REKOMENDASI BARANG MEDIS
+        REKOMENDASI PEMBELIAN BARANG
     </div>
 
     <table class="main-table" style="margin-bottom: 45px;">
@@ -90,7 +91,8 @@
             <td>Nama Barang</td>
             @foreach ($rekomendasi->getRekomedasiDetail as $item)
                 <td>
-                    {{ $item->getBarang->Nama ?? '-' }} / {{ $item->getBarang->getMerk->Nama ?? '-' }}
+                    {{ $item->getBarang->Nama ?? '-' }} / {{ $item->getBarang->getMerk->Nama ?? '-' }} /
+                    {{ $item->getBarang->Tipe ?? '-' }}
                 </td>
             @endforeach
         </tr>
@@ -124,7 +126,7 @@
             <td>Spesifikasi</td>
             @foreach ($rekomendasi->getRekomedasiDetail as $item)
                 <td>
-                    {!! $item->Spesifikasi ?? '-' !!}
+                    {{ $item->Spesifikasi ?? '-' }}
                 </td>
             @endforeach
         </tr>
@@ -132,7 +134,7 @@
             <td>Negara Produksi</td>
             @foreach ($rekomendasi->getRekomedasiDetail as $item)
                 <td>
-                    {{ $item->NegaraProduksi ?? '-' }}
+                    {{ $item->getNegara->Nama ?? '-' }}
                 </td>
             @endforeach
         </tr>

@@ -12,18 +12,21 @@ return new class extends Migration {
     {
         Schema::create('dokumen_approvals', function (Blueprint $table) {
             $table->id();
-            $table->enum('JenisUser', ['Master', 'Manual']);
-            $table->string('JenisFormId');
-            $table->string('DokumenId');
-            $table->string('PerusahaanId');
-            $table->string('JabatanId');
-            $table->string('UserId');
-            $table->string('Nama');
-            $table->integer('Urutan');
-            $table->enum('Status', ['Pending', 'Approved', 'Rejected']);
+            $table->enum('JenisUser', ['Master', 'Manual'])->nullable();
+            $table->string('JenisFormId')->nullable();
+            $table->string('DokumenId')->nullable();
+            $table->string('PerusahaanId')->nullable();
+            $table->string('JabatanId')->nullable();
+            $table->string('DepartemenId')->nullable();
+            $table->string('UserId')->nullable();
+            $table->string('Nama')->nullable();
+            $table->string('Email')->nullable();
+            $table->integer('Urutan')->nullable();
+            $table->enum('Status', ['Pending', 'Approved', 'Rejected'])->nullable();
             $table->timestamp('TanggalApprove')->nullable();
             $table->text('Catatan')->nullable();
             $table->string('Ttd')->nullable();
+            $table->text('ApprovalToken')->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();
             $table->string('UserDelete')->nullable();

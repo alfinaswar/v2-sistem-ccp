@@ -25,7 +25,8 @@ class UserController extends Controller
     public function index(Request $request): View
     {
         $data = User::with('getPerusahaan')->orderBy('id', 'DESC')->get();
-        return view('users.index', compact('data'));
+        $perusahaan = MasterPerusahaan::get();
+        return view('users.index', compact('data', 'perusahaan'));
     }
 
     /**

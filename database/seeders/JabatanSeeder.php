@@ -16,6 +16,8 @@ class JabatanSeeder extends Seeder
             ['Nama' => 'Ketua Komite', 'UserCreate' => 'system', 'UserUpdate' => null, 'UserDelete' => null],
             ['Nama' => 'Manajer', 'UserCreate' => 'system', 'UserUpdate' => null, 'UserDelete' => null],
             ['Nama' => 'Staff', 'UserCreate' => 'system', 'UserUpdate' => null, 'UserDelete' => null],
+            ['Nama' => 'CEO', 'UserCreate' => 'system', 'UserUpdate' => null, 'UserDelete' => null],
+            ['Nama' => 'Direktur Group', 'UserCreate' => 'system', 'UserUpdate' => null, 'UserDelete' => null],
         ];
 
         DB::table('master_jabatans')->insert($data);

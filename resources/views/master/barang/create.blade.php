@@ -43,8 +43,12 @@
                                 <select name="Jenis" id="Jenis"
                                     class="form-select @error('Jenis') is-invalid @enderror">
                                     <option value="">-- Pilih Jenis --</option>
-                                    <option value="MEDIS" {{ old('Jenis') == 'MEDIS' ? 'selected' : '' }}>MEDIS</option>
-                                    <option value="UMUM" {{ old('Jenis') == 'UMUM' ? 'selected' : '' }}>UMUM</option>
+                                    @foreach ($jenis ?? [] as $j)
+                                        <option value="{{ $j->id }}"
+                                            {{ old('Jenis') == $j->Nama ? 'selected' : '' }}>
+                                            {{ $j->Nama }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 @error('Jenis')
                                     <div class="text-danger mt-1">
@@ -58,7 +62,8 @@
                                     class="form-select select2 @error('Satuan') is-invalid @enderror">
                                     <option value="">-- Pilih Satuan --</option>
                                     @foreach ($satuan ?? [] as $s)
-                                        <option value="{{ $s->id }}" {{ old('Satuan') == $s->id ? 'selected' : '' }}>
+                                        <option value="{{ $s->id }}"
+                                            {{ old('Satuan') == $s->id ? 'selected' : '' }}>
                                             {{ $s->NamaSatuan }}
                                         </option>
                                     @endforeach

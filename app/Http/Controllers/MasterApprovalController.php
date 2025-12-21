@@ -31,7 +31,6 @@ class MasterApprovalController extends Controller
                         </a>
                     ';
                 })
-
                 ->rawColumns(['action'])
                 ->make(true);
         }
@@ -50,12 +49,13 @@ class MasterApprovalController extends Controller
         $form = MasterForm::get();
         return view('master.pengaturan-ttd.create', compact('form', 'perusahaan'));
     }
+
     public function aturTtd($id, $KodePerusahaan)
     {
         $id = decrypt($id);
         $KodePerusahaan = decrypt($KodePerusahaan);
         $form = MasterForm::with('getApproval')->where('id', $id)->first();
-        $user = User::get();
+        $user = User::with('getJabatan', 'getDepartemen')->get();
         $jabatan = MasterJabatan::get();
         $departemen = MasterDepartemen::get();
         return view('master.pengaturan-ttd.atur-ttd', compact('KodePerusahaan', 'form', 'user', 'jabatan', 'departemen'));
@@ -66,30 +66,35 @@ class MasterApprovalController extends Controller
      */
     public function store(Request $request)
     {
-        $data = [
-            'UserId' => $request->UserId,
-            'JabatanId' => $request->JabatanId,
-            'DepartemenId' => $request->DepartemenId,
-            'Urutan' => $request->Urutan,
-            'Wajib' => $request->Wajib,
-        ];
+        // Hapus semua approval yang ada sesuai KodePerusahaan & JenisForm
+        MasterApproval::where('KodePerusahaan', $request->KodePerusahaan)
+            ->where('JenisForm', $request->JenisForm)
+            ->delete();
 
-        $data['UserCreate'] = auth()->id();
-        if (is_array($request->UserId)) {
-            foreach ($request->UserId as $key => $userId) {
+        if (is_array($request->Urutan)) {
+            foreach ($request->Urutan as $key => $urutan) {
                 MasterApproval::create([
+                    'Urutan' => $urutan,
                     'KodePerusahaan' => $request->KodePerusahaan,
                     'JenisForm' => $request->JenisForm,
-                    'UserId' => $userId,
+                    'UserId' => $request->UserId[$key] ?? null,
                     'JabatanId' => $request->JabatanId[$key] ?? null,
                     'DepartemenId' => $request->DepartemenId[$key] ?? null,
-                    'Urutan' => $request->Urutan[$key] ?? null,
                     'Wajib' => $request->Wajib[$key] ?? null,
                     'UserCreate' => auth()->id(),
                 ]);
             }
         } else {
-            MasterApproval::create($data);
+            MasterApproval::create([
+                'Urutan' => $request->Urutan ?? null,
+                'KodePerusahaan' => $request->KodePerusahaan,
+                'JenisForm' => $request->JenisForm,
+                'UserId' => $request->UserId,
+                'JabatanId' => $request->JabatanId ?? null,
+                'DepartemenId' => $request->DepartemenId ?? null,
+                'Wajib' => $request->Wajib ?? null,
+                'UserCreate' => auth()->id(),
+            ]);
         }
 
         return redirect()

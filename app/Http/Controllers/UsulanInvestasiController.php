@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DokumenApproval;
 use App\Models\MasterBarang;
 use App\Models\MasterDepartemen;
+use App\Models\MasterForm;
 use App\Models\PengajuanItem;
 use App\Models\PengajuanPembelian;
 use App\Models\Rekomendasi;
 use App\Models\User;
 use App\Models\UsulanInvestasi;
 use App\Models\UsulanInvestasiDetail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UsulanInvestasiController extends Controller
 {
@@ -29,22 +33,19 @@ class UsulanInvestasiController extends Controller
     {
         $IdPengajuan = decrypt($IdPengajuan);
         $PengajuanItemId = decrypt($PengajuanItemId);
-        // dd($PengajuanItemId);
         $pengajuanItem = PengajuanItem::find($PengajuanItemId);
         if (!$pengajuanItem) {
             return redirect()->back()->withErrors(['Pengajuan item tidak ditemukan.']);
         }
         $IdBarang = $pengajuanItem->IdBarang;
-        // dd($IdBarang);
         $data = PengajuanPembelian::with([
             'getVendor.getNamaVendor',
             'getVendor.getVendorDetail' => function ($query) use ($IdBarang) {
                 $query->where('NamaBarang', $IdBarang);
             }
         ])->find($IdPengajuan);
-        // dd($data);
+
         $CariPengajuanItem = PengajuanItem::with('getRekomendasi')->find($PengajuanItemId);
-        // $vendorAcc = $CariPengajuanItem->getRekomendasi;
         $vendorAcc = Rekomendasi::with([
             'getRekomedasiDetail' => function ($query2) {
                 $query2->where('Rekomendasi', 1);
@@ -53,7 +54,13 @@ class UsulanInvestasiController extends Controller
         ])
             ->where('PengajuanItemId', $PengajuanItemId)
             ->first();
+
+        $namaUser = auth()->user()->name ?? 'User';
+        if (is_null($vendorAcc) || is_null($vendorAcc->getRekomedasiDetail) || count($vendorAcc->getRekomedasiDetail) == 0) {
+            return redirect()->back()->with('error', "Hai $namaUser, Maaf, CCP belum menentukan pilihan vendor.");
+        }
         $Acc = $vendorAcc->getRekomedasiDetail[0]->IdVendor;
+
         $data2 = PengajuanPembelian::with([
             'getVendor' => function ($query2) use ($Acc) {
                 $query2->where('NamaVendor', $Acc);
@@ -62,12 +69,15 @@ class UsulanInvestasiController extends Controller
                 $query->where('NamaBarang', $IdBarang);
             }
         ])->find($IdPengajuan);
-        // dd($data2);
         $departemen = MasterDepartemen::get();
         $user = User::get();
         $barang = MasterBarang::get();
-        // $dataPengajuan = PengajuanPembelian::with('getVendor.getVendorDetail')->find($data->IdPengajuan);
-        return view('form-usulan-investari.create', compact('barang', 'user', 'departemen', 'data', 'data2', 'PengajuanItemId'));
+
+        $usulan = UsulanInvestasi::with('getFuiDetail', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv')
+            ->where('IdPengajuan', $IdPengajuan)
+            ->where('PengajuanItemId', $PengajuanItemId)
+            ->first();
+        return view('form-usulan-investari.create', compact('barang', 'user', 'departemen', 'data', 'data2', 'PengajuanItemId', 'usulan'));
     }
 
     /**
@@ -103,6 +113,7 @@ class UsulanInvestasiController extends Controller
         // }
         // dd($request->all());
         $usulan = UsulanInvestasi::create([
+            'JenisForm' => '7',
             'IdPengajuan' => $request->IdPengajuan ?? null,
             'PengajuanItemId' => $request->PengajuanItemId ?? null,
             'IdVendor' => $request->VendorDipilih ?? null,
@@ -125,6 +136,7 @@ class UsulanInvestasiController extends Controller
             'SudahRkap2' => $request->SudahRkap2 ?? null,
             'SisaBudget2' => isset($request->SisaBudget2) ? preg_replace('/[^0-9]/', '', $request->SisaBudget2) : null,
             'DiajukanOleh' => auth()->user()->id ?? null,
+            'KodePerusahaan' => auth()->user()->kodeperusahaan ?? null,
             'DiajukanPada' => now(),
         ]);
 
@@ -146,6 +158,38 @@ class UsulanInvestasiController extends Controller
                 ]);
             }
         }
+        $Form = MasterForm::with([
+            'getApproval' => function ($q) use ($usulan) {
+                $q->where('KodePerusahaan', $usulan->KodePerusahaan);
+            },
+            'getApproval.getUser'
+        ])
+            ->where('id', $usulan->JenisForm)
+            ->first();
+
+        foreach ($Form->getApproval as $approvalSetting) {
+            DokumenApproval::updateOrCreate(
+                [
+                    'JenisFormId' => $usulan->JenisForm,
+                    'DokumenId' => $usulan->id,
+                    'Urutan' => $approvalSetting->Urutan ?? null,
+                ],
+                [
+                    'JenisUser' => $approvalSetting->JenisUser ?? 'Master',
+                    'DepartemenId' => $approvalSetting->Departemen ?? null,
+                    'PerusahaanId' => $approvalSetting->KodePerusahaan,
+                    'JabatanId' => $approvalSetting->JabatanId ?? null,
+                    'UserId' => $approvalSetting->UserId ?? null,
+                    'Nama' => $approvalSetting->getUser->name ?? null,
+                    'Status' => 'Pending',
+                    'TanggalApprove' => null,
+                    'ApprovalToken' => str_replace('-', '', Str::uuid()),
+                    'Catatan' => null,
+                    'Ttd' => null,
+                    'UserCreate' => auth()->user()->name,
+                ]
+            );
+        }
         return redirect()->back()->with('success', 'Usulan Investasi berhasil disimpan.');
     }
 
@@ -154,12 +198,19 @@ class UsulanInvestasiController extends Controller
      */
     public function show($IdPengajuan, $barang)
     {
+        // $IdPengajuan = decrypt($IdPengajuan);
+        // $PengajuanItemId = decrypt($barang);
+
         $usulan = UsulanInvestasi::with('getFuiDetail', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv')
             ->where('IdPengajuan', $IdPengajuan)
             ->where('PengajuanItemId', $barang)
             ->first();
-
-        return view('form-usulan-investari.show', compact('usulan'));
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $usulan->JenisForm)
+            ->where('DokumenId', $usulan->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+        return view('form-usulan-investari.show', compact('usulan', 'approval'));
     }
 
     public function print($IdPengajuan, $barang)
@@ -169,8 +220,12 @@ class UsulanInvestasiController extends Controller
             ->where('PengajuanItemId', $barang)
             ->first();
         $VendorAcc = UsulanInvestasiDetail::with('getVendorDipilih')->where('idUsulan', $usulan->id)->where('Vendor', $usulan->VendorDipilih)->first();
-        // Load the dompdf wrapper with F4 (Folio) paper size
-        $pdf = \PDF::loadView('form-usulan-investari.show-pdf', compact('usulan', 'VendorAcc'))
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $usulan->JenisForm)
+            ->where('DokumenId', $usulan->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+        $pdf = \PDF::loadView('form-usulan-investari.show-pdf', compact('usulan', 'VendorAcc', 'approval'))
             ->setPaper([0, 0, 612, 936], 'portrait');
         return $pdf->stream('Usulan_Investasi_' . $IdPengajuan . '_' . $barang . '.pdf');
     }
@@ -178,9 +233,18 @@ class UsulanInvestasiController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UsulanInvestasi $UsulanInvestasi)
+    public function edit($IdPengajuan, $barang)
     {
-        //
+        $IdPengajuan = decrypt($IdPengajuan);
+        $PengajuanItemId = decrypt($barang);
+        $usulan = UsulanInvestasi::with('getFuiDetail', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv')
+            ->where('IdPengajuan', $IdPengajuan)
+            ->where('PengajuanItemId', $PengajuanItemId)
+            ->first();
+
+        $user = user::where('kodeperusahaan', auth()->user()->kodeperusahaan);
+        $departemen = MasterDepartemen::get();
+        return view('form-usulan-investari.edit', compact('IdPengajuan', 'user', 'departemen', 'PengajuanItemId', 'usulan'));
     }
 
     public function approveKadiv(Request $request)
@@ -208,6 +272,44 @@ class UsulanInvestasiController extends Controller
         $usulan->save();
 
         return redirect()->back()->with('success', 'Usulan Investasi telah disetujui oleh Direktur.');
+    }
+
+    public function approve($token)
+    {
+        // dd($token);
+        $penilai = DokumenApproval::where('ApprovalToken', $token)->firstOrFail();
+        if ($penilai->Status !== 'Pending') {
+            return view('emails.setelah-approval', [
+                'message' => 'Persetujuan sudah diproses sebelumnya.'
+            ]);
+        }
+
+        $penilai->update([
+            'Status' => 'Approved',
+            'TanggalApprove' => Carbon::now(),
+        ]);
+
+        return view('emails.setelah-approval', [
+            'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
+        ]);
+    }
+
+    public function reject($token)
+    {
+        $penilai = DokumenApproval::where('ApprovalToken', $token)->firstOrFail();
+        if (!is_null($penilai->StatusAcc)) {
+            return view('emails.setelah-approval', [
+                'message' => 'Persetujuan sudah diproses sebelumnya.'
+            ]);
+        }
+        $penilai->update([
+            'Status' => 'Rejected',
+            'TanggalApprove' => Carbon::now(),
+        ]);
+
+        return view('emails.setelah-approval', [
+            'message' => 'Penilaian telah ditolak.'
+        ]);
     }
 
     /**

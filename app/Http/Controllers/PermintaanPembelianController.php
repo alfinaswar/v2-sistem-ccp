@@ -11,6 +11,7 @@ use App\Models\MasterPerusahaan;
 use App\Models\MasterSatuan;
 use App\Models\PermintaanPembelian;
 use App\Models\PermintaanPembelianDetail;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -54,13 +55,13 @@ class PermintaanPembelianController extends Controller
                 ->addColumn('action', function ($row) {
                     $encryptedId = encrypt($row->id);
                     return '
-                        <a href="' . route('pp.edit', $row->id) . '" class="btn btn-sm btn-warning me-1">
-                            <i class="fa fa-edit"></i> Edit
+                        <a href="' . route('pp.edit', $encryptedId) . '" class="btn btn-sm btn-warning me-1">
+                            <i class="fa fa-paper-plane"></i> Kirim Permintaan
                         </a>
-                        <button class="btn btn-sm btn-danger btn-delete me-1" data-id="' . $row->id . '">
+                        <button class="btn btn-sm btn-danger btn-delete me-1" data-id="' . $encryptedId . '">
                             <i class="fa fa-trash"></i> Hapus
                         </button>
-                        <a href="' . route('pp.print', $row->id) . '" class="btn btn-sm btn-success" target="_blank">
+                        <a href="' . route('pp.print', $encryptedId) . '" class="btn btn-sm btn-success" target="_blank">
                             <i class="fa fa-print"></i> Print
                         </a>
                     ';
@@ -87,7 +88,7 @@ class PermintaanPembelianController extends Controller
      */
     public function create()
     {
-        $barang = MasterBarang::with('getMerk', 'getSatuan')->get();
+        $barang = MasterBarang::with('getMerk', 'getSatuan', 'getJenis')->get();
         $departemen = MasterDepartemen::get();
         $satuan = MasterSatuan::get();
         $jenisPengajuan = MasterJenisPengajuan::get();
@@ -115,17 +116,23 @@ class PermintaanPembelianController extends Controller
             'RencanaPenempatan.*' => 'nullable|string|max:255',
             'Keterangan.*' => 'nullable|string|max:500',
         ]);
-
-        // Generate Nomor Pengajuan
+        // settingan jenis form yang dipakai
+        if ($request->Jenis == 1) {
+            $JenisForm = 5;
+        } elseif ($request->Jenis == 2) {
+            $JenisForm = 3;
+        } else {
+            $JenisForm = 4;
+        }
         $nomorAkhir = $this->generateNomorPermintaan();
         $permintaan = PermintaanPembelian::create([
-            'JenisForm' => '3',
+            'JenisForm' => $JenisForm,
             'NomorPermintaan' => $nomorAkhir,
             'Jenis' => $request->Jenis,
             'Tujuan' => $request->Tujuan,
             'Tanggal' => $request->Tanggal,
             'Departemen' => $request->Departemen,
-            'Status' => 'Baru Diajukan',
+            'Status' => 'Draft',
             'StatusUpdate' => now(),
             'KodePerusahaan' => auth()->user()->kodeperusahaan,
             'DiajukanOleh' => auth()->user()->id,
@@ -152,7 +159,7 @@ class PermintaanPembelianController extends Controller
         ])
             ->where('id', $permintaan->JenisForm)
             ->first();
-
+        // dd($Form);
         foreach ($Form->getApproval as $approvalSetting) {
             DokumenApproval::updateOrCreate(
                 [
@@ -218,6 +225,60 @@ class PermintaanPembelianController extends Controller
         return view('form.permintaan-pembelian.show', compact('data', 'approval'));
     }
 
+    /**
+     * Handle approval action for Permintaan Pembelian.
+     */
+    public function approve(Request $request)
+    {
+        $userId = $request->input('UserId');
+        $dokumenId = $request->input('DokumenId');
+        $jenisFormId = $request->input('JenisForm');
+
+        if (!$userId || !$dokumenId || !$jenisFormId) {
+            return back()->with('error', 'Parameter approval tidak lengkap.');
+        }
+        $data = PermintaanPembelian::find($dokumenId);
+        if (!$data) {
+            return back()->with('error', 'Data Permintaan Pembelian tidak ditemukan.');
+        }
+        $dokumenApproval = DokumenApproval::where('DokumenId', $dokumenId)
+            ->where('UserId', $userId)
+            ->where('JenisFormId', $jenisFormId)
+            ->first();
+
+        if (!$dokumenApproval) {
+            return back()->with('error', 'Persetujuan tidak tersedia untuk pengguna yang dipilih.');
+        }
+
+        if (auth()->id() != $dokumenApproval->UserId) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk menyetujui dokumen ini.');
+        }
+
+        $user = User::find($dokumenApproval->UserId);
+        if ($user && !empty($user->tandatangan)) {
+            $dokumenApproval->Ttd = $user->tandatangan;
+        }
+
+        $dokumenApproval->Status = 'Approved';
+        $dokumenApproval->TanggalApprove = now();
+        $dokumenApproval->save();
+
+        if ($dokumenApproval->Urutan == 4) {
+            $data->Status = 'Telah Disetujui';
+            $data->save();
+        }
+
+        if (function_exists('activity')) {
+            activity()
+                ->causedBy(auth()->user()->id)
+                ->performedOn($data)
+                ->withProperties(['ip' => request()->ip()])
+                ->log('Menyetujui permintaan pembelian: ' . ($data->NomorPengajuan ?? $data->id));
+        }
+
+        return redirect()->route('pp.show', encrypt($data->id))->with('success', 'Permintaan pembelian berhasil disetujui.');
+    }
+
     public function print($id)
     {
         // $id = decrypt($id);
@@ -241,12 +302,20 @@ class PermintaanPembelianController extends Controller
      */
     public function edit($id)
     {
+        $id = decrypt($id);
         $barang = MasterBarang::with('getMerk', 'getSatuan')->get();
         $departemen = MasterDepartemen::get();
+        $jabatan = MasterDepartemen::get();
         $satuan = MasterSatuan::get();
         $data = PermintaanPembelian::with('getDetail.getBarang')->find($id);
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $data->JenisForm)
+            ->where('DokumenId', $data->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
         $jenisPengajuan = MasterJenisPengajuan::get();
-        return view('form.permintaan-pembelian.edit', compact('barang', 'departemen', 'satuan', 'data', 'jenisPengajuan'));
+        $user = User::with('getJabatan', 'getDepartemen')->get();
+        return view('form.permintaan-pembelian.edit', compact('barang', 'departemen', 'satuan', 'data', 'jenisPengajuan', 'approval', 'user', 'jabatan'));
     }
 
     /**
@@ -254,6 +323,7 @@ class PermintaanPembelianController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // dd($request->all());
         $request->validate([
             'Tanggal' => 'required|date',
             'Departemen' => 'required',
@@ -278,6 +348,7 @@ class PermintaanPembelianController extends Controller
             'Departemen' => $request->Departemen,
             'Jenis' => $request->Jenis,
             'Tujuan' => $request->Tujuan,
+            'Status' => 'Sudah Diajukan',
             'UserUpdate' => auth()->user()->name ?? null,
         ]);
 
@@ -293,6 +364,28 @@ class PermintaanPembelianController extends Controller
                 'RencanaPenempatan' => $request->RencanaPenempatan[$key],
                 'Keterangan' => $request->Keterangan[$key] ?? null,
                 'KodePerusahaan' => auth()->user()->kodeperusahaan,
+            ]);
+        }
+
+        $approvalDocs = DokumenApproval::where([
+            'JenisFormId' => $permintaan->JenisForm,
+            'DokumenId' => $permintaan->id,
+        ])->orderBy('Urutan', 'asc')->get();
+
+        foreach ($approvalDocs as $key => $approval) {
+            $userIdRaw = $request->UserId[$key] ?? null;
+            $userIdParts = explode('|', $userIdRaw, 2);
+            $userId = trim($userIdParts[0] ?? '');
+            $namaUser = trim($userIdParts[1] ?? '');
+
+            $approval->update([
+                'JabatanId' => $request->JabatanId[$key],
+                'DepartemenId' => $request->DepartemenId[$key],
+                'UserId' => $userId,
+                'Nama' => $namaUser,
+                'Email' => $request->Email[$key],
+                'Urutan' => $approval->Urutan,  // Urutan tetap sesuai urutan record yang kecil ke besar
+                'UserUpdate' => auth()->user()->name,
             ]);
         }
         if (function_exists('activity')) {
@@ -420,6 +513,7 @@ class PermintaanPembelianController extends Controller
 
     public function destroy($id)
     {
+        $id = decrypt($id);
         $permintaan = PermintaanPembelian::find($id);
 
         if (!$permintaan) {

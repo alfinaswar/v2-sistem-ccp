@@ -123,9 +123,9 @@
                                                         <option value="">Pilih Barang</option>
                                                         @foreach ($barang ?? [] as $b)
                                                             <option value="{{ $b->id }}"
-                                                                data-jenis="{{ $b->Jenis }}"
+                                                                data-jenis-id="{{ $b->Jenis }}"
                                                                 {{ $nb == $b->id ? 'selected' : '' }}>
-                                                                {{ $b->NamaBarang }} - {{ $b->getMerk->Nama }}
+                                                                {{ $b->Nama }} - {{ $b->getMerk->Nama }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -174,9 +174,9 @@
                                                         <option value="">Pilih Barang</option>
                                                         @foreach ($barang ?? [] as $b)
                                                             <option value="{{ $b->id }}"
-                                                                data-jenis="{{ $b->Jenis }}"
+                                                                data-jenis-id="{{ $b->Jenis }}"
                                                                 {{ $list->NamaBarang == $b->id ? 'selected' : '' }}>
-                                                                {{ $b->NamaBarang }} - {{ $b->getMerk->Nama }}
+                                                                {{ $b->Nama }} - {{ $b->getMerk->Nama }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -241,13 +241,19 @@
                             <a href="{{ route('pp.index') }}" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            {{-- <button type="submit" class="btn btn-primary">
                                 <i class="fa fa-save"></i> Simpan Perubahan
+                            </button> --}}
+                            <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal"
+                                data-bs-target="#modalPenilai">
+                                <i class="fa fa-eye"></i> Lihat Preview
                             </button>
                         </div>
                     </div>
                 </div>
+                @include('form.permintaan-pembelian.modal-kirim-email')
             </form>
+            <!-- Modal: Pengaturan Tanda Tangan -->
         </div>
     </div>
 @endsection
@@ -265,15 +271,15 @@
             $('#total-jumlah-view').text(total);
         }
 
-        function getBarangOptions(filterJenis) {
+        // Barang akan dikelompokkan berdasarkan Jenis (val Jenis select)
+        function getBarangOptions(JenisFilter) {
             let barang = @json($barang ?? []);
             let html = `<option value="">Pilih Barang</option>`;
             barang.forEach(function(b) {
-                // Field b.Jenis is now expected "MEDIS" or "UMUM"
-                if (!filterJenis || b.Jenis === filterJenis) {
+                if (!JenisFilter || String(b.Jenis) === String(JenisFilter)) {
                     let merkNama = (b.get_merk && b.get_merk.Nama) ? b.get_merk.Nama : '';
                     html +=
-                        `<option value="${b.id}" data-jenis="${b.Jenis}">${b.Nama} - ${merkNama}</option>`;
+                        `<option value="${b.id}" data-jenis-id="${b.Jenis}">${b.Nama} - ${merkNama}</option>`;
                 }
             });
             return html;
@@ -287,23 +293,15 @@
                     });
                 }
             }
+            // Ambil jenis ID (val) dari opsi Jenis
             let jenisPengajuanArr = @json($jenisPengajuan ?? []);
-            let JENIS_ID_MEDIS = null;
-            let JENIS_ID_UMUM = null;
-            jenisPengajuanArr.forEach(j => {
-                let n = (j.Nama || '').toLowerCase();
-                if (n.includes('medis')) JENIS_ID_MEDIS = String(j.id);
-                if (n.includes('umum')) JENIS_ID_UMUM = String(j.id);
-            });
-            const JENIS_MEDIS = "MEDIS";
-            const JENIS_UMUM = "UMUM";
-            let currentFilterJenis = null;
+            let currentFilterJenis = $('#jenis').val() || null;
 
-            function filterBarangSelects(filterJenis) {
+            function filterBarangSelects(Jenis) {
                 $('#table-detail-pembelian tbody tr').each(function() {
                     let $select = $(this).find('select[name="NamaBarang[]"]');
                     let currentVal = $select.val();
-                    let html = getBarangOptions(filterJenis);
+                    let html = getBarangOptions(Jenis);
                     $select.html(html);
                     if (currentVal && $select.find(`option[value="${currentVal}"]`).length) {
                         $select.val(currentVal).trigger("change");
@@ -313,8 +311,8 @@
                 });
             }
 
-            function generateRowTemplate(filterJenis = null) {
-                let options = getBarangOptions(filterJenis);
+            function generateRowTemplate(Jenis = null) {
+                let options = getBarangOptions(Jenis);
                 let satuanOptions = `@foreach ($satuan ?? [] as $s)
                     <option value="{{ $s->id }}">{{ $s->NamaSatuan }}</option>
                 @endforeach`;
@@ -349,27 +347,15 @@
                 `;
             }
 
+            // Ketika jenis berubah, ambil value id, filter barang dengan Jenis barang sama dengan value Jenis
             $('#jenis').on('change', function() {
                 let selectedJenis = $(this).val();
-                if (selectedJenis && JENIS_ID_MEDIS && String(selectedJenis) === JENIS_ID_MEDIS) {
-                    currentFilterJenis = JENIS_MEDIS;
-                } else if (selectedJenis && JENIS_ID_UMUM && String(selectedJenis) === JENIS_ID_UMUM) {
-                    currentFilterJenis = JENIS_UMUM;
-                } else {
-                    currentFilterJenis = null;
-                }
+                currentFilterJenis = selectedJenis;
                 filterBarangSelects(currentFilterJenis);
             });
 
-            if ($('#jenis').val()) {
-                let valJenis = $('#jenis').val();
-                if (JENIS_ID_MEDIS && String(valJenis) === JENIS_ID_MEDIS) {
-                    currentFilterJenis = JENIS_MEDIS;
-                } else if (JENIS_ID_UMUM && String(valJenis) === JENIS_ID_UMUM) {
-                    currentFilterJenis = JENIS_UMUM;
-                } else {
-                    currentFilterJenis = null;
-                }
+            // Inisialisasi jika sudah terisi
+            if (currentFilterJenis) {
                 filterBarangSelects(currentFilterJenis);
             }
 

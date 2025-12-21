@@ -12,13 +12,14 @@ return new class extends Migration {
     {
         Schema::create('master_approvals', function (Blueprint $table) {
             $table->id();
-            $table->string('KodePerusahaan');
-            $table->string('JenisForm');
-            $table->string('JabatanId');
-            $table->string('UserId');
-            $table->integer('Urutan');
-            $table->enum('Wajib', ['Y', 'N'])->default('N');
-            $table->enum('Aktif', ['Y', 'N'])->default('Y');
+            $table->string('KodePerusahaan')->nullable();
+            $table->string('JenisForm')->nullable();
+            $table->string('JabatanId')->nullable();
+            $table->string('DepartemenId')->nullable();
+            $table->string('UserId')->nullable();
+            $table->integer('Urutan')->nullable();
+            $table->enum('Wajib', ['Y', 'N'])->default('N')->nullable();
+            $table->enum('Aktif', ['Y', 'N'])->default('Y')->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();
             $table->string('UserDelete')->nullable();

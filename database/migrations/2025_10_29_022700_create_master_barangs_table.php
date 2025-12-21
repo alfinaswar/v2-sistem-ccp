@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('KodeBarang')->nullable();
             $table->string('ItemId')->nullable();
             $table->string('Nama')->nullable();
-            $table->enum('Jenis', ['UMUM', 'MEDIS'])->nullable();
+            $table->string('Jenis')->nullable();
             $table->string('Satuan')->nullable();
             $table->string('Merek')->nullable();
             $table->string('Tipe')->nullable();

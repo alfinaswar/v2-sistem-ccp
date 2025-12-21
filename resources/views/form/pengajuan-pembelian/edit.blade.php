@@ -182,6 +182,20 @@
                                             @endfor
                                         </ul>
                                         <div class="tab-content" id="vendorTabContent">
+                                            @php
+                                                // Kumpulkan data NamaBarang dan Mereknya dari vendor 1
+                                                $vendor1Details =
+                                                    isset($data->getVendor[0]) && $data->getVendor[0]->getVendorDetail
+                                                        ? $data->getVendor[0]->getVendorDetail
+                                                        : collect();
+                                                $vendor1BarangList = [];
+                                                $vendor1MerekList = [];
+                                                foreach ($vendor1Details as $vendor1Barang) {
+                                                    $vendor1BarangList[] = $vendor1Barang->NamaBarang;
+                                                    $vendor1MerekList[] =
+                                                        $vendor1Barang->getNamaBarang->getMerk->Nama ?? '';
+                                                }
+                                            @endphp
                                             @for ($i = 0; $i < 3; $i++)
                                                 @php
                                                     $vendorTab = $data->getVendor[$i] ?? null;
@@ -189,7 +203,6 @@
                                                         ? $vendorTab->getVendorDetail
                                                         : collect();
                                                 @endphp
-                                                {{-- {{ $vendorTab }} --}}
                                                 <div class="tab-pane fade {{ $i == 0 ? 'show active' : '' }}"
                                                     id="vendor-panel-{{ $i }}" role="tabpanel"
                                                     aria-labelledby="vendor-tab-{{ $i }}">
@@ -271,8 +284,8 @@
                                                                         Vendor</strong></label>
                                                                 <input class="form-control" type="file"
                                                                     id="vendor_list_{{ $i }}_penawaran_file"
-                                                                    name="vendors[{{ $i }}][penawaran_file][]"
-                                                                    accept=".pdf,.jpg,.jpeg,.png" multiple
+                                                                    name="vendors[{{ $i }}][penawaran_file]"
+                                                                    accept=".pdf,.jpg,.jpeg,.png"
                                                                     style="border: 2px dashed #ced4da; padding: 20px;"
                                                                     ondragover="this.classList.add('dragover')"
                                                                     ondragleave="this.classList.remove('dragover')"
@@ -280,15 +293,14 @@
                                                                 @if ($vendorTab && $vendorTab->SuratPenawaranVendor)
                                                                     <div class="mt-2">
                                                                         File saat ini:<br>
-                                                                        @foreach (explode(',', $vendorTab->SuratPenawaranVendor) as $file)
+                                                                        @foreach (is_array(json_decode($vendorTab->SuratPenawaranVendor, true)) ? json_decode($vendorTab->SuratPenawaranVendor, true) : explode(',', $vendorTab->SuratPenawaranVendor) ?? [] as $file)
                                                                             <a href="{{ asset('storage/penawaran_vendor/' . $file) }}"
                                                                                 target="_blank">{{ basename($file) }}</a><br>
                                                                         @endforeach
                                                                     </div>
                                                                 @endif
                                                                 <small class="form-text text-muted">Anda bisa drag and drop
-                                                                    file di
-                                                                    area ini atau klik untuk memilih file.</small>
+                                                                    file di area ini atau klik untuk memilih file.</small>
                                                                 @error('vendors.' . $i . '.penawaran_file')
                                                                     <div class="text-danger mt-1">
                                                                         {{ $message }}
@@ -315,114 +327,321 @@
                                                                 </tr>
                                                             </thead>
                                                             <tbody id="table-detail-body-{{ $i }}">
-                                                                @forelse ($vendorDetailTab as $key => $barang)
-                                                                    {{-- {{ $barang }} --}}
-                                                                    <tr>
-                                                                        <td width="15%">
-                                                                            <select
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][barang_id]"
-                                                                                class="form-control select2 barang-name-in-table"
-                                                                                data-placeholder="Pilih Barang"
-                                                                                style="width: 100%;">
-                                                                                <option value="">Pilih Barang
-                                                                                </option>
-                                                                                @foreach ($masterbarang as $b)
-                                                                                    <option value="{{ $b->id }}"
-                                                                                        @if ($barang->NamaBarang == $b->id) selected @endif>
-                                                                                        {{ $b->Nama }} /
-                                                                                        {{ $b->getMerk->Nama }}
-                                                                                    </option>
-                                                                                @endforeach
-                                                                            </select>
-                                                                        </td>
-                                                                        <td>
-                                                                            <input type="text"
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][merek]"
-                                                                                class="form-control merek-vendor-input-{{ $i }}"
-                                                                                placeholder="Merek"
-                                                                                value="{{ $barang->getNamaBarang->getMerk->Nama }}"
-                                                                                readonly>
-                                                                        </td>
-                                                                        <td width="15%">
-                                                                            <select
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][vendor_id]"
-                                                                                class="form-control select2 vendor-name-in-table"
-                                                                                data-placeholder="Pilih Vendor"
-                                                                                style="width: 100%;" disabled>
-                                                                                <option value="">Pilih Vendor
-                                                                                </option>
-                                                                                @foreach ($vendor as $v)
-                                                                                    <option value="{{ $v->id }}"
-                                                                                        @if ($vendorTab && $vendorTab->VendorId == $v->id) selected @endif>
-                                                                                        {{ $v->Nama }}
-                                                                                    </option>
-                                                                                @endforeach
-                                                                            </select>
-                                                                        </td>
-                                                                        <td>
-                                                                            <input type="number"
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][jumlah]"
-                                                                                class="form-control jumlah-vendor-input-{{ $i }}"
-                                                                                placeholder="Jumlah"
-                                                                                oninput="hitungOtomatis{{ $i }}(this)"
-                                                                                value="{{ $barang->Jumlah }}" readonly>
-                                                                        </td>
-                                                                        <td>
-                                                                            <input type="text"
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][harga_satuan]"
-                                                                                class="form-control harga-satuan-input-{{ $i }} currency-input-{{ $i }}"
-                                                                                placeholder="Harga Satuan"
-                                                                                oninput="hitungOtomatis{{ $i }}(this); formatRupiahInput{{ $i }}(this);"
-                                                                                onkeyup="formatRupiahInput{{ $i }}(this);"
-                                                                                value="{{ old('vendors.' . $i . '.details.' . $key . '.harga_satuan', isset($barang->HargaSatuan) ? number_format($barang->HargaSatuan, 0, ',', '.') : '') }}">
-                                                                        </td>
-                                                                        <td>
-                                                                            <select
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][jenis_diskon_item]"
-                                                                                class="form-control jenis-diskon-item-select-{{ $i }}"
-                                                                                onchange="hitungOtomatis{{ $i }}(this)">
-                                                                                <option value="Rp"
-                                                                                    {{ isset($barang) && $barang->JenisDiskon == 'Rp' ? 'selected' : '' }}>
-                                                                                    Rp
-                                                                                </option>
-                                                                                <option value="Persen"
-                                                                                    {{ isset($barang) && $barang->JenisDiskon == 'Persen' ? 'selected' : '' }}>
-                                                                                    Persen
-                                                                                </option>
-                                                                            </select>
-                                                                        </td>
-                                                                        <td>
-                                                                            <input type="text"
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][diskon_item]"
-                                                                                class="form-control diskon-item-input-{{ $i }} currency-input-{{ $i }}"
-                                                                                placeholder="Diskon"
-                                                                                oninput="hitungOtomatis{{ $i }}(this);"
-                                                                                value="{{ old('vendors.' . $i . '.details.' . $key . '.diskon_item', $barang->Diskon ?? '') }}">
-                                                                        </td>
+                                                                @php
+                                                                    // Mechanism to get reference list from vendor 1
+                                                                    $refBarangList = $vendor1BarangList;
+                                                                    $refMerekList = $vendor1MerekList;
+                                                                @endphp
 
-                                                                        <td>
-                                                                            <input type="text"
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][total_diskon]"
-                                                                                class="form-control total-diskon-input-{{ $i }} currency-input-{{ $i }}"
-                                                                                placeholder="Total Diskon" readonly
-                                                                                value="{{ old('vendors.' . $i . '.details.' . $key . '.total_diskon', isset($barang->TotalDiskon) ? number_format($barang->TotalDiskon, 0, ',', '.') : '') }}"
-                                                                                onkeyup="formatRupiahInput{{ $i }}(this);">
-                                                                        </td>
-                                                                        <td>
-                                                                            <input type="text"
-                                                                                name="vendors[{{ $i }}][details][{{ $key }}][total_harga]"
-                                                                                class="form-control total-harga-input-{{ $i }} currency-input-{{ $i }}"
-                                                                                placeholder="Total Harga" readonly
-                                                                                value="{{ old('vendors.' . $i . '.details.' . $key . '.total_harga', isset($barang->TotalHarga) ? number_format($barang->TotalHarga, 0, ',', '.') : '') }}"
-                                                                                onkeyup="formatRupiahInput{{ $i }}(this);">
-                                                                    </tr>
-                                                                @empty
-                                                                    <tr>
-                                                                        <td colspan="8" class="text-center">Tidak ada
-                                                                            barang pada
-                                                                            pengajuan ini.</td>
-                                                                    </tr>
-                                                                @endforelse
+                                                                @if ($i == 0)
+                                                                    {{-- Vendor 1: Tetap default --}}
+                                                                    @forelse ($vendorDetailTab as $key => $barang)
+                                                                        <tr>
+                                                                            <td width="15%">
+                                                                                <select
+                                                                                    name="vendors[0][details][{{ $key }}][barang_id]"
+                                                                                    class="form-control select2 barang-name-in-table"
+                                                                                    data-placeholder="Pilih Barang"
+                                                                                    style="width: 100%;">
+                                                                                    <option value="">Pilih Barang
+                                                                                    </option>
+                                                                                    @foreach ($masterbarang as $b)
+                                                                                        <option
+                                                                                            value="{{ $b->id }}"
+                                                                                            @if ($barang->NamaBarang == $b->id) selected @endif>
+                                                                                            {{ $b->Nama }} /
+                                                                                            {{ $b->getMerk->Nama }}
+                                                                                        </option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                            </td>
+                                                                            <td>
+                                                                                <input type="text"
+                                                                                    name="vendors[0][details][{{ $key }}][merek]"
+                                                                                    class="form-control merek-vendor-input-0"
+                                                                                    placeholder="Merek"
+                                                                                    value="{{ $barang->getNamaBarang->getMerk->Nama }}"
+                                                                                    readonly>
+                                                                            </td>
+                                                                            <td width="15%">
+                                                                                <select
+                                                                                    name="vendors[0][details][{{ $key }}][vendor_id]"
+                                                                                    class="form-control select2 vendor-name-in-table"
+                                                                                    data-placeholder="Pilih Vendor"
+                                                                                    style="width: 100%;">
+                                                                                    <option value="">Pilih Vendor
+                                                                                    </option>
+                                                                                    @foreach ($vendor as $v)
+                                                                                        <option
+                                                                                            value="{{ $v->id }}"
+                                                                                            @if ($vendorTab && $vendorTab->VendorId == $v->id) selected @endif>
+                                                                                            {{ $v->Nama }}
+                                                                                        </option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                            </td>
+                                                                            <td>
+                                                                                <input type="number"
+                                                                                    name="vendors[0][details][{{ $key }}][jumlah]"
+                                                                                    class="form-control jumlah-vendor-input-0"
+                                                                                    placeholder="Jumlah"
+                                                                                    oninput="hitungOtomatis0(this)"
+                                                                                    value="{{ $barang->Jumlah }}">
+                                                                            </td>
+                                                                            <td>
+                                                                                <input type="text"
+                                                                                    name="vendors[0][details][{{ $key }}][harga_satuan]"
+                                                                                    class="form-control harga-satuan-input-0 currency-input-0"
+                                                                                    placeholder="Harga Satuan"
+                                                                                    oninput="hitungOtomatis0(this); formatRupiahInput0(this);"
+                                                                                    onkeyup="formatRupiahInput0(this);"
+                                                                                    value="{{ old('vendors.0.details.' . $key . '.harga_satuan', isset($barang->HargaSatuan) ? number_format($barang->HargaSatuan, 0, ',', '.') : '') }}">
+                                                                            </td>
+                                                                            <td>
+                                                                                <select
+                                                                                    name="vendors[0][details][{{ $key }}][jenis_diskon_item]"
+                                                                                    class="form-control jenis-diskon-item-select-0"
+                                                                                    onchange="hitungOtomatis0(this)">
+                                                                                    <option value="Rp"
+                                                                                        {{ isset($barang) && $barang->JenisDiskon == 'Rp' ? 'selected' : '' }}>
+                                                                                        Rp
+                                                                                    </option>
+                                                                                    <option value="Persen"
+                                                                                        {{ isset($barang) && $barang->JenisDiskon == 'Persen' ? 'selected' : '' }}>
+                                                                                        Persen
+                                                                                    </option>
+                                                                                </select>
+                                                                            </td>
+                                                                            <td>
+                                                                                <input type="text"
+                                                                                    name="vendors[0][details][{{ $key }}][diskon_item]"
+                                                                                    class="form-control diskon-item-input-0 currency-input-0"
+                                                                                    placeholder="Diskon"
+                                                                                    oninput="hitungOtomatis0(this);"
+                                                                                    value="{{ old('vendors.0.details.' . $key . '.diskon_item', $barang->Diskon ?? '') }}">
+                                                                            </td>
+
+                                                                            <td>
+                                                                                <input type="text"
+                                                                                    name="vendors[0][details][{{ $key }}][total_diskon]"
+                                                                                    class="form-control total-diskon-input-0 currency-input-0"
+                                                                                    placeholder="Total Diskon" readonly
+                                                                                    value="{{ old('vendors.0.details.' . $key . '.total_diskon', isset($barang->TotalDiskon) ? number_format($barang->TotalDiskon, 0, ',', '.') : '') }}"
+                                                                                    onkeyup="formatRupiahInput0(this);">
+                                                                            </td>
+                                                                            <td>
+                                                                                <input type="text"
+                                                                                    name="vendors[0][details][{{ $key }}][total_harga]"
+                                                                                    class="form-control total-harga-input-0 currency-input-0"
+                                                                                    placeholder="Total Harga" readonly
+                                                                                    value="{{ old('vendors.0.details.' . $key . '.total_harga', isset($barang->TotalHarga) ? number_format($barang->TotalHarga, 0, ',', '.') : '') }}"
+                                                                                    onkeyup="formatRupiahInput0(this);">
+                                                                            </td>
+                                                                        </tr>
+                                                                    @empty
+                                                                        {{-- default kosong --}}
+                                                                    @endforelse
+                                                                @else
+                                                                    {{-- Untuk vendor 2/3, default NamaBarang dan Merek mengikuti vendor 1 --}}
+                                                                    @if ($vendorDetailTab->isNotEmpty())
+                                                                        @foreach ($vendorDetailTab as $key => $barang)
+                                                                            <tr>
+                                                                                <td width="15%">
+                                                                                    <select
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][barang_id]"
+                                                                                        class="form-control select2 barang-name-in-table"
+                                                                                        data-placeholder="Pilih Barang"
+                                                                                        style="width: 100%;">
+                                                                                        <option value="">Pilih Barang
+                                                                                        </option>
+                                                                                        @foreach ($masterbarang as $b)
+                                                                                            <option
+                                                                                                value="{{ $b->id }}"
+                                                                                                @if ($barang->NamaBarang == $b->id) selected
+                                                                                                @elseif(isset($refBarangList[$key]) && $refBarangList[$key] == $b->id) selected @endif>
+                                                                                                {{ $b->Nama }} /
+                                                                                                {{ $b->getMerk->Nama }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][merek]"
+                                                                                        class="form-control merek-vendor-input-{{ $i }}"
+                                                                                        placeholder="Merek"
+                                                                                        value="{{ $barang->getNamaBarang->getMerk->Nama ?? ($refMerekList[$key] ?? '') }}"
+                                                                                        readonly>
+                                                                                </td>
+                                                                                <td width="15%">
+                                                                                    <select
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][vendor_id]"
+                                                                                        class="form-control select2 vendor-name-in-table"
+                                                                                        data-placeholder="Pilih Vendor"
+                                                                                        style="width: 100%;">
+                                                                                        <option value="">Pilih Vendor
+                                                                                        </option>
+                                                                                        @foreach ($vendor as $v)
+                                                                                            <option
+                                                                                                value="{{ $v->id }}"
+                                                                                                @if ($vendorTab && $vendorTab->VendorId == $v->id) selected @endif>
+                                                                                                {{ $v->Nama }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="number"
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][jumlah]"
+                                                                                        class="form-control jumlah-vendor-input-{{ $i }}"
+                                                                                        placeholder="Jumlah"
+                                                                                        oninput="hitungOtomatis{{ $i }}(this)"
+                                                                                        value="{{ $barang->Jumlah }}">
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][harga_satuan]"
+                                                                                        class="form-control harga-satuan-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Harga Satuan"
+                                                                                        oninput="hitungOtomatis{{ $i }}(this); formatRupiahInput{{ $i }}(this);"
+                                                                                        onkeyup="formatRupiahInput{{ $i }}(this);"
+                                                                                        value="{{ old("vendors.$i.details.$key.harga_satuan", isset($barang->HargaSatuan) ? number_format($barang->HargaSatuan, 0, ',', '.') : '') }}">
+                                                                                </td>
+                                                                                <td>
+                                                                                    <select
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][jenis_diskon_item]"
+                                                                                        class="form-control jenis-diskon-item-select-{{ $i }}"
+                                                                                        onchange="hitungOtomatis{{ $i }}(this)">
+                                                                                        <option value="Rp"
+                                                                                            {{ isset($barang) && $barang->JenisDiskon == 'Rp' ? 'selected' : '' }}>
+                                                                                            Rp
+                                                                                        </option>
+                                                                                        <option value="Persen"
+                                                                                            {{ isset($barang) && $barang->JenisDiskon == 'Persen' ? 'selected' : '' }}>
+                                                                                            Persen
+                                                                                        </option>
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][diskon_item]"
+                                                                                        class="form-control diskon-item-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Diskon"
+                                                                                        oninput="hitungOtomatis{{ $i }}(this);"
+                                                                                        value="{{ old("vendors.$i.details.$key.diskon_item", $barang->Diskon ?? '') }}">
+                                                                                </td>
+
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][total_diskon]"
+                                                                                        class="form-control total-diskon-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Total Diskon" readonly
+                                                                                        value="{{ old("vendors.$i.details.$key.total_diskon", isset($barang->TotalDiskon) ? number_format($barang->TotalDiskon, 0, ',', '.') : '') }}"
+                                                                                        onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $key }}][total_harga]"
+                                                                                        class="form-control total-harga-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Total Harga" readonly
+                                                                                        value="{{ old("vendors.$i.details.$key.total_harga", isset($barang->TotalHarga) ? number_format($barang->TotalHarga, 0, ',', '.') : '') }}"
+                                                                                        onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    @else
+                                                                        @for ($row = 0; $row < count($refBarangList); $row++)
+                                                                            <tr>
+                                                                                <td width="15%">
+                                                                                    <select
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][barang_id]"
+                                                                                        class="form-control select2 barang-name-in-table"
+                                                                                        data-placeholder="Pilih Barang"
+                                                                                        style="width: 100%;">
+                                                                                        <option value="">Pilih Barang
+                                                                                        </option>
+                                                                                        @foreach ($masterbarang as $b)
+                                                                                            <option
+                                                                                                value="{{ $b->id }}"
+                                                                                                @if ($refBarangList[$row] == $b->id) selected @endif>
+                                                                                                {{ $b->Nama }} /
+                                                                                                {{ $b->getMerk->Nama }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][merek]"
+                                                                                        class="form-control merek-vendor-input-{{ $i }}"
+                                                                                        placeholder="Merek"
+                                                                                        value="{{ $refMerekList[$row] ?? '' }}"
+                                                                                        readonly>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <select
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][vendor_id]"
+                                                                                        class="form-control select2 vendor-name-in-table"
+                                                                                        data-placeholder="Pilih Vendor"
+                                                                                        style="width: 100%;">
+                                                                                        <option value="">Pilih Vendor
+                                                                                        </option>
+                                                                                        @foreach ($vendor as $v)
+                                                                                            <option
+                                                                                                value="{{ $v->id }}">
+                                                                                                {{ $v->Nama }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="number"
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][jumlah]"
+                                                                                        class="form-control jumlah-vendor-input-{{ $i }}"
+                                                                                        placeholder="Jumlah">
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][harga_satuan]"
+                                                                                        class="form-control harga-satuan-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Harga Satuan"
+                                                                                        oninput="hitungOtomatis{{ $i }}(this); formatRupiahInput{{ $i }}(this);"
+                                                                                        onkeyup="formatRupiahInput{{ $i }}(this);">
+                                                                                </td>
+                                                                                <td>
+                                                                                    <select
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][jenis_diskon_item]"
+                                                                                        class="form-control jenis-diskon-item-select-{{ $i }}"
+                                                                                        onchange="hitungOtomatis{{ $i }}(this)">
+                                                                                        <option value="Rp">Rp</option>
+                                                                                        <option value="Persen">Persen
+                                                                                        </option>
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][diskon_item]"
+                                                                                        class="form-control diskon-item-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Diskon"
+                                                                                        oninput="hitungOtomatis{{ $i }}(this);">
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][total_diskon]"
+                                                                                        class="form-control total-diskon-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Total Diskon"
+                                                                                        readonly>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text"
+                                                                                        name="vendors[{{ $i }}][details][{{ $row }}][total_harga]"
+                                                                                        class="form-control total-harga-input-{{ $i }} currency-input-{{ $i }}"
+                                                                                        placeholder="Total Harga" readonly>
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endfor
+                                                                    @endif
+                                                                @endif
                                                             </tbody>
                                                             <tfoot>
                                                                 <tr>
@@ -469,7 +688,6 @@
                                                                             onkeyup="formatRupiahInput{{ $i }}(this);">
                                                                     </td>
                                                                 </tr>
-
                                                                 <tr>
                                                                     <td colspan="6" class="text-end">
                                                                         <strong>PPN (%)</strong>
@@ -697,11 +915,11 @@
                                                                         }
                                                                     });
 
-                                                                    // Sync value awal Nama Vendor pada tabel dengan dropdown utama & lock
+                                                                    // Sync value awal Nama Vendor pada tabel dengan dropdown utama
                                                                     var mainVendorSelect = $('#vendor_list_{{ $i }}_id');
                                                                     var vendorValue = mainVendorSelect.val();
                                                                     $('#table-detail-body-{{ $i }} select.vendor-name-in-table').each(function() {
-                                                                        $(this).val(vendorValue).prop('disabled', true).trigger('change');
+                                                                        $(this).val(vendorValue).trigger('change');
                                                                     });
                                                                 }, 500);
                                                             });
@@ -715,14 +933,13 @@
                             </div>
                         </div>
                         <div class="col-12 text-end mt-3">
-                            <a href="{{ route('ajukan.show', $data->id) }}" class="btn btn-secondary me-2">
+                            <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
                             <button type="button" class="btn btn-primary me-2" id="btn-simpan-perubahan"
                                 name="submit_type" value="simpan">
                                 <i class="fa fa-save"></i> Simpan Perubahan
                             </button>
-
                         </div>
                     </div>
                 </div>
@@ -732,6 +949,20 @@
 @endsection
 
 @push('js')
+    @if (Session::get('success'))
+        <script>
+            setTimeout(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ Session::get('success') }}',
+                    iconColor: '#4BCC1F',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#4BCC1F',
+                });
+            }, 500);
+        </script>
+    @endif
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('btn-simpan-perubahan').addEventListener('click', function(e) {
@@ -786,10 +1017,10 @@
                 if (noHpPICSpan) noHpPICSpan.innerText = noHpPIC;
             }
 
-            // Set semua select vendor pada tabel
+            // Set semua select vendor pada tabel, tapi JANGAN di-disable, supaya tetap bisa edit
             var tableSelector = '#table-detail-body-' + vn + ' select.vendor-name-in-table';
             $(tableSelector).each(function() {
-                $(this).val(select.value).prop('disabled', true).trigger('change');
+                $(this).val(select.value).trigger('change');
             });
         }
 

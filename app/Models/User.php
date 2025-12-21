@@ -61,4 +61,19 @@ class User extends Authenticatable
     {
         return $this->hasOne(MasterPerusahaan::class, 'Kode', 'kodeperusahaan');
     }
+
+    public function getJabatan()
+    {
+        return $this->hasOne(MasterJabatan::class, 'id', 'jabatan');
+    }
+
+    /**
+     * Get the Departemen associated with the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function getDepartemen()
+    {
+        return $this->hasOne(MasterDepartemen::class, 'id', 'departemen');
+    }
 }

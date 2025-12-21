@@ -38,4 +38,9 @@ class MasterBarang extends Model
     {
         return $this->hasOne(MasterMerk::class, 'id', 'Merek');
     }
+
+    public function getJenis()
+    {
+        return $this->hasOne(MasterJenisPengajuan::class, 'id', 'Jenis');
+    }
 }

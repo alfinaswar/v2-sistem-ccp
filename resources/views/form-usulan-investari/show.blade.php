@@ -234,117 +234,97 @@
                     <div class="row mt-4 justify-content-center">
                         <div class="col-12">
                             <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
+                            <!-- Tambah baris untuk nama jabatan di atas tabel approval -->
+                            <div class="mb-2 text-center">
+                                @if (!empty($approval))
+                                    <div class="row justify-content-center">
+                                        @foreach ($approval as $item)
+                                            <div class="col text-center" style="font-weight:600;">
+                                                {{ $item->getJabatan->Nama ?? '-' }}
+                                                {{ $item->getDepartemen->Nama ?? '-' }}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                             <div class="table-responsive">
-                                <table class="table table-borderless" style="max-width:60%; margin: 0 auto;">
+                                <table class="table table-borderless" style="max-width:100%; margin: 0 auto;">
                                     <colgroup>
-                                        <col style="width: 50%;">
-                                        <col style="width: 50%;">
+                                        @if (!empty($approval))
+                                            @foreach ($approval as $item)
+                                                <col style="width: {{ 100 / count($approval) }}%;">
+                                            @endforeach
+                                        @endif
                                     </colgroup>
                                     <tbody>
                                         <tr>
-                                            <td class="text-center align-bottom">Diajukan oleh,<br>Kepala Divisi Jangmed
-                                            </td>
-                                            <td class="text-center align-bottom">Disetujui oleh,<br>Direktur</td>
+                                            @foreach ($approval as $item)
+                                                <td class="text-center align-bottom">
+                                                    {{-- Nama jabatan sudah ditampilkan di atas, bisa dikosongi atau diisi strip --}}
+                                                    -
+                                                </td>
+                                            @endforeach
                                         </tr>
                                         <tr>
-                                            <td style="height: 70px;" class="text-center">
-                                                @php
-                                                    $ttdKadiv =
-                                                        !empty($usulan->getAccKadiv) &&
-                                                        !empty($usulan->getAccKadiv->tandatangan)
-                                                            ? asset(
-                                                                'storage/upload/tandatangan/' .
-                                                                    $usulan->getAccKadiv->tandatangan,
-                                                            )
-                                                            : asset('assets/img/ccp/default_approve.png');
-                                                @endphp
-                                                @if (!empty($usulan->getAccKadiv->name))
-                                                    <img src="{{ $ttdKadiv }}" alt="TTD Kadiv"
-                                                        style="height: 100px;">
-                                                @endif
-                                            </td>
-                                            <td style="height: 70px;" class="text-center">
-                                                @php
-                                                    $ttdDirektur =
-                                                        !empty($usulan->getAccDirektur) &&
-                                                        !empty($usulan->getAccDirektur->tandatangan)
-                                                            ? asset(
-                                                                'storage/upload/tandatangan/' .
-                                                                    $usulan->getAccDirektur->tandatangan,
-                                                            )
-                                                            : asset('assets/img/ccp/default_approve.png');
-                                                @endphp
-                                                @if (!empty($usulan->getAccDirektur->name))
-                                                    <img src="{{ $ttdDirektur }}" alt="TTD Direktur"
-                                                        style="height: 100px;">
-                                                @endif
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-center" style="padding-bottom:0;">
-                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
-                                            </td>
-                                            <td class="text-center" style="padding-bottom:0;">
-                                                <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-center align-top">
-                                                <span style="font-weight:600;">
-                                                    {{ $usulan->getAccKadiv ? $usulan->getAccKadiv->name : '-' }}
-                                                </span>
-                                                <br>
-                                                <small class="text-muted" style="font-size:85%;">
-                                                    @if (!empty($usulan->KadivJangMedPada))
-                                                        {{ \Carbon\Carbon::parse($usulan->KadivAt)->translatedFormat('d M Y H:i') }}
-                                                    @else
-                                                        -
+                                            @foreach ($approval as $item)
+                                                <td style="height: 70px;" class="text-center">
+                                                    @if (!empty($item->Ttd))
+                                                        <img src="{{ asset('storage/upload/tandatangan/' . $item->Ttd) }}"
+                                                            alt="TTD" style="max-width:110px; max-height:60px;">
                                                     @endif
-                                                </small>
-                                            </td>
-                                            <td class="text-center align-top">
-                                                <span style="font-weight:600;">
-                                                    {{ $usulan->getAccDirektur ? $usulan->getAccDirektur->name : '-' }}
-                                                </span>
-                                                <br>
-                                                <small class="text-muted" style="font-size:85%;">
-                                                    @if (!empty($usulan->DirekturPada))
-                                                        {{ \Carbon\Carbon::parse($usulan->DirekturPada)->translatedFormat('d M Y H:i') }}
-                                                    @else
-                                                        -
-                                                    @endif
-                                                </small>
-                                            </td>
+                                                </td>
+                                            @endforeach
                                         </tr>
-
+                                        <tr>
+                                            @foreach ($approval as $item)
+                                                <td class="text-center" style="padding-bottom:0;">
+                                                    <hr
+                                                        style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                        <tr>
+                                            @foreach ($approval as $item)
+                                                <td class="text-center align-top">
+                                                    <small>Nama Lengkap</small><br>
+                                                    <span style="font-weight:600;">
+                                                        {{ $item->Nama ?? '-' }}
+                                                    </span>
+                                                    <br>
+                                                    <small>{{ $item->Status ?? '-' }}</small>
+                                                </td>
+                                            @endforeach
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-                    </div>
-                    <div class="col-12 text-end mt-4 d-flex justify-content-end align-items-center">
-                        @can('fui-approve-direktur')
-                            <form id="acc-direktur-form" action="{{ route('rekomendasi.setujui-direktur', $usulan->id) }}"
-                                method="POST" style="display:inline-block;">
-                                @csrf
-                                <button type="button" class="btn btn-success me-2" id="acc-direktur-btn">
-                                    <i class="fa fa-check"></i> ACC Direktur
-                                </button>
-                            </form>
-                        @endcan
-                        @can('fui-approve-jangmed')
-                            <form id="acc-jangmed-form" action="{{ route('rekomendasi.setujui-kadiv', $usulan->id) }}"
-                                method="POST" style="display:inline-block;">
-                                @csrf
-                                <button type="button" class="btn btn-primary me-2" id="acc-jangmed-btn">
-                                    <i class="fa fa-check"></i> ACC Jangmed
-                                </button>
-                            </form>
-                        @endcan
-                        <a href="javascript:history.back()" class="btn btn-secondary me-2">
-                            <i class="fa fa-arrow-left"></i> Kembali
-                        </a>
+                        <div class="col-12 text-end mt-3">
+                            <a href="javascript:history.back()" class="btn btn-secondary me-2">
+                                <i class="fa fa-arrow-left"></i> Kembali
+                            </a>
+
+                            @foreach ($approval as $item)
+                                <form id="formApprove{{ $item->id }}"
+                                    action="{{ route('usulan-investasi.approve', $item->ApprovalToken) }}" method="POST"
+                                    class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="UserId" value="{{ $item->UserId }}">
+                                    <input type="hidden" name="DokumenId" value="{{ $item->DokumenId }}">
+                                    <input type="hidden" name="JenisForm" value="{{ $item->JenisFormId }}">
+                                    @if (auth()->id() == ($item->UserId ?? null))
+                                        <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
+                                            data-title="Konfirmasi"
+                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama ?? $item->JenisUser }}?"
+                                            data-form="formApprove{{ $item->id }}">
+                                            <i class="fa {{ $item->icon ?? 'fa-user' }}"></i>
+                                            {{ $item->JabatanNama ?? $item->JenisUser }}
+                                        </button>
+                                    @endif
+                                </form>
+                            @endforeach
+                        </div>
                     </div>
 
 

@@ -404,51 +404,74 @@
                 <u>{{ number_format($usulan->SisaBudget2 ?? 0, 0, ',', '.') }}</u>
         </div>
 
-        <div class="signature-section">
-            <table class="signature-table">
-                <tr>
-                    <td>
-                        <div class="signature-title">Diajukan,</div>
-                    </td>
-                    <td>
-                        <div class="signature-title">Mengetahui,</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td><br>Kepala Divisi JangMed</td>
-                    <td><br>Direktur</td>
-                </tr>
-                <tr>
-                    <td style="height: 80px; vertical-align: bottom;">
-                        @if (isset($usulan->getAccKadiv) && $usulan->getAccKadiv && $usulan->getAccKadiv->name)
-                            <img src="{{ public_path('storage/upload/tandatangan/' . $usulan->getAccKadiv->tandatangan) }}"
-                                alt="TTD Kadiv" style="height:60px;">
-                        @else
-                            <div style="height:60px;"></div>
-                        @endif
-                    </td>
-                    <td style="height: 80px; vertical-align: bottom;">
-                        @if (isset($usulan->getAccDirektur) && $usulan->getAccDirektur && $usulan->getAccDirektur->name)
-                            <img src="{{ public_path('storage/upload/tandatangan/' . $usulan->getAccDirektur->tandatangan) }}"
-                                alt="TTD Direktur" style="height:60px;">
-                        @else
-                            <div style="height:60px;"></div>
-                        @endif
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="signature-name">
-                            ({{ $usulan->getAccKadiv && $usulan->getAccKadiv->name ? $usulan->getAccKadiv->name : 'dr. ____________' }})
+        <div class="row mt-4 justify-content-center">
+            <div class="col-12">
+                <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
+                <!-- Untuk cetak PDF tanda tangan approval -->
+                <div class="mb-2 text-center">
+                    @if (!empty($approval))
+                        <div class="row justify-content-center">
+                            @foreach ($approval as $item)
+                                <div class="col text-center" style="font-weight:600;">
+                                    {{ $item->getJabatan->Nama ?? '-' }}
+                                    {{ $item->getDepartemen->Nama ?? '-' }}
+                                </div>
+                            @endforeach
                         </div>
-                    </td>
-                    <td>
-                        <div class="signature-name">
-                            ({{ $usulan->getAccDirektur && $usulan->getAccDirektur->name ? $usulan->getAccDirektur->name : 'dr. ____________' }})
-                        </div>
-                    </td>
-                </tr>
-            </table>
+                    @endif
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-borderless" style="max-width:100%; margin: 0 auto;">
+                        <colgroup>
+                            @if (!empty($approval))
+                                @foreach ($approval as $item)
+                                    <col style="width: {{ 100 / count($approval) }}%;">
+                                @endforeach
+                            @endif
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                @foreach ($approval as $item)
+                                    <td class="text-center align-bottom" style="height: 20px;">
+                                        {{-- Tempat kosong untuk tanda tangan basah di cetak PDF --}}
+                                    </td>
+                                @endforeach
+                            </tr>
+                            <tr>
+                                @foreach ($approval as $item)
+                                    <td style="height: 70px;" class="text-center">
+                                        @if (!empty($item->Ttd))
+                                            <img src="{{ public_path('storage/upload/tandatangan/' . $item->Ttd) }}"
+                                                alt="TTD" style="max-width:110px; max-height:60px;">
+                                        @else
+                                            <!-- Jika tidak ada tanda tangan digital, biarkan kosong untuk tanda tangan manual -->
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                            <tr>
+                                @foreach ($approval as $item)
+                                    <td class="text-center" style="padding-bottom:0;">
+                                        <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                    </td>
+                                @endforeach
+                            </tr>
+                            <tr>
+                                @foreach ($approval as $item)
+                                    <td class="text-center align-top">
+                                        <small>Nama Lengkap</small><br>
+                                        <span style="font-weight:600;">
+                                            {{ $item->Nama ?? '-' }}
+                                        </span>
+                                        <br>
+                                        <small>{{ $item->Status ?? '-' }}</small>
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div class="footer-note">

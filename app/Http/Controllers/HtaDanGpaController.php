@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Mail\NotifikasiPengajuanMail;
+use App\Models\DokumenApproval;
 use App\Models\HtaDanGpa;
 use App\Models\HtaDanGpaDetail;
+use App\Models\MasterDepartemen;
+use App\Models\MasterForm;
+use App\Models\MasterJabatan;
 use App\Models\MasterParameter;
 use App\Models\PengajuanPembelian;
 use App\Models\PenilaiHtaGpa;
@@ -35,9 +39,19 @@ class HtaDanGpaController extends Controller
             }
         ])->find($idPengajuan);
         // dd($data);
+        $approval = null;
+        if ($data->getHtaGpa) {
+            $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $data->getHtaGpa->JenisForm)
+                ->where('DokumenId', $data->getHtaGpa->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+        }
         $parameter = MasterParameter::get();
         $user = User::get();
-        return view('hta-gpa.index', compact('data', 'parameter', 'user'));
+        $jabatan = MasterJabatan::get();
+        $departemen = MasterDepartemen::get();
+        return view('hta-gpa.index', compact('data', 'parameter', 'user', 'approval', 'jabatan', 'departemen'));
     }
 
     /**
@@ -67,27 +81,58 @@ class HtaDanGpaController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->vendor[0]['IdPengajuan']);
+        // dd($request->all());
         $header = HtaDanGpa::updateOrCreate(
             [
-                'JenisForm' => $request->JenisForm ?? null,
+                'JenisForm' => '1',
                 'IdPengajuan' => $request->vendor[0]['IdPengajuan'],
                 'PengajuanItemId' => $request->vendor[0]['PengajuanItemId'],
                 'IdVendor' => $request->vendor[0]['IdVendor'],
                 'IdBarang' => $request->vendor[0]['IdBarang'],
             ],
             [
-                'JenisForm' => $request->JenisForm ?? null,
+                'JenisForm' => '1',
                 'IdPengajuan' => $request->vendor[0]['IdPengajuan'],
                 'PengajuanItemId' => $request->vendor[0]['PengajuanItemId'],
                 'IdVendor' => $request->vendor[0]['IdVendor'],
                 'IdBarang' => $request->vendor[0]['IdBarang'],
                 'UserCreate' => auth()->user()->name,
+                'KodePerusahaan' => auth()->user()->kodeperusahaan,
                 'DiajukanOleh' => auth()->user()->id,
                 'DiajukanPada' => now(),
             ]
         );
-
+        $Form = MasterForm::with([
+            'getApproval' => function ($q) use ($header) {
+                $q->where('KodePerusahaan', $header->KodePerusahaan);
+            },
+            'getApproval.getUser'
+        ])
+            ->where('id', $header->JenisForm)
+            ->first();
+        // dd($Form);
+        foreach ($Form->getApproval as $approvalSetting) {
+            DokumenApproval::updateOrCreate(
+                [
+                    'JenisFormId' => $header->JenisForm,
+                    'DokumenId' => $header->id,
+                    'Urutan' => $approvalSetting->Urutan ?? null,
+                ],
+                [
+                    'JenisUser' => $approvalSetting->JenisUser ?? 'Master',
+                    'DepartemenId' => $approvalSetting->DepartemenId ?? null,
+                    'PerusahaanId' => $approvalSetting->KodePerusahaan,
+                    'JabatanId' => $approvalSetting->JabatanId ?? null,
+                    'UserId' => $approvalSetting->UserId ?? null,
+                    'Nama' => $approvalSetting->getUser->name ?? null,
+                    'Status' => 'Pending',
+                    'TanggalApprove' => null,
+                    'Catatan' => null,
+                    'Ttd' => null,
+                    'UserCreate' => auth()->user()->name,
+                ]
+            );
+        }
         foreach ($request->vendor as $key => $value) {
             $Isi = HtaDanGpaDetail::updateOrCreate(
                 [
@@ -109,12 +154,21 @@ class HtaDanGpaController extends Controller
                     'SubTotal' => $value['SubTotal'] ?? null,
                     'UmurEkonomis' => $value['UmurEkonomis'],
                     'BuybackPeriod' => $value['BuybackPeriod'],
-                    'TarifDiusulkan' => $value['TarifDiusulkan'],
+                    'TarifDiusulkan' => preg_replace('/\D/', '', $value['TarifDiusulkan']),
                     'TargetPemakaianBulanan' => $value['TargetPemakaianBulanan'],
                     'Keterangan' => $value['Keterangan'],
                 ]
             );
         }
+
+        activity('hta')
+            ->causedBy(auth()->user())
+            ->performedOn($header)
+            ->withProperties([
+                'attributes' => $header->toArray(),
+                'vendor_items' => $request->vendor,
+            ])
+            ->log('Memperbarui data HTA dengan kode ' . ($header->Nomor ?? $header->id));
         return redirect()->back()->with('success', 'Data berhasil disimpan.');
     }
 
@@ -124,34 +178,43 @@ class HtaDanGpaController extends Controller
         $cariHTA = HtaDanGpa::where('IdPengajuan', $request->IdPengajuan)
             ->where('PengajuanItemId', $request->PengajuanItemId)
             ->first();
-
+        // dd($cariHTA);
         if (!$cariHTA) {
-
             return redirect()->back()->with('error', 'Data HTA tidak ditemukan.');
         }
 
-        $count = count($request->TipeInputPenilai);
-        for ($i = 0; $i < $count; $i++) {
-            PenilaiHtaGpa::updateOrCreate(
-                [
-                    'IdHtaGpa' => $cariHTA->id,
-                    'PenilaiKe' => $i + 1,
-                ],
-                [
-                    'IdUser' => $request->NamaPenilai[$i] ?? null,
-                    'TipeInputPenilai' => $request->TipeInputPenilai[$i] ?? null,
-                    'Nama' => $request->NamaPenilaiManual[$i] ?? null,
-                    'Jabatan' => null,
-                    'Email' => $request->EmailPenilai[$i] ?? null,
-                    'ApprovalToken' => Str::uuid(),
-                    'UserCreate' => auth()->user()->name,
-                ]
-            );
-        }
+        $approvalDocs = DokumenApproval::where([
+            'JenisFormId' => $cariHTA->JenisForm,
+            'DokumenId' => $cariHTA->id,
+        ])->orderBy('Urutan', 'asc')->get();
+        // dd($approvalDocs);
+        foreach ($approvalDocs as $key => $approval) {
+            // Handle the NamaPenilai entry, which may contain "id,name"
+            $namaPenilai = $request->NamaPenilai[$key] ?? null;
+            $userId = null;
+            $userName = null;
 
+            if ($namaPenilai && strpos($namaPenilai, ',') !== false) {
+                [$userId, $userName] = explode(',', $namaPenilai, 2);
+            } else {
+                $userId = $namaPenilai;
+                $userName = null;
+            }
+
+            $approval->update([
+                'JenisUser' => $request->TipeInputPenilai[$key],
+                'JabatanId' => $request->JabatanId[$key],
+                'DepartemenId' => $request->DepartemenId[$key],
+                'UserId' => $userId,
+                'Nama' => $request->NamaPenilaiManual[$key] ?? $userName,
+                'Email' => $request->EmailPenilai[$key],
+                'Urutan' => $approval->Urutan,
+                'ApprovalToken' => str_replace('-', '', Str::uuid()),
+                'UserUpdate' => auth()->user()->name,
+            ]);
+        }
         $idPengajuan = $request->IdPengajuan;
         $idPengajuanItem = $request->PengajuanItemId;
-
 
         $pengajuan = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
@@ -159,26 +222,15 @@ class HtaDanGpaController extends Controller
                 $query->where('PengajuanItemId', $idPengajuanItem);
             },
             'getJenisPermintaan.getForm',
-            'getHtaGpa.getPenilai1',
-            'getHtaGpa.getPenilai2',
-            'getHtaGpa.getPenilai3',
-            'getHtaGpa.getPenilai4',
-            'getHtaGpa.getPenilai5',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
 
         $parameter = MasterParameter::get();
-        $penilaiList = PenilaiHtaGpa::where('IdHtaGpa', $cariHTA->id)->get();
-
-        foreach ($penilaiList as $penilai) {
+        foreach ($approvalDocs as $penilai) {
             if (empty($penilai->Email)) {
                 continue;
-            }
-            if (empty($penilai->ApprovalToken)) {
-                $penilai->ApprovalToken = Str::uuid();
-                $penilai->save();
             }
 
             Mail::to($penilai->Email)
@@ -205,20 +257,19 @@ class HtaDanGpaController extends Controller
                 $query->where('PengajuanItemId', $idPengajuanItem);
             },
             'getJenisPermintaan.getForm',
-            'getHtaGpa.getPenilai1',
-            'getHtaGpa.getPenilai2',
-            'getHtaGpa.getPenilai3',
-            'getHtaGpa.getPenilai4',
-            'getHtaGpa.getPenilai5',
-            'getHtaGpa.getPenilai',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
-
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $data->getHtaGpa->JenisForm)
+            ->where('DokumenId', $data->getHtaGpa->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
         $parameter = MasterParameter::get();
-        return view('hta-gpa.show', compact('data', 'parameter'));
+        return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
     }
+
     public function print($idPengajuan, $idPengajuanItem)
     {
         $data = PengajuanPembelian::with([
@@ -241,10 +292,11 @@ class HtaDanGpaController extends Controller
         $parameter = MasterParameter::get();
 
         $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter'))
-            ->setPaper([0, 0, 612, 936], 'portrait'); // 8.5in x 13in in points
+            ->setPaper('a4', 'landscape');  // Ubah ke A4 landscape
 
         return $pdf->stream('hta-gpa-' . $idPengajuan . '-' . $idPengajuanItem . '.pdf');
     }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -269,102 +321,19 @@ class HtaDanGpaController extends Controller
         //
     }
 
-    public function accPenilai1(Request $request, $id)
-    {
-        $htaDanGpa = HtaDanGpa::findOrFail($id);
-        // dd($htaDanGpa);
-        $htaDanGpa->Penilai1_Oleh = auth()->user()->id ?? 'N/A';
-        $htaDanGpa->Penilai1_Status = 'Y';
-        $htaDanGpa->Penilai1_Pada = now();
-
-        $htaDanGpa->save();
-
-        return redirect()->back()->with('success', 'Penilaian Tahap 1 telah berhasil disetujui.');
-    }
-
-    public function accPenilai2(Request $request, $id)
-    {
-        $htaDanGpa = HtaDanGpa::findOrFail($id);
-        // if (empty($htaDanGpa->Penilai1_Status) || $htaDanGpa->Penilai1_Status != 'Y') {
-        //     return redirect()->back()->with('error', 'Penilaian Tahap 1 harus disetujui sebelum dapat melanjutkan ke Tahap 2.');
-        // }
-
-        $htaDanGpa->Penilai2_Oleh = auth()->user()->id ?? 'N/A';
-        $htaDanGpa->Penilai2_Status = 'Y';
-        $htaDanGpa->Penilai2_Pada = now();
-
-        $htaDanGpa->save();
-
-        return redirect()->back()->with('success', 'Penilaian Tahap 2 telah berhasil disetujui.');
-    }
-
-    public function accPenilai3(Request $request, $id)
-    {
-        $htaDanGpa = HtaDanGpa::findOrFail($id);
-
-        // Cek apakah Penilai2 sudah diisi
-        // if (empty($htaDanGpa->Penilai2_Status) || $htaDanGpa->Penilai2_Status != 'Y') {
-        //     return redirect()->back()->with('error', 'Penilaian Tahap 2 harus disetujui sebelum dapat melanjutkan ke Tahap 3.');
-        // }
-
-        $htaDanGpa->Penilai3_Oleh = auth()->user()->id ?? 'N/A';
-        $htaDanGpa->Penilai3_Status = 'Y';
-        $htaDanGpa->Penilai3_Pada = now();
-
-        $htaDanGpa->save();
-
-        return redirect()->back()->with('success', 'Penilaian Tahap 3 telah berhasil disetujui.');
-    }
-
-    public function accPenilai4(Request $request, $id)
-    {
-        $htaDanGpa = HtaDanGpa::findOrFail($id);
-
-        // Cek apakah Penilai3 sudah diisi
-        // if (empty($htaDanGpa->Penilai3_Status) || $htaDanGpa->Penilai3_Status != 'Y') {
-        //     return redirect()->back()->with('error', 'Penilaian Tahap 3 harus disetujui sebelum dapat melanjutkan ke Tahap 4.');
-        // }
-
-        $htaDanGpa->Penilai4_Oleh = auth()->user()->id ?? 'N/A';
-        $htaDanGpa->Penilai4_Status = 'Y';
-        $htaDanGpa->Penilai4_Pada = now();
-
-        $htaDanGpa->save();
-
-        return redirect()->back()->with('success', 'Penilaian Tahap 4 telah berhasil disetujui.');
-    }
-
-    public function accPenilai5(Request $request, $id)
-    {
-        $htaDanGpa = HtaDanGpa::findOrFail($id);
-
-        // Cek apakah Penilai4 sudah diisi
-        // if (empty($htaDanGpa->Penilai4_Status) || $htaDanGpa->Penilai4_Status != 'Y') {
-        //     return redirect()->back()->with('error', 'Penilaian Tahap 4 harus disetujui sebelum dapat melanjutkan ke Tahap 5.');
-        // }
-
-        $htaDanGpa->Penilai5_Oleh = auth()->user()->id ?? 'N/A';
-        $htaDanGpa->Penilai5_Status = 'Y';
-        $htaDanGpa->Penilai5_Pada = now();
-
-        $htaDanGpa->save();
-
-        return redirect()->back()->with('success', 'Penilaian Tahap 5 telah berhasil disetujui.');
-    }
     public function approve($token)
     {
         // dd($token);
-        $penilai = PenilaiHtaGpa::where('ApprovalToken', $token)->firstOrFail();
-
-        if (!is_null($penilai->StatusAcc)) {
+        $penilai = DokumenApproval::where('ApprovalToken', $token)->firstOrFail();
+        if ($penilai->Status !== 'Pending') {
             return view('emails.setelah-approval', [
                 'message' => 'Persetujuan sudah diproses sebelumnya.'
             ]);
         }
 
         $penilai->update([
-            'StatusAcc' => 'Y',
-            'AccPada' => Carbon::now(),
+            'Status' => 'Approved',
+            'TanggalApprove' => Carbon::now(),
         ]);
 
         return view('emails.setelah-approval', [

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterBarang;
+use App\Models\MasterJenisPengajuan;
 use App\Models\MasterMerk;
 use App\Models\MasterSatuan;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class MasterBarangController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = MasterBarang::with('getSatuan', 'getMerk')->latest();
+            $data = MasterBarang::with('getSatuan', 'getMerk', 'getJenis')->latest();
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
@@ -28,6 +29,9 @@ class MasterBarangController extends Controller
                 ->editColumn('Merek', function ($row) {
                     return optional($row->getMerk)->Nama ?? '-';
                 })
+                ->editColumn('Jenis', function ($row) {
+                    return optional($row->getJenis)->Nama ?? '-';
+                })
                 ->rawColumns(['action'])
                 ->make(true);
         }
@@ -37,10 +41,10 @@ class MasterBarangController extends Controller
 
     public function create()
     {
-        $satuan = MasterSatuan::all();
-        $merekList = MasterMerk::all();
-
-        return view('master.barang.create', compact('satuan', 'merekList'));
+        $satuan = MasterSatuan::get();
+        $merekList = MasterMerk::get();
+        $jenis = MasterJenisPengajuan::get();
+        return view('master.barang.create', compact('satuan', 'merekList', 'jenis'));
     }
 
     public function store(Request $request)
@@ -78,24 +82,20 @@ class MasterBarangController extends Controller
         $bulan = date('m');
         $tahun = date('y');
         $jenis = strtoupper($jenis);
-
-        if ($jenis === 'MEDIS') {
+        if ($jenis === '1') {
             $prefix = "M{$tahun}{$bulan}";
-        } elseif ($jenis === 'UMUM') {
+        } elseif ($jenis === '2') {
             $prefix = "U{$tahun}{$bulan}";
+        } elseif ($jenis === '3') {
+            $prefix = "P{$tahun}{$bulan}";
         } else {
             $prefix = "X{$tahun}{$bulan}";
         }
+        $count = MasterBarang::withTrashed()
+            ->where('KodeBarang', 'like', $prefix . '%')
+            ->count();
 
-        $maxKode = MasterBarang::where('KodeBarang', 'like', $prefix . '%')
-            ->max('KodeBarang');
-
-        if ($maxKode) {
-            $lastNumber = (int) substr($maxKode, -4);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
+        $nextNumber = $count + 1;
 
         return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
@@ -103,9 +103,10 @@ class MasterBarangController extends Controller
     public function edit($id)
     {
         $barang = MasterBarang::findOrFail($id);
-        $satuan = MasterSatuan::all();
-        $merekList = MasterMerk::all();
-        return view('master.barang.edit', compact('barang', 'satuan', 'merekList'));
+        $satuan = MasterSatuan::get();
+        $merekList = MasterMerk::get();
+        $jenis = MasterJenisPengajuan::get();
+        return view('master.barang.edit', compact('barang', 'satuan', 'merekList', 'jenis'));
     }
 
     public function update(Request $request, $id)
@@ -150,6 +151,12 @@ class MasterBarangController extends Controller
         $barang->save();
 
         $barang->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($barang)
+            ->withProperties(['ip' => request()->ip()])
+            ->log('Menghapus master barang: ' . $barang->Nama);
 
         return response()->json(['status' => 200, 'message' => 'Barang berhasil dihapus']);
     }

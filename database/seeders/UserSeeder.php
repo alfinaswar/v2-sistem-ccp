@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class UserSeeder extends Seeder
 {
@@ -91,6 +91,10 @@ class UserSeeder extends Seeder
             ['dr. Laura Nurul Alfiola', 'RSAB-BAJ', 'Ketua Komite Mutu & Keselamatan Pasien'],
             ['Ns. Yanti Sinaga, S.Kep', 'RSAB-BAJ', 'Ka Divisi Keperawatan'],
             ['Ferdy Permana, S.Kom', 'RSAB-BAJ', 'Ka Divisi HCM'],
+            ['Febriana Pranesti, S.Kom', 'RSAB-AYN', 'Staff Penunjang Medis'],
+            ['Rian Made Pratama, Amd', 'RSAB-AYN', 'Staff Keuangan'],
+            ['Dicky, A.Md', 'RSAB-AYN', 'Staff Penunjang Medis'],
+            ['Ir. H. Arfan Awaloeddin', 'RSAB-SDR', 'CEO'],
         ];
 
         foreach ($users as $data) {
@@ -98,8 +102,7 @@ class UserSeeder extends Seeder
             $kodePerusahaan = $data[1];
             $jabatanAsli = $data[2];
 
-            // --- LOGIKA MAPPING JABATAN (id 1-6) ---
-            $jabatanId = 6; // Default Staff
+            $jabatanId = 6;  // Default Staff
             if (str_contains($jabatanAsli, 'Direktur'))
                 $jabatanId = 1;
             elseif (str_contains($jabatanAsli, 'GH '))
@@ -110,8 +113,9 @@ class UserSeeder extends Seeder
                 $jabatanId = 4;
             elseif (str_contains($jabatanAsli, 'Manajer'))
                 $jabatanId = 5;
+            elseif (str_contains($jabatanAsli, 'CEO'))
+                $jabatanId = 7;
 
-            // --- LOGIKA MAPPING DEPARTEMEN (id 1-13) ---
             $deptId = null;
             if (str_contains($jabatanAsli, 'Pelayanan & Penunjang Medis') || str_contains($jabatanAsli, 'Pelayanan dan Penunjang Medis'))
                 $deptId = 3;

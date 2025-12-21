@@ -15,7 +15,7 @@ class MasterFormController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = MasterForm::where('KodePerusahaan', auth()->user()->kodeperusahaan)->latest();
+            $data = MasterForm::where('KodePerusahaan');
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {

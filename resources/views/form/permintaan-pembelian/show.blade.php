@@ -179,20 +179,22 @@
                             </a>
 
                             @foreach ($approval as $item)
-                                @if (auth()->id() == ($item->UserId ?? null))
-                                    <form id="formApprove{{ $item->id }}"
-                                        action="{{ route($item->approve_route ?? '#', $data->id) }}" method="POST"
-                                        class="d-inline">
-                                        @csrf
+                                <form id="formApprove{{ $item->id }}" action="{{ route('pp.approve') }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="UserId" value="{{ $item->UserId }}">
+                                    <input type="hidden" name="DokumenId" value="{{ $item->DokumenId }}">
+                                    <input type="hidden" name="JenisForm" value="{{ $item->JenisFormId }}">
+                                    @if (auth()->id() == ($item->UserId ?? null))
                                         <button type="button" class="btn btn-primary me-2 swal-confirm-btn"
                                             data-title="Konfirmasi"
-                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->JabatanNama ?? $item->JenisUser }}?"
+                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama ?? $item->JenisUser }}?"
                                             data-form="formApprove{{ $item->id }}">
                                             <i class="fa {{ $item->icon ?? 'fa-user' }}"></i>
                                             {{ $item->JabatanNama ?? $item->JenisUser }}
                                         </button>
-                                    </form>
-                                @endif
+                                    @endif
+                                </form>
                             @endforeach
                         </div>
                     </div>

@@ -181,7 +181,7 @@ class RekomendasiController extends Controller
         $idPengajuan = decrypt($idPengajuan);
         $idPengajuanItem = decrypt($idPengajuanItem);
 
-        $rekomendasi = Rekomendasi::with('getRekomedasiDetail.getPerusahaan', 'getRekomedasiDetail.getBarang')->where('PengajuanItemId', $idPengajuanItem)->first();
+        $rekomendasi = Rekomendasi::with('getRekomedasiDetail.getPerusahaan', 'getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNegara')->where('PengajuanItemId', $idPengajuanItem)->first();
         $pdf = Pdf::loadView('rekomendasi-pembelian.cetak-review', [
             'rekomendasi' => $rekomendasi,
         ]);

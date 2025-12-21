@@ -376,11 +376,11 @@
                                         <tr>
                                             <th class="text-center" style="width:40px;">No</th>
                                             <th>Nama Barang</th>
+                                            <th class="text-center">Rekomendasi</th>
                                             <th class="text-center">HTA / GPA</th>
                                             <th class="text-center">Usulan Investasi</th>
                                             <th class="text-center">Lembar Disposisi</th>
                                             <th class="text-center">Feasibility Study</th>
-                                            <th class="text-center">Rekomendasi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -390,6 +390,27 @@
                                                     <td class="text-center">{{ $i + 1 }}</td>
                                                     <td>
                                                         {{ $item->getBarang->Nama ?? '-' }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                            class="btn btn-primary">
+                                                            <i class="fa fa-pen"></i> Buat Rekomendasi
+                                                        </a>
+                                                        @php
+                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
+                                                        @endphp
+                                                        @if ($adaRekomendasi)
+                                                            <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                class="btn btn-info ms-2" target="_blank">
+                                                                <i class="fa fa-print"></i> Print
+                                                            </a>
+                                                            @can('rekomendasi-show')
+                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                    class="btn btn-secondary ms-2" target="_blank">
+                                                                    <i class="fa fa-eye"></i> Lihat
+                                                                </a>
+                                                            @endcan
+                                                        @endif
                                                     </td>
                                                     <td class="text-center">
                                                         @php
@@ -498,27 +519,7 @@
                                                             @endif
                                                         @endif
                                                     </td>
-                                                    <td class="text-center">
-                                                        <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                            class="btn btn-primary">
-                                                            <i class="fa fa-pen"></i> Buat Rekomendasi
-                                                        </a>
-                                                        @php
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                        @endphp
-                                                        @if ($adaRekomendasi)
-                                                            <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                class="btn btn-info ms-2" target="_blank">
-                                                                <i class="fa fa-print"></i> Print
-                                                            </a>
-                                                            @can('rekomendasi-show')
-                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                    class="btn btn-secondary ms-2" target="_blank">
-                                                                    <i class="fa fa-eye"></i> Lihat
-                                                                </a>
-                                                            @endcan
-                                                        @endif
-                                                    </td>
+
 
                                                 </tr>
                                             @endforeach

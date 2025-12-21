@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('usulan_investasis', function (Blueprint $table) {
             $table->id();
+            $table->string('JenisForm')->nullable();
             $table->string('IdPengajuan')->nullable();
             $table->string('PengajuanItemId')->nullable();
             $table->string('IdVendor')->nullable();
@@ -38,6 +39,8 @@ return new class extends Migration {
             $table->string('SisaBudget2')->nullable();
             $table->string('DiajukanOleh')->nullable();
             $table->string('DiajukanPada')->nullable();
+            $table->string('KodePerusahaan')->nullable();
+            $table->enum('Status', ['Draft', 'Selesai', 'Disetujui'])->default('Draft')->nullable();
             $table->string('Direktur')->nullable();
             $table->dateTime('DirekturPada')->nullable();
             $table->string('KadivJangMed')->nullable();

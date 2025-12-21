@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->date('Tanggal')->nullable();
             $table->string('DiajukanOleh')->nullable();
             $table->dateTime('DiajukanPada')->nullable();
-            $table->string('Status')->nullable();
+            $table->enum('Status', ['Draft', 'Sudah Diajukan', 'Telah Disetujui'])->default('Draft');
             $table->dateTime('StatusUpdate')->nullable();
 
             // --- Mengetahui Kepala Divisi 1 ---

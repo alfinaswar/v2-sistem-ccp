@@ -272,11 +272,13 @@
                                             </div>
                                             <label class="col-md-3 col-form-label fw-bold">Tarif Diusulkan</label>
                                             <div class="col-md-9">
-                                                <input type="text" class="form-control"
+                                                <input type="text" class="form-control rupiah-input"
                                                     name="vendor[{{ $vIdx }}][TarifDiusulkan]"
                                                     placeholder="Masukkan Tarif Diusulkan"
-                                                    value="{{ $Vendor->getHtaGpa->TarifDiusulkan ?? '' }}">
+                                                    value="{{ isset($Vendor->getHtaGpa->TarifDiusulkan) && is_numeric($Vendor->getHtaGpa->TarifDiusulkan) ? number_format((float) $Vendor->getHtaGpa->TarifDiusulkan, 0, ',', '.') : '' }}"
+                                                    oninput="this.value=formatRupiah(this.value)">
                                             </div>
+
                                         </div>
                                         <div class="col-md-6">
                                             <label class="col-md-3 col-form-label fw-bold">Buyback Period</label>
@@ -308,10 +310,21 @@
                                 <i class="fa fa-save me-1"></i> Simpan Sebagai Draft
                             </button>
                             <!-- Ajukan Button trigger modal -->
-                            <button type="button" id="btnAjukan" class="btn btn-success me-2" data-bs-toggle="modal"
-                                data-bs-target="#modalPenilai">
-                                <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
-                            </button>
+                            @php
+                                $showAjukan = false;
+                                foreach ($data->getVendor as $idx => $v) {
+                                    if (!is_null($v->getHtaGpa->Nilai2 ?? null)) {
+                                        $showAjukan = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            @if ($showAjukan)
+                                <button type="button" id="btnAjukan" class="btn btn-success me-2"
+                                    data-bs-toggle="modal" data-bs-target="#modalPenilai">
+                                    <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
+                                </button>
+                            @endif
                             <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">
                                 <i class="fa fa-arrow-left me-1"></i> Kembali
                             </a>
@@ -448,5 +461,30 @@
             toggleButtons();
         });
     </script>
+    <script>
+        function formatRupiah(angka, prefix) {
+            var number_string = angka.replace(/[^,\d]/g, '').toString(),
+                split = number_string.split(','),
+                sisa = split[0].length % 3,
+                rupiah = split[0].substr(0, sisa),
+                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
+            if (ribuan) {
+                var separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.rupiah-input').forEach(function(el) {
+                el.addEventListener('keyup', function(e) {
+                    var caret = el.selectionStart;
+                    var val = formatRupiah(this.value);
+                    this.value = val;
+                    el.setSelectionRange(caret, caret);
+                });
+            });
+        });
+    </script>
 @endpush
