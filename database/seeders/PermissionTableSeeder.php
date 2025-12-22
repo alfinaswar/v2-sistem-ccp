@@ -89,21 +89,7 @@ class PermissionTableSeeder extends Seeder
             'permintaan-create',
             'permintaan-edit',
             'permintaan-delete',
-            // Permintaan,
-            //
-            'permintaan-approve-kepala-divisi',
-            'permintaan-approve-penunjang',
-            'permintaan-approve-direktur',
-            'permintaan-approve-logistik',
-            // hta
-            'hta-gpa-approve-penilai1',
-            'hta-gpa-approve-penilai2',
-            'hta-gpa-approve-penilai3',
-            'hta-gpa-approve-penilai4',
-            'hta-gpa-approve-penilai5',
-            // fui
-            'fui-approve-jangmed',
-            'fui-approve-direktur',
+
             // hta-gpa
             'hta-gpa-create',
             'hta-gpa-edit',
@@ -122,6 +108,11 @@ class PermissionTableSeeder extends Seeder
             'rekomendasi-delete',
             'rekomendasi-show',
             'rekomendasi-print',
+            'master-approval-list',
+            'master-approval-create',
+            'master-approval-edit',
+            'master-approval-delete',
+
         ];
 
         foreach ($permissions as $permission) {

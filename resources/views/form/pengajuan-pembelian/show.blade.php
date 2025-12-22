@@ -595,14 +595,25 @@
                                                                 <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
                                                                     class="btn btn-success">
                                                                     <i class="fa fa-eye"></i>
-                                                                    Lihat FS
+                                                                    Lihat
+                                                                </a>
+                                                                <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
+                                                                    class="btn btn-success">
+                                                                    <i class="fa fa-eye"></i>
+                                                                    Lihat
                                                                 </a>
                                                             @else
-                                                                <a href="{{ route('fs.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                    class="btn btn-primary">
-                                                                    <i class="fa fa-edit"></i>
-                                                                    Isi Fisibility Study
-                                                                </a>
+                                                                @role('keuangan')
+                                                                    <a href="{{ route('fs.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                        class="btn btn-primary">
+                                                                        <i class="fa fa-edit"></i>
+                                                                        Lengkapi
+                                                                    </a>
+                                                                @else
+                                                                    <div class="alert alert-danger mt-1" role="alert">
+                                                                        FS, Di buat oleh Keuangan
+                                                                    </div>
+                                                                @endrole
                                                             @endif
                                                         @endif
                                                     </td>

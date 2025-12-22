@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('rekomendasis', function (Blueprint $table) {
             $table->id();
+            $table->string('JenisForm')->nullable();
             $table->string('IdPengajuan')->nullable();
             $table->string('PengajuanItemId')->nullable();
             $table->date('TanggalPresentasi')->nullable();
