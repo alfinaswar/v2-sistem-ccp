@@ -1,0 +1,416 @@
+@extends('layouts.app')
+
+@section('content')
+    @push('css')
+        <style>
+            #scrollToTopBtn,
+            #scrollToBottomBtn {
+                position: fixed;
+                right: 30px;
+                width: 48px;
+                height: 48px;
+                border: none;
+                border-radius: 50%;
+                background: #4BCC1F;
+                color: white;
+                font-size: 24px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                cursor: pointer;
+                z-index: 999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: opacity 0.2s;
+                opacity: 0.8;
+            }
+
+            #scrollToTopBtn:hover,
+            #scrollToBottomBtn:hover {
+                opacity: 1;
+            }
+
+            #scrollToTopBtn {
+                bottom: 90px;
+                display: none;
+            }
+
+            #scrollToBottomBtn {
+                bottom: 30px;
+                display: none;
+            }
+        </style>
+    @endpush
+    <div class="page-header">
+        <div class="row">
+            <div class="col">
+                <h3 class="page-title">Form Input Penilaian</h3>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#">Hta / Gpa</a></li>
+                    <li class="breadcrumb-item active">Isi Penilaian</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xxl-12 col-xl-12">
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        Penilaian HTA / GPA
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5 class="mb-3">Informasi Barang</h5>
+                        <table class="table align-middle" style="width:100%;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:180px;">Nama Barang</th>
+                                    <td>{{ $data->getPengajuanItem[0]->getBarang->Nama ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Merek</th>
+                                    <td>{{ $data->getPengajuanItem[0]->getBarang->getMerk->Nama ?? '-' }}</td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-warning d-flex align-items-center" role="alert" style="min-height: 70px;">
+                        <i class="fa fa-exclamation-circle me-2" style="align-self: center; font-size: 1.6rem;"></i>
+                        <div class="d-flex align-items-center" style="min-height: 50px;">
+                            <ol class="mb-0 ps-2">
+                                <li>Isi HTA secara lengkap untuk setiap Vendor terlebih dahulu. Setelah HTA Vendor ini
+                                    diisi, baru bisa melanjutkan ke Vendor berikutnya.</li>
+                                <li>Semua kolom HTA wajib diisi.</li>
+                                <li>Jika {{ auth()->user()->name }} sedang sibuk, Anda dapat menyimpan data sebagai draft
+                                    terlebih dahulu dan melanjutkan pengisian di lain waktu.</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <form id="formHtaGpa" action="{{ route('htagpa.store-umum') }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <ul class="nav nav-tabs tab-style-1 d-sm-flex d-block" role="tablist" id="vendorTabs">
+                            @foreach ($data->getVendor as $vIdx => $Vendor)
+                                @php
+                                    // Jangan biarkan tab vendor berikutnya aktif jika tab sebelumnya belum diisi (berdasarkan Nilai1)
+                                    $disableTab = false;
+                                    if ($vIdx >= 1) {
+                                        $prevVendor = $data->getVendor[$vIdx - 1] ?? null;
+                                        $prevNilai1 = $prevVendor->getHtaGpa->File[0] ?? null;
+                                        $disableTab = is_null($prevNilai1);
+                                    }
+                                @endphp
+                                <li class="nav-item">
+                                    <a class="nav-link {{ $vIdx === 0 ? 'active' : '' }} {{ $disableTab ? 'disabled' : '' }}"
+                                        id="vendor-tab-{{ $vIdx }}"
+                                        @if (!$disableTab) data-bs-toggle="tab" href="#vendor-pane-{{ $vIdx }}" role="tab" aria-controls="vendor-pane-{{ $vIdx }}" aria-selected="{{ $vIdx === 0 ? 'true' : 'false' }}" @else tabindex="-1" aria-disabled="true" @endif
+                                        style="{{ $disableTab ? 'pointer-events: none; opacity: 0.5;' : '' }}">
+                                        {{ $Vendor->getNamaVendor->Nama ?? 'Vendor' }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <div class="tab-content" id="vendorTabPanes">
+                            @foreach ($data->getVendor as $vIdx => $Vendor)
+                                {{-- @php
+                                    dd($Vendor);
+                                @endphp --}}
+                                <div class="tab-pane fade {{ $vIdx === 0 ? 'show active' : '' }}"
+                                    id="vendor-pane-{{ $vIdx }}" role="tabpanel"
+                                    aria-labelledby="vendor-tab-{{ $vIdx }}">
+                                    <input type="hidden" name="vendor[{{ $vIdx }}][IdVendor]"
+                                        value="{{ $Vendor->NamaVendor }}">
+
+                                    <input type="hidden" name="vendor[{{ $vIdx }}][IdPengajuan]"
+                                        value="{{ $data->id }}">
+                                    <input type="hidden" name="vendor[{{ $vIdx }}][PengajuanItemId]"
+                                        value="{{ $data->getPengajuanItem[0]->id ?? '' }}">
+                                    <input type="hidden" name="vendor[{{ $vIdx }}][IdBarang]"
+                                        value="{{ $data->getPengajuanItem[0]->IdBarang ?? '' }}">
+                                    {{-- Additional hidden data if needed --}}
+
+
+                                    <div class="mb-3">
+                                        <label for="file_{{ $vIdx }}" class="form-label">Upload PDF atau Excel
+                                            (optional)
+                                        </label>
+                                        <div class="dropzone-container" id="dropzone_{{ $vIdx }}"
+                                            style="border: 2px dashed #ccc; padding: 30px; border-radius: 8px; text-align: center; cursor: pointer; background: #f9f9f9;">
+                                            <i class="fa fa-cloud-upload-alt fa-2x mb-2"></i>
+                                            <div>Drag & Drop file PDF/Excel di sini, atau klik untuk memilih file</div>
+                                            <input type="file" class="form-control d-none" id="file_{{ $vIdx }}"
+                                                name="vendor[{{ $vIdx }}][file]" accept=".pdf,.xls,.xlsx">
+                                            <div class="dz-filename mt-2 text-primary" style="display:none;"
+                                                id="dz_filename_{{ $vIdx }}"></div>
+                                            @php
+                                                // Jika sudah ada file dari DB, tampilkan link preview
+                                                $uploadedFile = null;
+                                                // Pastikan relasi dan struktur sesuai data: pastikan Vendor->getHtaGpa->File ada
+                                                if (
+                                                    isset($Vendor->getHtaGpa->File) &&
+                                                    !empty($Vendor->getHtaGpa->File)
+                                                ) {
+                                                    if (is_array($Vendor->getHtaGpa->File)) {
+                                                        $uploadedFile = $Vendor->getHtaGpa->File[0] ?? null;
+                                                    } else {
+                                                        $uploadedFile = $Vendor->getHtaGpa->File;
+                                                    }
+                                                }
+                                            @endphp
+                                            @if ($uploadedFile)
+                                                <div class="mt-2">
+                                                    <a href="{{ asset('storage/upload/gpa/' . $uploadedFile) }}"
+                                                        class="btn btn-link text-success" target="_blank">
+                                                        <i class="fa fa-eye"></i> Preview File
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <small class="form-text text-muted">Unggah dokumen pendukung dalam format PDF atau
+                                            Excel.</small>
+                                    </div>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            var dzZone = document.getElementById('dropzone_{{ $vIdx }}');
+                                            var dzInput = document.getElementById('file_{{ $vIdx }}');
+                                            var dzFilename = document.getElementById('dz_filename_{{ $vIdx }}');
+
+                                            dzZone.addEventListener('click', function(e) {
+                                                if (e.target === dzZone || e.target.classList.contains('fa-cloud-upload-alt')) {
+                                                    dzInput.click();
+                                                }
+                                            });
+
+                                            dzZone.addEventListener('dragover', function(e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                dzZone.style.background = "#eef8ff";
+                                            });
+
+                                            dzZone.addEventListener('dragleave', function(e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                dzZone.style.background = "#f9f9f9";
+                                            });
+
+                                            dzZone.addEventListener('drop', function(e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                dzZone.style.background = "#f9f9f9";
+                                                var files = e.dataTransfer.files;
+                                                if (
+                                                    files.length &&
+                                                    (files[0].type === "application/pdf" ||
+                                                        files[0].name.endsWith('.xls') ||
+                                                        files[0].name.endsWith('.xlsx'))
+                                                ) {
+                                                    dzInput.files = files;
+                                                    dzFilename.style.display = 'block';
+                                                    dzFilename.textContent = files[0].name;
+                                                } else {
+                                                    dzFilename.style.display = 'block';
+                                                    dzFilename.textContent = 'File tidak valid. Hanya PDF atau Excel yang diizinkan.';
+                                                }
+                                            });
+
+                                            dzInput.addEventListener('change', function(e) {
+                                                if (dzInput.files.length) {
+                                                    dzFilename.style.display = 'block';
+                                                    dzFilename.textContent = dzInput.files[0].name;
+                                                } else {
+                                                    dzFilename.style.display = 'none';
+                                                }
+                                            });
+                                        });
+                                    </script>
+
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="mt-3 d-flex justify-content-end">
+                            <button type="submit" name="action" value="draft" class="btn btn-warning me-2">
+                                <i class="fa fa-save me-1"></i> Simpan Sebagai Draft
+                            </button>
+                            <!-- Ajukan Button trigger modal -->
+                            @php
+                                $showAjukan = false;
+                                foreach ($data->getVendor as $idx => $v) {
+                                    if (!is_null($v->getHtaGpa->File ?? null)) {
+                                        $showAjukan = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            @if ($showAjukan)
+                                <button type="button" id="btnAjukan" class="btn btn-success me-2" data-bs-toggle="modal"
+                                    data-bs-target="#modalPenilai">
+                                    <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
+                                </button>
+                            @endif
+                            <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">
+                                <i class="fa fa-arrow-left me-1"></i> Kembali
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <form id="formAjukanHtaGpa" action="{{ route('htagpa.ajukan') }}" method="POST" style="display:none;">
+                @csrf
+                <input type="hidden" name="IdPengajuan" value="{{ $data->id }}">
+                <input type="hidden" name="PengajuanItemId" value="{{ $data->getPengajuanItem[0]->id ?? '' }}">
+                <input type="hidden" name="IdBarang" value="{{ $data->getPengajuanItem[0]->IdBarang ?? '' }}">
+                <input type="hidden" name="Status" value="Diajukan">
+            </form>
+            @include('hta-gpa.modal-kirim-email')
+        </div>
+    </div>
+    <!-- Floating Scroll Button -->
+
+
+    <button id="scrollToTopBtn" title="Scroll to Top">
+        <i class="fa fa-arrow-up"></i>
+    </button>
+    <button id="scrollToBottomBtn" title="Scroll to Bottom">
+        <i class="fa fa-arrow-down"></i>
+    </button>
+@endsection
+@push('js')
+    @if (Session::get('success'))
+        <script>
+            setTimeout(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ Session::get('success') }}',
+                    iconColor: '#4BCC1F',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#4BCC1F',
+                });
+            }, 500);
+        </script>
+    @endif
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input.currency-input-global').forEach(function(inp) {
+                inp.addEventListener('blur', function() {
+                    let val = this.value.replace(/[^0-9]/g, '');
+                    if (val) {
+                        this.value = parseInt(val).toLocaleString('id-ID');
+                    }
+                });
+                // auto-format on load if there is value
+                if (inp.value) {
+                    let n = inp.value.replace(/[^0-9]/g, '');
+                    if (n) {
+                        inp.value = parseInt(n).toLocaleString('id-ID');
+                    }
+                }
+            });
+        });
+    </script>
+    <script>
+        function updateSubtotalsAndGrandTotal(vendorTable) {
+            let grandTotal = 0;
+            vendorTable.find("tbody tr").each(function() {
+                let subtotal = 0;
+                $(this).find('.nilai-input').each(function() {
+                    let nilai = parseFloat($(this).val());
+                    if (isNaN(nilai)) nilai = 0;
+                    if (nilai > 5) {
+                        $(this).val(5);
+                        nilai = 5;
+                    }
+                    if (nilai < 0) {
+                        $(this).val(0);
+                        nilai = 0;
+                    }
+                    subtotal += nilai;
+                });
+                $(this).find('.subtotal-input').val(subtotal);
+                grandTotal += subtotal;
+            });
+            vendorTable.find('.grandtotal-input').val(grandTotal);
+        }
+
+        $(document).ready(function() {
+            $('.nilai-table').each(function() {
+                let vendorTable = $(this);
+                updateSubtotalsAndGrandTotal(vendorTable);
+
+                vendorTable.on('input', '.nilai-input', function() {
+                    updateSubtotalsAndGrandTotal(vendorTable);
+                });
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const topBtn = document.getElementById('scrollToTopBtn');
+            const bottomBtn = document.getElementById('scrollToBottomBtn');
+
+            function toggleButtons() {
+                if (window.scrollY > 150) {
+                    topBtn.style.display = 'flex';
+                } else {
+                    topBtn.style.display = 'none';
+                }
+                if (window.innerHeight + window.scrollY < document.body.offsetHeight - 150) {
+                    bottomBtn.style.display = 'flex';
+                } else {
+                    bottomBtn.style.display = 'none';
+                }
+            }
+
+            window.addEventListener('scroll', toggleButtons);
+            window.addEventListener('resize', toggleButtons);
+
+            topBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            bottomBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Initial check
+            toggleButtons();
+        });
+    </script>
+    <script>
+        function formatRupiah(angka, prefix) {
+            var number_string = angka.replace(/[^,\d]/g, '').toString(),
+                split = number_string.split(','),
+                sisa = split[0].length % 3,
+                rupiah = split[0].substr(0, sisa),
+                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                var separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.rupiah-input').forEach(function(el) {
+                el.addEventListener('keyup', function(e) {
+                    var caret = el.selectionStart;
+                    var val = formatRupiah(this.value);
+                    this.value = val;
+                    el.setSelectionRange(caret, caret);
+                });
+            });
+        });
+    </script>
+@endpush

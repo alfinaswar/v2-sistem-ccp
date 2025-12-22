@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->string('IdBarang')->nullable();
             $table->string('DiajukanOleh')->nullable();
             $table->dateTime('DiajukanPada')->nullable();
+            $table->string('File')->nullable();
             $table->string('Penilai1_Oleh')->nullable();
             $table->enum('Penilai1_Status', ['P', 'Y', 'N']);
             $table->dateTime('Penilai1_Pada')->nullable();

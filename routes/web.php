@@ -222,6 +222,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::prefix('form-hta-atau-gpa')->group(function () {
         Route::get('/hta/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'index'])->name('htagpa.form-hta');
         Route::post('/simpan', [HtaDanGpaController::class, 'store'])->name('htagpa.store');
+        Route::post('/simpan-umum', [HtaDanGpaController::class, 'storeUmum'])->name('htagpa.store-umum');
         Route::post('/ajukan-hta', [HtaDanGpaController::class, 'ajukan'])->name('htagpa.ajukan');
         Route::get('/show/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'show'])->name('htagpa.show');
         Route::get('/print/{idPengajuan}/{idPengajuanItem}', [HtaDanGpaController::class, 'print'])->name('htagpa.print');

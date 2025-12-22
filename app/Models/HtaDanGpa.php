@@ -65,4 +65,12 @@ class HtaDanGpa extends Model
     {
         return $this->belongsTo(User::class, 'Penilai5_Oleh', 'id');
     }
+
+    /**
+     * Relationship to get all HTA/GPA detail rows associated with this HTA/GPA.
+     */
+    public function getDetailHta()
+    {
+        return $this->hasMany(HtaDanGpaDetail::class, 'IdHtaGpa', 'id');
+    }
 }

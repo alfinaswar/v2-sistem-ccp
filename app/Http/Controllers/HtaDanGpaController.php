@@ -15,6 +15,7 @@ use App\Models\PenilaiHtaGpa;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -38,7 +39,7 @@ class HtaDanGpaController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
-        // dd($data);
+
         $approval = null;
         if ($data->getHtaGpa) {
             $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
@@ -51,7 +52,11 @@ class HtaDanGpaController extends Controller
         $user = User::get();
         $jabatan = MasterJabatan::get();
         $departemen = MasterDepartemen::get();
-        return view('hta-gpa.index', compact('data', 'parameter', 'user', 'approval', 'jabatan', 'departemen'));
+        if ($data->Jenis != 1) {
+            return view('hta-gpa.umum.index', compact('data', 'parameter', 'user', 'approval', 'jabatan', 'departemen'));
+        } else {
+            return view('hta-gpa.index', compact('data', 'parameter', 'user', 'approval', 'jabatan', 'departemen'));
+        }
     }
 
     /**
@@ -81,7 +86,6 @@ class HtaDanGpaController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $header = HtaDanGpa::updateOrCreate(
             [
                 'JenisForm' => '1',
@@ -172,10 +176,115 @@ class HtaDanGpaController extends Controller
         return redirect()->back()->with('success', 'Data berhasil disimpan.');
     }
 
+    public function storeUmum(Request $request)
+    {
+        // dd($request->all());
+        $header = HtaDanGpa::updateOrCreate(
+            [
+                'JenisForm' => '2',
+                'IdPengajuan' => $request->vendor[0]['IdPengajuan'],
+                'PengajuanItemId' => $request->vendor[0]['PengajuanItemId'],
+                'IdVendor' => $request->vendor[0]['IdVendor'],
+                'IdBarang' => $request->vendor[0]['IdBarang'],
+            ],
+            [
+                'JenisForm' => '2',
+                'IdPengajuan' => $request->vendor[0]['IdPengajuan'],
+                'PengajuanItemId' => $request->vendor[0]['PengajuanItemId'],
+                'IdVendor' => $request->vendor[0]['IdVendor'],
+                'IdBarang' => $request->vendor[0]['IdBarang'],
+                'UserCreate' => auth()->user()->name,
+                'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                'DiajukanOleh' => auth()->user()->id,
+                'DiajukanPada' => now(),
+            ]
+        );
+        $Form = MasterForm::with([
+            'getApproval' => function ($q) use ($header) {
+                $q->where('KodePerusahaan', $header->KodePerusahaan);
+            },
+            'getApproval.getUser'
+        ])
+            ->where('id', $header->JenisForm)
+            ->first();
+        // dd($Form);
+        foreach ($Form->getApproval as $approvalSetting) {
+            DokumenApproval::updateOrCreate(
+                [
+                    'JenisFormId' => $header->JenisForm,
+                    'DokumenId' => $header->id,
+                    'Urutan' => $approvalSetting->Urutan ?? null,
+                ],
+                [
+                    'JenisUser' => $approvalSetting->JenisUser ?? 'Master',
+                    'DepartemenId' => $approvalSetting->DepartemenId ?? null,
+                    'PerusahaanId' => $approvalSetting->KodePerusahaan,
+                    'JabatanId' => $approvalSetting->JabatanId ?? null,
+                    'UserId' => $approvalSetting->UserId ?? null,
+                    'Nama' => $approvalSetting->getUser->name ?? null,
+                    'Status' => 'Pending',
+                    'TanggalApprove' => null,
+                    'Catatan' => null,
+                    'Ttd' => null,
+                    'UserCreate' => auth()->user()->name,
+                ]
+            );
+        }
+        foreach ($request->vendor as $key => $value) {
+            $filePath = null;
+
+            if (isset($value['file']) && $value['file'] instanceof UploadedFile) {
+                $file = $value['file'];
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('upload/gpa', $filename, 'public');
+                $filePath = $filename;
+            } else {
+                $existingDetail = HtaDanGpaDetail::where([
+                    'IdPengajuan' => $value['IdPengajuan'],
+                    'PengajuanItemId' => $value['PengajuanItemId'],
+                    'IdVendor' => $value['IdVendor'] ?? null,
+                    'IdBarang' => $value['IdBarang'] ?? null,
+                    'IdHtaGpa' => $header->id,
+                ])->first();
+                if ($existingDetail) {
+                    $filePath = $existingDetail->File;
+                }
+            }
+
+            $Isi = HtaDanGpaDetail::updateOrCreate(
+                [
+                    'IdPengajuan' => $value['IdPengajuan'],
+                    'PengajuanItemId' => $value['PengajuanItemId'],
+                    'IdVendor' => $value['IdVendor'] ?? null,
+                    'IdBarang' => $value['IdBarang'] ?? null,
+                    'IdHtaGpa' => $header->id,
+                ],
+                [
+                    'IdParameter' => $value['IdParameter'] ?? null,
+                    'Parameter' => $value['Parameter'] ?? null,
+                    'Deskripsi' => $value['Deskripsi'] ?? null,
+                    'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                    'File' => $filePath,
+                ]
+            );
+        }
+
+        activity('hta')
+            ->causedBy(auth()->user())
+            ->performedOn($header)
+            ->withProperties([
+                'attributes' => $header->toArray(),
+                'vendor_items' => $request->vendor,
+            ])
+            ->log('Memperbarui data HTA dengan kode ' . ($header->Nomor ?? $header->id));
+        return redirect()->back()->with('success', 'Data berhasil disimpan.');
+    }
+
     public function SimpanPenilai(Request $request)
     {
         // dd($request->all());
-        $cariHTA = HtaDanGpa::where('IdPengajuan', $request->IdPengajuan)
+        $cariHTA = HtaDanGpa::with('getDetailHta')
+            ->where('IdPengajuan', $request->IdPengajuan)
             ->where('PengajuanItemId', $request->PengajuanItemId)
             ->first();
         // dd($cariHTA);
@@ -187,9 +296,13 @@ class HtaDanGpaController extends Controller
             'JenisFormId' => $cariHTA->JenisForm,
             'DokumenId' => $cariHTA->id,
         ])->orderBy('Urutan', 'asc')->get();
-        // dd($approvalDocs);
+        $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $cariHTA->JenisForm)
+            ->where('DokumenId', $cariHTA->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+
         foreach ($approvalDocs as $key => $approval) {
-            // Handle the NamaPenilai entry, which may contain "id,name"
             $namaPenilai = $request->NamaPenilai[$key] ?? null;
             $userId = null;
             $userName = null;
@@ -229,19 +342,26 @@ class HtaDanGpaController extends Controller
 
         $parameter = MasterParameter::get();
         foreach ($approvalDocs as $penilai) {
-            if (empty($penilai->Email)) {
+            if (empty($penilai->Email))
                 continue;
+            $fileLampiran = [];
+            if ($cariHTA->JenisForm == '2') {
+                foreach ($cariHTA->getDetailHta as $detail) {
+                    if (!empty($detail->File)) {
+                        $fileLampiran[] = $detail->File;
+                    }
+                }
             }
-
+            // dd($fileLampiran);
             Mail::to($penilai->Email)
-                ->send(
-                    new NotifikasiPengajuanMail(
-                        $pengajuan,
-                        $cariHTA,
-                        $parameter,
-                        $penilai
-                    )
-                );
+                ->send(new NotifikasiPengajuanMail(
+                    $pengajuan,
+                    $cariHTA,
+                    $parameter,
+                    $penilai,
+                    $approval2,
+                    $fileLampiran
+                ));
         }
         return redirect()->back()->with('success', 'Data berhasil disimpan & email notifikasi terkirim.');
     }
@@ -261,13 +381,18 @@ class HtaDanGpaController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
+        // dd($data);
         $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $data->getHtaGpa->JenisForm)
             ->where('DokumenId', $data->getHtaGpa->id)
             ->orderBy('Urutan', 'asc')
             ->get();
         $parameter = MasterParameter::get();
-        return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
+        if ($data->getHtaGpa->JenisForm == 2) {
+            return view('hta-gpa.umum.show', compact('data', 'parameter', 'approval'));
+        } else {
+            return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
+        }
     }
 
     public function print($idPengajuan, $idPengajuanItem)
@@ -288,14 +413,14 @@ class HtaDanGpaController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
-        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+        $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $data->getHtaGpa->JenisForm)
             ->where('DokumenId', $data->getHtaGpa->id)
             ->orderBy('Urutan', 'asc')
             ->get();
         $parameter = MasterParameter::get();
 
-        $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter', 'approval'))
+        $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter', 'approval2'))
             ->setPaper('a4', 'landscape');  // Ubah ke A4 landscape
 
         return $pdf->stream('hta-gpa-' . $idPengajuan . '-' . $idPengajuanItem . '.pdf');

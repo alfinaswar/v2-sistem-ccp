@@ -181,15 +181,15 @@
 <!-- Untuk cetak PDF tanda tangan approval -->
 <table style="width:100%; margin: 0 auto; border:none;">
     <colgroup>
-        @if (!empty($approval))
-            @foreach ($approval as $item)
-                <col style="width: {{ 100 / count($approval) }}%;">
+        @if (!empty($approval2))
+            @foreach ($approval2 as $item)
+                <col style="width: {{ 100 / count($approval2) }}%;">
             @endforeach
         @endif
     </colgroup>
     <tbody>
         <tr>
-            @foreach ($approval as $item)
+            @foreach ($approval2 as $item)
                 <td style="text-align:center; font-weight:600; border:none;">
                     {{ $item->getJabatan->Nama ?? '-' }}<br>
                     {{ $item->getDepartemen->Nama ?? '' }}
@@ -197,14 +197,14 @@
             @endforeach
         </tr>
         <tr>
-            @foreach ($approval as $item)
+            @foreach ($approval2 as $item)
                 <td class="text-center align-bottom" style="height: 20px; border:none;">
                     {{-- Tempat kosong untuk tanda tangan basah di cetak PDF --}}
                 </td>
             @endforeach
         </tr>
         <tr>
-            @foreach ($approval as $item)
+            @foreach ($approval2 as $item)
                 <td style="height: 70px; text-align:center; border:none;">
                     @if (!empty($item->Ttd))
                         <img src="{{ public_path('storage/upload/tandatangan/' . $item->Ttd) }}" alt="TTD"
@@ -216,14 +216,14 @@
             @endforeach
         </tr>
         <tr>
-            @foreach ($approval as $item)
+            @foreach ($approval2 as $item)
                 <td class="text-center" style="padding-bottom:0; border:none;">
                     <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
                 </td>
             @endforeach
         </tr>
         <tr>
-            @foreach ($approval as $item)
+            @foreach ($approval2 as $item)
                 <td class="text-center align-top" style="border:none;">
                     <span style="font-weight:600; display: block; text-align: center;">
                         {{ $item->Nama ?? '-' }}

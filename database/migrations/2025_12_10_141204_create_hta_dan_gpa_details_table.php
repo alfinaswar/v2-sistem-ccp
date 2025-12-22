@@ -31,6 +31,7 @@ return new class extends Migration {
             $table->string('TarifDiusulkan')->nullable();
             $table->string('TargetPemakaianBulanan')->nullable();
             $table->text('Keterangan')->nullable();
+            $table->text('File')->nullable();
             $table->string('KodePerusahaan')->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();
