@@ -29,9 +29,16 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="NamaBarang" class="form-label fw-bold">Nama Barang</label>
-                                <input type="text" class="form-control @error('NamaBarang') is-invalid @enderror"
-                                    name="NamaBarang" id="NamaBarang" value="{{ old('NamaBarang') }}"
-                                    placeholder="Masukkan nama barang">
+                                <select class="form-select select2 @error('NamaBarang') is-invalid @enderror"
+                                    name="NamaBarang" id="NamaBarang">
+                                    <option value="">-- Pilih Nama Barang --</option>
+                                    @if (isset($barang))
+                                        <option value="{{ $barang->id }}"
+                                            {{ old('NamaBarang', $barang->Nama ?? '') == $barang->Nama ? 'selected' : '' }}>
+                                            {{ $barang->Nama }}
+                                        </option>
+                                    @endif
+                                </select>
                                 @error('NamaBarang')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -40,16 +47,19 @@
                                 <label for="NilaiInvestasi" class="form-label fw-bold">Nilai Investasi</label>
                                 <input type="text"
                                     class="form-control rupiah @error('NilaiInvestasi') is-invalid @enderror"
-                                    name="NilaiInvestasi" id="NilaiInvestasi" value="{{ old('NilaiInvestasi') }}"
-                                    placeholder="Masukkan nilai investasi">
+                                    name="NilaiInvestasi" id="NilaiInvestasi"
+                                    value="{{ old('NilaiInvestasi', isset($data->getFui->Total) ? number_format($data->getFui->Total, 0, ',', '.') : '0') }}"
+                                    placeholder="Masukkan nilai investasi" oninput="this.value = formatRupiah(this.value)">
+
                                 @error('NilaiInvestasi')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
                             <div class="col-12">
                                 <label for="Spesifikasi" class="form-label fw-bold">Spesifikasi</label>
                                 <textarea class="form-control @error('Spesifikasi') is-invalid @enderror" name="Spesifikasi" id="Spesifikasi"
-                                    rows="2" placeholder="Masukkan spesifikasi">{{ old('Spesifikasi') }}</textarea>
+                                    rows="10" placeholder="Masukkan spesifikasi">{{ old('Spesifikasi', $data->getRekomendasi->getRekomedasiDetail[0]) }}</textarea>
                                 @error('Spesifikasi')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -203,7 +213,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[JumlahPasien][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.JumlahPasien.$i") }}">
+                                                                value="{{ old("rugi_laba.JumlahPasien.$i") }}"
+                                                                placeholder="Masukan jumlah pasien">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -213,7 +224,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[TarifUmum][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.TarifUmum.$i") }}">
+                                                                value="{{ old("rugi_laba.TarifUmum.$i") }}"
+                                                                placeholder="Masukan tarif umum">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -223,7 +235,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[TarifBpjs][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.TarifBpjs.$i") }}">
+                                                                value="{{ old("rugi_laba.TarifBpjs.$i") }}"
+                                                                placeholder="Masukan tarif BPJS">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -233,7 +246,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[Revenue][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.Revenue.$i") }}">
+                                                                value="{{ old("rugi_laba.Revenue.$i") }}"
+                                                                placeholder="Masukan revenue">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -243,7 +257,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[BiayaTetap][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.BiayaTetap.$i") }}">
+                                                                value="{{ old("rugi_laba.BiayaTetap.$i") }}"
+                                                                placeholder="Masukan biaya tetap">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -253,7 +268,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[BiayaVariable][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.BiayaVariable.$i") }}">
+                                                                value="{{ old("rugi_laba.BiayaVariable.$i") }}"
+                                                                placeholder="Masukan biaya variable">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -263,7 +279,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[NetProfit][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.NetProfit.$i") }}">
+                                                                value="{{ old("rugi_laba.NetProfit.$i") }}"
+                                                                placeholder="Masukan net profit">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -273,7 +290,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[Ebitda][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.Ebitda.$i") }}">
+                                                                value="{{ old("rugi_laba.Ebitda.$i") }}"
+                                                                placeholder="Masukan EBITDA">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -283,7 +301,8 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[AkumEbitda][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.AkumEbitda.$i") }}">
+                                                                value="{{ old("rugi_laba.AkumEbitda.$i") }}"
+                                                                placeholder="Masukan akumulasi EBITDA">
                                                         </td>
                                                     @endfor
                                                 </tr>
@@ -293,21 +312,23 @@
                                                         <td>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 name="rugi_laba[RoiTahunKe][{{ $i }}]"
-                                                                value="{{ old("rugi_laba.RoiTahunKe.$i") }}">
+                                                                value="{{ old("rugi_laba.RoiTahunKe.$i") }}"
+                                                                placeholder="Masukan ROI tahun ke-{{ $i }}">
                                                         </td>
                                                     @endfor
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p class="text-muted mt-2" style="font-size: 0.95em;">*Isikan data utama saja secara
+                                    {{-- <p class="text-muted mt-2" style="font-size: 0.95em;">*Isikan data utama saja secara
                                         manual. Hitungan revenue, net profit, dsb bisa manual/terpisah <br> Versi sederhana:
-                                        hanya Jumlah Pasien, Tarif dan Biaya (Tanpa hitung otomatis).</p>
+                                        hanya Jumlah Pasien, Tarif dan Biaya (Tanpa hitung otomatis).</p> --}}
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
-                                <a href="{{ route('fs.index') }}" class="btn btn-secondary me-2">
+                                <a href="{{ route('ajukan.show', encrypt($idPengajuan)) }}"
+                                    class="btn btn-secondary me-2">
                                     <i class="fas fa-arrow-left"></i> Kembali
                                 </a>
                                 <button type="submit" class="btn btn-success">
@@ -334,6 +355,30 @@
             });
             </script>
     @endif
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var input = document.getElementById('NilaiInvestasi');
+            if (input && input.value) {
+                input.value = formatRupiah(input.value);
+            }
+        });
+
+        function formatRupiah(angka) {
+            angka = angka.replace(/[^,\d]/g, '').toString();
+            var split = angka.split(',');
+            var sisa = split[0].length % 3;
+            var rupiah = split[0].substr(0, sisa);
+            var ribuan = split[0].substr(sisa).match(/\d{3}/g);
+
+            if (ribuan) {
+                var separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            rupiah = rupiah ? rupiah : '0';
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+    </script>
     <script>
         function formatRupiah(angka, prefix = 'Rp ') {
             let number_string = angka.replace(/[^,\d]/g, '').toString(),

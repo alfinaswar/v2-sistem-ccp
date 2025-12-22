@@ -32,7 +32,7 @@ class NotifikasiPengajuanMail extends Mailable
             'hta' => $this->hta,
             'parameter' => $this->parameter,
             'penilai' => $this->penilai,
-        ]);
+        ])->setPaper('a4', 'landscape');
         // dd($this->penilai->id);
         return $this
             ->subject('Persetujuan Penilaian HTA / GPA')

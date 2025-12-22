@@ -29,6 +29,7 @@ return new class extends Migration {
             $table->string('Dokter')->nullable();
             $table->string('TotalBiayaVariable')->nullable();
             $table->string('Tarif')->nullable();
+            $table->string('KodePerusahaan')->nullable();
             $table->string('UserCreate')->nullable();
             $table->string('UserUpdate')->nullable();
             $table->string('UserDelete')->nullable();

@@ -174,13 +174,14 @@
                         </div>
 
                         <div class="col-12 text-end mt-3">
-                            <a href="{{ route('pp.index') }}" class="btn btn-secondary me-2">
+                            <a href="javascript:history.back()" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
 
                             @foreach ($approval as $item)
-                                <form id="formApprove{{ $item->id }}" action="{{ route('pp.approve') }}"
-                                    method="POST" class="d-inline">
+                                <form id="formApprove{{ $item->id }}"
+                                    action="{{ route('pp.approve', $item->ApprovalToken) }}" method="POST"
+                                    class="d-inline">
                                     @csrf
                                     <input type="hidden" name="UserId" value="{{ $item->UserId }}">
                                     <input type="hidden" name="DokumenId" value="{{ $item->DokumenId }}">

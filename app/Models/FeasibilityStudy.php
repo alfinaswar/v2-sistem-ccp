@@ -28,4 +28,9 @@ class FeasibilityStudy extends Model
     {
         return $this->hasMany(FeasibilityStudyDetail::class, 'IdFs', 'id');
     }
+
+    public function getBarang()
+    {
+        return $this->hasOne(MasterBarang::class, 'id', 'NamaBarang');
+    }
 }

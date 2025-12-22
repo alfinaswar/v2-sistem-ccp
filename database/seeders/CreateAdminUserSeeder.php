@@ -16,8 +16,8 @@ class CreateAdminUserSeeder extends Seeder
     {
         // Data admin untuk RSAB-SDR (RS Awal Bros Sudirman)
         $company = [
-            'Kode' => 'RSAB-SDR',
-            'Nama' => 'RSAB Sudirman',
+            'Kode' => 'RSAB-AYN',
+            'Nama' => 'AwalBros A. Yani',
         ];
 
         $role = Role::firstOrCreate(['name' => 'Admin']);

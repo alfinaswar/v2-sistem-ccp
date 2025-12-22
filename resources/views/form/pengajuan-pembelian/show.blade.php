@@ -523,7 +523,7 @@
                                                                     <i class="fa fa-lightbulb"></i> Lengkapi (FUI)
                                                                 </a>
                                                             @else
-                                                                @if ($item->getFui && $item->getFui->SudahRkap2)
+                                                                @if (optional($item->getFui)->SudahRkap2 === null)
                                                                     <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                         class="btn btn-warning">
                                                                         <i class="fa fa-edit"></i> Lengkapi (FUI)
@@ -597,13 +597,13 @@
                                                                     <i class="fa fa-eye"></i>
                                                                     Lihat
                                                                 </a>
-                                                                <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
+                                                                <a href="{{ route('fs.cetak', [$data->id, $item->id]) }}"
                                                                     class="btn btn-success">
                                                                     <i class="fa fa-eye"></i>
-                                                                    Lihat
+                                                                    Cetak
                                                                 </a>
                                                             @else
-                                                                @role('keuangan')
+                                                                @role('Keuangan')
                                                                     <a href="{{ route('fs.create', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                         class="btn btn-primary">
                                                                         <i class="fa fa-edit"></i>

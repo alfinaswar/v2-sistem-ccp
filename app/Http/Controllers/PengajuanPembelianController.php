@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DokumenApproval;
 use App\Models\HtaDanGpa;
 use App\Models\HtaMedis;
 use App\Models\ListVendor;
@@ -92,7 +93,9 @@ class PengajuanPembelianController extends Controller
         return view('form.pengajuan-pembelian.create', compact('JenisPengajuan', 'masterbarang', 'permintaan', 'vendor', 'departemen'));
     }
 
-    public function SimpanDraft($id) {}
+    public function SimpanDraft($id)
+    {
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -422,39 +425,54 @@ class PengajuanPembelianController extends Controller
 
     public function UpdatePengajuan(Request $request, $id)
     {
-        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang', 'getPengajuanItem.getHtaGpa', 'getPengajuanItem.getRekomendasi', 'getPengajuanItem.getFui', 'getPengajuanItem.getDisposisi', 'getDepartemen', 'getPengajuanItem.getFs')->find($id);
-        $countVendor = $data->getVendor;
-        $namaUser = auth()->user()->name ?? 'User';
-        if (count($countVendor) < 2) {
-            return redirect()->back()->with('error', "Hai $namaUser, pengajuan tidak bisa diajukan ke CCP. Minimal harus ada 2 vendor dan maksimal 3 vendor ya.");
-        }
-        if (count($countVendor) > 3) {
-            return redirect()->back()->with('error', "Hai $namaUser, pengajuan tidak bisa diajukan ke CCP. Maksimal hanya boleh 3 vendor ya.");
-        }
-        $pengajuan = PengajuanPembelian::findOrFail($id);
-        $pengajuan->Status = $request->Status;
-        $pengajuan->DiajukanOleh = auth()->user()->id;
-        $pengajuan->DiajukanPada = now();
-        $pengajuan->save();
+        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang', 'getPengajuanItem.getHtaGpa', 'getPengajuanItem.getRekomendasi', 'getPengajuanItem.getFui', 'getPengajuanItem.getDisposisi', 'getDepartemen', 'getPengajuanItem.getFs', 'getHtaGpa')->find($id);
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $data->getHtaGpa->JenisForm)
+            ->where('DokumenId', $data->getHtaGpa->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
 
-        if (function_exists('activity')) {
-            activity()
-                ->causedBy(auth()->user()->id)
-                ->withProperties(['ip' => request()->ip()])
-                ->log('Mengajukan pengajuan pembelian ke CCP: ' . $pengajuan->KodePengajuan);
-        }
+        $semuaApproved = $approval->every(function ($item) {
+            return $item->Status === 'Approved';
+        });
 
-        $message = '';
-        if ($request->Status == 'Diajukan') {
-            $message = 'Terimakasih ' . auth()->user()->name . ', pengajuan Anda berhasil diajukan ke CCP.';
-        } elseif ($request->Status == 'Draft') {
-            $message = 'Pengajuan berhasil dikembalikan ke draft.';
+        if ($semuaApproved) {
+            $countVendor = $data->getVendor;
+            $namaUser = auth()->user()->name ?? 'User';
+            if (count($countVendor) < 2) {
+                return redirect()->back()->with('error', "Hai $namaUser, pengajuan tidak bisa diajukan ke CCP. Minimal harus ada 2 vendor dan maksimal 3 vendor ya.");
+            }
+            if (count($countVendor) > 3) {
+                return redirect()->back()->with('error', "Hai $namaUser, pengajuan tidak bisa diajukan ke CCP. Maksimal hanya boleh 3 vendor ya.");
+            }
+            $pengajuan = PengajuanPembelian::findOrFail($id);
+            $pengajuan->Status = $request->Status;
+            $pengajuan->DiajukanOleh = auth()->user()->id;
+            $pengajuan->DiajukanPada = now();
+            $pengajuan->save();
+
+            if (function_exists('activity')) {
+                activity()
+                    ->causedBy(auth()->user()->id)
+                    ->withProperties(['ip' => request()->ip()])
+                    ->log('Mengajukan pengajuan pembelian ke CCP: ' . $pengajuan->KodePengajuan);
+            }
+
+            $message = '';
+            if ($request->Status == 'Diajukan') {
+                $message = 'Terimakasih ' . auth()->user()->name . ', pengajuan Anda berhasil diajukan ke CCP.';
+            } elseif ($request->Status == 'Draft') {
+                $message = 'Pengajuan berhasil dikembalikan ke draft.';
+            } else {
+                $message = 'Status pengajuan berhasil diperbarui.';
+            }
+            return redirect()
+                ->route('ajukan.show', encrypt($id))
+                ->with('success', $message);
         } else {
-            $message = 'Status pengajuan berhasil diperbarui.';
+            return back()->with('error', 'HTA / GPA, Belum Disetujui. Proses Tidak Dapat Diteruskan.');
         }
-        return redirect()
-            ->route('ajukan.show', encrypt($id))
-            ->with('success', $message);
+
     }
 
     /**

@@ -14,6 +14,7 @@ use App\Models\PermintaanPembelianDetail;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class PermintaanPembelianController extends Controller
@@ -176,6 +177,7 @@ class PermintaanPembelianController extends Controller
                     'Nama' => $approvalSetting->getUser->name ?? null,
                     'Status' => 'Pending',
                     'TanggalApprove' => null,
+                    'ApprovalToken' => str_replace('-', '', Str::uuid()->toString()),
                     'Catatan' => null,
                     'Ttd' => null,
                     'UserCreate' => auth()->user()->name,
@@ -384,9 +386,11 @@ class PermintaanPembelianController extends Controller
                 'UserId' => $userId,
                 'Nama' => $namaUser,
                 'Email' => $request->Email[$key],
-                'Urutan' => $approval->Urutan,  // Urutan tetap sesuai urutan record yang kecil ke besar
+                'Urutan' => $approval->Urutan,
+                'ApprovalToken' => str_replace('-', '', Str::uuid()->toString()),
                 'UserUpdate' => auth()->user()->name,
             ]);
+
         }
         if (function_exists('activity')) {
             activity()

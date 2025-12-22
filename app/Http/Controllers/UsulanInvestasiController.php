@@ -112,50 +112,57 @@ class UsulanInvestasiController extends Controller
         //     dd($e->validator->errors());
         // }
         // dd($request->all());
-        $usulan = UsulanInvestasi::create([
-            'JenisForm' => '7',
-            'IdPengajuan' => $request->IdPengajuan ?? null,
-            'PengajuanItemId' => $request->PengajuanItemId ?? null,
-            'IdVendor' => $request->VendorDipilih ?? null,
-            'IdBarang' => $request->PengajuanItemId ?? null,
-            'Tanggal' => $request->Tanggal ?? null,
-            'NamaKadiv' => $request->NamaKadiv ?? null,
-            'Divisi' => $request->Divisi ?? null,
-            'Kategori' => $request->Kategori ?? null,
-            'Tanggal2' => $request->Tanggal2 ?? null,
-            'NamaKadiv2' => $request->NamaKadiv2 ?? null,
-            'Divisi2' => $request->Divisi2 ?? null,
-            'Kategori2' => $request->Kategori2 ?? null,
-            'Alasan' => $request->Alasan ?? null,
-            'BiayaAkhir' => isset($request->BiayaAkhir) ? preg_replace('/[^0-9]/', '', $request->BiayaAkhir) : null,
-            'VendorDipilih' => $request->VendorDipilih ?? null,
-            'HargaDiskonPpn' => isset($request->HargaDiskonPpn) ? preg_replace('/[^0-9]/', '', $request->HargaDiskonPpn) : null,
-            'Total' => isset($request->Total) ? preg_replace('/[^0-9]/', '', $request->Total) : null,
-            'SudahRkap' => $request->SudahRkap ?? null,
-            'SisaBudget' => isset($request->SisaBudget) ? preg_replace('/[^0-9]/', '', $request->SisaBudget) : null,
-            'SudahRkap2' => $request->SudahRkap2 ?? null,
-            'SisaBudget2' => isset($request->SisaBudget2) ? preg_replace('/[^0-9]/', '', $request->SisaBudget2) : null,
-            'DiajukanOleh' => auth()->user()->id ?? null,
-            'KodePerusahaan' => auth()->user()->kodeperusahaan ?? null,
-            'DiajukanPada' => now(),
-        ]);
+        $usulan = UsulanInvestasi::updateOrCreate(
+            [
+                'IdPengajuan' => $request->IdPengajuan ?? null,
+                'PengajuanItemId' => $request->PengajuanItemId ?? null,
+            ],
+            [
+                'JenisForm' => '7',
+                'IdVendor' => $request->VendorDipilih ?? null,
+                'IdBarang' => $request->PengajuanItemId ?? null,
+                'Tanggal' => $request->Tanggal ?? null,
+                'NamaKadiv' => $request->NamaKadiv ?? null,
+                'Divisi' => $request->Divisi ?? null,
+                'Kategori' => $request->Kategori ?? null,
+                'Tanggal2' => $request->Tanggal2 ?? null,
+                'NamaKadiv2' => $request->NamaKadiv2 ?? null,
+                'Divisi2' => $request->Divisi2 ?? null,
+                'Kategori2' => $request->Kategori2 ?? null,
+                'Alasan' => $request->Alasan ?? null,
+                'BiayaAkhir' => isset($request->BiayaAkhir) ? preg_replace('/[^0-9]/', '', $request->BiayaAkhir) : null,
+                'VendorDipilih' => $request->VendorDipilih ?? null,
+                'HargaDiskonPpn' => isset($request->HargaDiskonPpn) ? preg_replace('/[^0-9]/', '', $request->HargaDiskonPpn) : null,
+                'Total' => isset($request->Total) ? preg_replace('/[^0-9]/', '', $request->Total) : null,
+                'SudahRkap' => $request->SudahRkap ?? null,
+                'SisaBudget' => isset($request->SisaBudget) ? preg_replace('/[^0-9]/', '', $request->SisaBudget) : null,
+                'SudahRkap2' => $request->SudahRkap2 ?? null,
+                'SisaBudget2' => isset($request->SisaBudget2) ? preg_replace('/[^0-9]/', '', $request->SisaBudget2) : null,
+                'DiajukanOleh' => auth()->user()->id ?? null,
+                'KodePerusahaan' => auth()->user()->kodeperusahaan ?? null,
+                'DiajukanPada' => now(),
+            ]
+        );
 
         if (!empty($request->items) && is_array($request->items)) {
             foreach ($request->items as $item) {
-                UsulanInvestasiDetail::create([
-                    'IdUsulan' => $usulan->id ?? null,
-                    'NamaBarang' => $item['NamaBarang'] ?? null,
-                    'Vendor' => $item['Vendor'] ?? null,
-                    'IdVendor' => $item['IdVendor'] ?? null,
-                    'Jumlah' => $item['Jumlah'] ?? null,
-                    'Harga' => isset($item['Harga']) ? preg_replace('/[^0-9]/', '', $item['Harga']) : null,
-                    'Diskon' => isset($item['Diskon']) ? preg_replace('/[^0-9]/', '', $item['Diskon']) : null,
-                    'Ppn' => $item['Ppn'] ?? null,
-                    // If $request->Total is not set, this will be null (nullable)
-                    'Total' => isset($request->Total) ? preg_replace('/[^0-9]/', '', $request->Total) : null,
-                    'UserCreate' => auth()->user()->id ?? null,
-                    'UserUpdate' => null,
-                ]);
+                UsulanInvestasiDetail::updateOrCreate(
+                    [
+                        'IdUsulan' => $usulan->id ?? null,
+                        'NamaBarang' => $item['NamaBarang'] ?? null,
+                        'Vendor' => $item['Vendor'] ?? null,
+                    ],
+                    [
+                        'Jumlah' => $item['Jumlah'] ?? null,
+                        'Harga' => isset($item['Harga']) ? preg_replace('/[^0-9]/', '', $item['Harga']) : null,
+                        'Diskon' => isset($item['Diskon']) ? preg_replace('/[^0-9]/', '', $item['Diskon']) : null,
+                        'Ppn' => $item['Ppn'] ?? null,
+                        // If $request->Total is not set, this will be null (nullable)
+                        'Total' => isset($request->Total) ? preg_replace('/[^0-9]/', '', $request->Total) : null,
+                        'UserCreate' => auth()->user()->id ?? null,
+                        'UserUpdate' => null,
+                    ]
+                );
             }
         }
         $Form = MasterForm::with([

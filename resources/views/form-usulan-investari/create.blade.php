@@ -505,7 +505,7 @@
                             <div class="row">
                                 @php
                                     $deptDisabled =
-                                        auth()->user() && auth()->user()->hasRole('Keuangan') ? 'disabled' : '';
+                                        auth()->user() && auth()->user()->hasRole('Keuangan') ? 'readonly' : '';
                                 @endphp
                                 <div class="col-md-6">
                                     <div class="border rounded p-3 h-100 {{ $deptDisabled ? 'bg-light' : '' }}">
@@ -555,7 +555,7 @@
                                     </div>
                                 </div>
                                 @php
-                                    $disabled = auth()->user() && auth()->user()->hasRole('Keuangan') ? '' : 'disabled';
+                                    $disabled = auth()->user() && auth()->user()->hasRole('Keuangan') ? '' : 'readonly';
                                 @endphp
                                 <div class="col-md-6">
                                     <div class="border rounded p-3 h-100 {{ $disabled ? 'bg-light' : '' }}">

@@ -50,6 +50,8 @@ Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'ap
 Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
 Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
 Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
+Route::get('/approval/fisibility-studi/{token}/approve', [FeasibilityStudyController::class, 'approve'])->name('fs.approve');
+Route::get('/approval/fisibility-studi/{token}/reject', [FeasibilityStudyController::class, 'reject'])->name('fs.reject');
 Route::group(['middleware' => ['auth']], function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permission', PermissionController::class);
@@ -248,6 +250,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/edit/{id}', [FeasibilityStudyController::class, 'edit'])->name('fs.edit');
         Route::put('/update/{id}', [FeasibilityStudyController::class, 'update'])->name('fs.update');
         Route::get('/show/{idPengajuan}/{idPengajuanItem}', [FeasibilityStudyController::class, 'show'])->name('fs.show');
+        Route::get('/cetak/{idPengajuan}/{idPengajuanItem}', [FeasibilityStudyController::class, 'cetak'])->name('fs.cetak');
         Route::delete('/delete/{id}', [FeasibilityStudyController::class, 'destroy'])->name('fs.destroy');
         Route::get('/approval/feasibility-study/{token}/approve', [FeasibilityStudyController::class, 'approve'])->name('fs.approve');
     });

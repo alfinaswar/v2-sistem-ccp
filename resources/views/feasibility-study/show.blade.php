@@ -25,7 +25,7 @@
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Nama Barang</label>
                             <div class="form-control bg-light">
-                                {{ $data->NamaBarang ?? '-' }}
+                                {{ $data->getBarang->Nama ?? '-' }}
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -223,13 +223,98 @@
                                 <p class="text-muted mt-2" style="font-size: 0.95em;">*Data hasil input feasibility study.
                                 </p>
                             </div>
+
+                        </div>
+                        <div class="row mt-4 justify-content-center">
+                            <div class="col-12">
+                                <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
+                                <!-- Tambah baris untuk nama jabatan di atas tabel approval -->
+                                <div class="mb-2 text-center">
+                                    @if (!empty($approval))
+                                        <div class="row justify-content-center">
+                                            @foreach ($approval as $item)
+                                                <div class="col text-center" style="font-weight:600;">
+                                                    {{ $item->getJabatan->Nama ?? '-' }}
+                                                    {{ $item->getDepartemen->Nama ?? '-' }}
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-borderless" style="max-width:100%; margin: 0 auto;">
+                                        <colgroup>
+                                            @if (!empty($approval))
+                                                @foreach ($approval as $item)
+                                                    <col style="width: {{ 100 / count($approval) }}%;">
+                                                @endforeach
+                                            @endif
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                @foreach ($approval as $item)
+                                                    <td class="text-center align-bottom">
+                                                        {{-- Nama jabatan sudah ditampilkan di atas, bisa dikosongi atau diisi strip --}}
+                                                        -
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                            <tr>
+                                                @foreach ($approval as $item)
+                                                    <td style="height: 70px;" class="text-center">
+                                                        @if (!empty($item->Ttd))
+                                                            <img src="{{ asset('storage/upload/tandatangan/' . $item->Ttd) }}"
+                                                                alt="TTD" style="max-width:110px; max-height:60px;">
+                                                        @endif
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                            <tr>
+                                                @foreach ($approval as $item)
+                                                    <td class="text-center" style="padding-bottom:0;">
+                                                        <hr
+                                                            style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                            <tr>
+                                                @foreach ($approval as $item)
+                                                    <td class="text-center align-top">
+                                                        <small>Nama Lengkap</small><br>
+                                                        <span style="font-weight:600;">
+                                                            {{ $item->Nama ?? '-' }}
+                                                        </span>
+                                                        <br>
+                                                        <small>{{ $item->Status ?? '-' }}</small>
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="col-12 text-end mt-3">
+                                <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary me-2">
+                                    <i class="fa fa-arrow-left"></i> Kembali
+                                </a>
+
+                                @foreach ($approval as $item)
+                                    @if (auth()->id() == ($item->UserId ?? null))
+                                        <a href="#" class="btn btn-primary me-2 swal-confirm-btn-approve"
+                                            data-url="{{ route('fs.approve', $item->ApprovalToken) }}"
+                                            data-title="Konfirmasi"
+                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama }}?">
+                                            <i class="fa {{ $item->icon ?? 'fa-user' }}"></i>
+                                            Setujui
+                                        </a>
+                                    @endif
+                                @endforeach
+
+
+                            </div>
                         </div>
 
-                        <div class="d-flex justify-content-end mt-4">
-                            <a href="{{ route('fs.index') }}" class="btn btn-secondary me-2">
-                                <i class="fas fa-arrow-left"></i> Kembali
-                            </a>
-                        </div>
                     </div>
                 </div>
 
@@ -237,3 +322,56 @@
         </div>
     </div>
 @endsection
+@push('js')
+    @if (Session::get('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{{ Session::get('success') }}',
+                iconColor: '#4BCC1F',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#4BCC1F',
+            });
+        </script>
+    @endif
+    @if (Session::get('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '{{ Session::get('error') }}',
+                iconColor: '#d33',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#d33',
+            });
+        </script>
+    @endif
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.swal-confirm-btn-approve').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var url = this.getAttribute('data-url');
+                    var title = this.getAttribute('data-title') || 'Konfirmasi';
+                    var text = this.getAttribute('data-text') ||
+                        'Yakin ingin melakukan tindakan ini?';
+
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Setujui'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = url;
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+@endpush
