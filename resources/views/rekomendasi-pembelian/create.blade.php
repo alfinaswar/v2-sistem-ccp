@@ -94,46 +94,7 @@
                             @endforeach
                         </ul>
                         <div class="tab-content" id="vendorTabPanes">
-                            <div class="mb-4">
-                                <label for="fileUpload" class="form-label fw-bold mb-2">Lampirkan File (Optional)</label>
-                                <div class="card border-0 shadow-sm upload-container position-relative mb-1 p-0">
-                                    <div id="custom-file-drop-area-{{ uniqid() }}"
-                                        class="upload-area d-flex flex-column flex-md-row align-items-center justify-content-between px-4 py-4 gap-3"
-                                        style="background: linear-gradient(90deg, #f6f8fc 60%, #e3ebf8 100%); min-height: 120px; border-radius: 12px; cursor: pointer; border: 2px dashed #b6c2d1; transition: border-color 0.2s;">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <span
-                                                class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                                                style="width: 48px; height: 48px; font-size: 1.8rem;">
-                                                <i class="fa fa-file-upload"></i>
-                                            </span>
-                                            <div>
-                                                <div class="fw-semibold mb-1 text-dark">Drag &amp; Drop file di sini</div>
-                                                <div class="small text-muted">atau <span
-                                                        class="text-primary fw-bold text-decoration-underline"
-                                                        style="cursor:pointer;">klik untuk memilih file</span></div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex flex-column text-end">
-                                            <input type="file" name="upload_file" id="fileUpload" style="display: none;">
-                                            <span id="file-selected-name" class="fw-semibold text-success"
-                                                style="min-height: 22px;"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-text mt-1 small">
-                                    Format file: <span class="fw-bold">pdf</span>
-                                </div>
-                                @error('upload_file')
-                                    <div class="text-danger mt-1 small">{{ $message }}</div>
-                                @enderror
-                            </div>
 
-                            <style>
-                                .upload-area:hover,
-                                .upload-area.active {
-                                    border-color: #2563eb !important;
-                                }
-                            </style>
                             @if ($data->Jenis == 1)
                                 @foreach ($data->getVendor as $vIdx => $Vendor)
                                     @php
@@ -313,6 +274,49 @@
                                     </div>
                                 @endforeach
                             @else
+                                <div class="mb-4">
+                                    <label for="fileUpload" class="form-label fw-bold mb-2">Lampirkan File
+                                        (Optional)</label>
+                                    <div class="card border-0 shadow-sm upload-container position-relative mb-1 p-0">
+                                        <div id="custom-file-drop-area-{{ uniqid() }}"
+                                            class="upload-area d-flex flex-column flex-md-row align-items-center justify-content-between px-4 py-4 gap-3"
+                                            style="background: linear-gradient(90deg, #f6f8fc 60%, #e3ebf8 100%); min-height: 120px; border-radius: 12px; cursor: pointer; border: 2px dashed #b6c2d1; transition: border-color 0.2s;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <span
+                                                    class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                                    style="width: 48px; height: 48px; font-size: 1.8rem;">
+                                                    <i class="fa fa-file-upload"></i>
+                                                </span>
+                                                <div>
+                                                    <div class="fw-semibold mb-1 text-dark">Drag &amp; Drop file di sini
+                                                    </div>
+                                                    <div class="small text-muted">atau <span
+                                                            class="text-primary fw-bold text-decoration-underline"
+                                                            style="cursor:pointer;">klik untuk memilih file</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column text-end">
+                                                <input type="file" name="upload_file" id="fileUpload"
+                                                    style="display: none;">
+                                                <span id="file-selected-name" class="fw-semibold text-success"
+                                                    style="min-height: 22px;"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-text mt-1 small">
+                                        Format file: <span class="fw-bold">pdf</span>
+                                    </div>
+                                    @error('upload_file')
+                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <style>
+                                    .upload-area:hover,
+                                    .upload-area.active {
+                                        border-color: #2563eb !important;
+                                    }
+                                </style>
                                 @foreach ($data->getVendor as $vIdx => $Vendor)
                                     <div class="tab-pane fade {{ $vIdx === 0 ? 'show active' : '' }}"
                                         id="vendor-pane-{{ $vIdx }}" role="tabpanel"

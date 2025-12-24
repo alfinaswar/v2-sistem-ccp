@@ -86,6 +86,7 @@ class HtaDanGpaController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $header = HtaDanGpa::updateOrCreate(
             [
                 'JenisForm' => '1',
@@ -376,6 +377,9 @@ class HtaDanGpaController extends Controller
             'getHtaGpa' => function ($query) use ($idPengajuanItem) {
                 $query->where('PengajuanItemId', $idPengajuanItem);
             },
+            'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
+                $query->where('PengajuanItemId', $idPengajuanItem);
+            },
             'getJenisPermintaan.getForm',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
@@ -400,6 +404,9 @@ class HtaDanGpaController extends Controller
         $data = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getHtaGpa' => function ($query) use ($idPengajuanItem) {
+                $query->where('PengajuanItemId', $idPengajuanItem);
+            },
+            'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
                 $query->where('PengajuanItemId', $idPengajuanItem);
             },
             'getJenisPermintaan.getForm',

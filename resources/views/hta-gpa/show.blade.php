@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+    {{-- @php
+        dd($data->getVendor);
+    @endphp --}}
     <div class="page-header">
         <div class="row">
             <div class="col">
@@ -77,7 +80,7 @@
                                         </td>
                                         @foreach ($data->getVendor as $vIdx => $Vendor)
                                             <td>
-                                                {!! $Vendor->getHtaGpa->Deskripsi[$key] ?? '-' !!}
+                                                {!! isset($Vendor->getHtaGpa->Deskripsi[$key]) ? nl2br(e($Vendor->getHtaGpa->Deskripsi[$key])) : '-' !!}
                                             </td>
                                             <td>
                                                 <input type="number" readonly min="0" max="5"
@@ -120,7 +123,6 @@
                                         <th colspan="6"></th>
                                         <th>
                                             @php
-                                                // Hitung GrandTotal dari subtotal
                                                 $grandTotal = 0;
                                                 if (
                                                     isset($Vendor->getHtaGpa->SubTotal) &&
@@ -136,7 +138,7 @@
                                                         ? $grandTotal
                                                         : $Vendor->getHtaGpa->GrandTotal ?? '';
                                             @endphp
-                                            <input type="text" value="{{ number_format($grandTotalShow, 2, ',', '.') }}"
+                                            <input type="text" value="{{ $grandTotalShow }}"
                                                 class="form-control bg-light" readonly style="font-weight:bold;">
                                         </th>
                                     @endforeach
