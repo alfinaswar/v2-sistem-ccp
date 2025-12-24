@@ -4,10 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-    <meta name="description" content="POS - Bootstrap Admin Template">
-    <meta name="keywords"
-        content="admin, estimates, bootstrap, business, corporate, creative, management, minimal, modern,  html5, responsive">
-    <meta name="author" content="Dreamguys - Bootstrap Admin Template">
+    <meta name="description" content="AB Proc - Sistem Administrasi dan Pengadaan">
+    <meta name="keywords" content="AB Proc, administrasi, pengadaan, sistem, manajemen, modern, html5, responsive">
+    <meta name="author" content="AB Proc Team">
     <meta name="robots" content="noindex, nofollow">
     <title>{{ env('APP_NAME', 'CCP') }}</title>
 
